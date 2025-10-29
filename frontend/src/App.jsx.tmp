@@ -1,0 +1,41 @@
+// frontend/src/App.jsx
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import DashboardLayout from './layouts/DashboardLayout';
+import AuthLayout from './layouts/AuthLayout';
+import ComponentShowcase from './pages/ComponentShowcase';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+
+/**
+ * 🎓 LEARNING: React Router Setup
+ * 
+ * React Router enables client-side routing - changing pages without
+ * full page reloads.
+ * 
+ * Key concepts:
+ * - BrowserRouter: Provides routing context
+ * - Routes: Container for all routes
+ * - Route: Defines a route (path + component)
+ * - Navigate: Redirects to another route
+ * - Nested routes: Parent layouts with child pages
+ */
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Auth Routes */}
+        <Route element={<AuthLayout />}>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Route>
+
+        {/* Component Showcase */}
+        <Route path="/showcase" element={<ComponentShowcase />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;

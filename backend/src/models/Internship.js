@@ -115,27 +115,23 @@ const internshipSchema = new mongoose.Schema({
   // ═══════════════════════════════════════════════════════════
   
   location: {
-    type: {
-      type: String,
-      enum: ['remote', 'onsite', 'hybrid'],
-      required: true
-    },
-    address: String,
-    city: String,
-    state: String,
-    country: String,
-    zipCode: String,
-    coordinates: {
-      type: { type: String, enum: ['Point'], default: 'Point' },
-      coordinates: [Number]
-    },
-    // For hybrid
-    remoteFlexibility: {
-      type: String,
-      enum: ['full-remote', 'mostly-remote', 'hybrid', 'mostly-onsite']
-    },
-    officeVisits: String // e.g., '2 days per week'
+  type: {
+    type: String,
+    enum: ['remote', 'onsite', 'hybrid'],
+    required: true
   },
+  address: String,
+  city: String,
+  state: String,
+  country: String,
+  zipCode: String,
+  // Removed coordinates
+  remoteFlexibility: {
+    type: String,
+    enum: ['full-remote', 'mostly-remote', 'hybrid', 'mostly-onsite']
+  },
+  officeVisits: String
+},
   
   // ═══════════════════════════════════════════════════════════
   // COMPENSATION & BENEFITS
@@ -417,22 +413,22 @@ const internshipSchema = new mongoose.Schema({
 // ═══════════════════════════════════════════════════════════
 
 // Geospatial index
-internshipSchema.index({ 'location.coordinates': '2dsphere' });
+//internshipSchema.index({ 'location.coordinates': '2dsphere' });
 
 // Text search
-internshipSchema.index({
-  title: 'text',
-  description: 'text',
-  'requirements.skills.name': 'text'
-});
+// internshipSchema.index({ title: 'text' });
+// internshipSchema.index({ description: 'text' });
+// internshipSchema.index({ 'requirements.skills.name': 'text' });
+
 
 // Common queries
 internshipSchema.index({ organization: 1, status: 1 });
-internshipSchema.index({ status: 1, 'featured.isFeatured': -1, publishedAt: -1 });
-internshipSchema.index({ 'timeline.applicationDeadline': 1 });
-internshipSchema.index({ categories: 1, status: 1 });
-internshipSchema.index({ 'requirements.skills.name': 1 });
-internshipSchema.index({ 'location.type': 1, status: 1 });
+internshipSchema.index({ status: 1, publishedAt: -1 });
+// internshipSchema.index({ status: 1, 'featured.isFeatured': -1, publishedAt: -1 });
+// internshipSchema.index({ 'timeline.applicationDeadline': 1 });
+// internshipSchema.index({ categories: 1, status: 1 });
+// internshipSchema.index({ 'requirements.skills.name': 1 });
+// internshipSchema.index({ 'location.type': 1, status: 1 });
 
 // Compound index for featured listings
 internshipSchema.index({ 

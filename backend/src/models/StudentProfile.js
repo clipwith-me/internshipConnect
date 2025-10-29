@@ -50,17 +50,14 @@ const studentProfileSchema = new mongoose.Schema({
       enum: ['male', 'female', 'non-binary', 'prefer-not-to-say']
     },
     nationality: String,
-    location: {
-      address: String,
-      city: String,
-      state: String,
-      country: String,
-      zipCode: String,
-      coordinates: {
-        type: { type: String, enum: ['Point'], default: 'Point' },
-        coordinates: [Number]  // [longitude, latitude]
-      }
-    },
+   location: {
+  address: String,
+  city: String,
+  state: String,
+  country: String,
+  zipCode: String
+  // Removed coordinates completely for now
+},
     profilePicture: {
       url: String,
       publicId: String  // For Cloudinary deletion
@@ -434,29 +431,28 @@ const studentProfileSchema = new mongoose.Schema({
 // ═══════════════════════════════════════════════════════════
 
 // Geospatial index for location-based search
-studentProfileSchema.index({ 'personalInfo.location.coordinates': '2dsphere' });
+// studentProfileSchema.index({ 'personalInfo.location.coordinates': '2dsphere' });
 
 // Text search index
-studentProfileSchema.index({
-  'personalInfo.firstName': 'text',
-  'personalInfo.lastName': 'text',
-  'bio': 'text',
-  'headline': 'text'
-});
+// studentProfileSchema.index({
+//   'personalInfo.firstName': 'text',
+//   'personalInfo.lastName': 'text',
+//   'bio': 'text',
+//   'headline': 'text'
+// });
 
 // Common query indexes
 studentProfileSchema.index({ user: 1 });
-studentProfileSchema.index({ 'skills.name': 1 });
-studentProfileSchema.index({ 'education.graduationYear': 1 });
-studentProfileSchema.index({ 'education.institution': 1 });
-studentProfileSchema.index({ profileCompleteness: -1 });
+// studentProfileSchema.index({ 'skills.name': 1 });
+// studentProfileSchema.index({ 'education.graduationYear': 1 });
+// studentProfileSchema.index({ 'education.institution': 1 });
+// studentProfileSchema.index({ profileCompleteness: -1 });
 studentProfileSchema.index({ createdAt: -1 });
 
 // Compound indexes for filtering
-studentProfileSchema.index({ 
-  'preferences.internshipTypes': 1, 
-  'preferences.industries': 1 
-});
+// Separate indexes - MongoDB can't compound index multiple arrays
+//  studentProfileSchema.index({ 'preferences.internshipTypes': 1 });
+//  studentProfileSchema.index({ 'preferences.industries': 1 });
 
 // ═══════════════════════════════════════════════════════════
 // VIRTUALS

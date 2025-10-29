@@ -77,23 +77,20 @@ const organizationProfileSchema = new mongoose.Schema({
       type: String,
       match: [/^https?:\/\/.+/, 'Please provide a valid website URL']
     },
-    headquarters: {
-      address: String,
-      city: {
-        type: String,
-        required: true
-      },
-      state: String,
-      country: {
-        type: String,
-        required: true
-      },
-      zipCode: String,
-      coordinates: {
-        type: { type: String, enum: ['Point'], default: 'Point' },
-        coordinates: [Number]
-      }
-    },
+  headquarters: {
+  address: String,
+  city: {
+    type: String,
+    required: true
+  },
+  state: String,
+  country: {
+    type: String,
+    required: true
+  },
+  zipCode: String
+  // Removed coordinates
+},
     officeLocations: [{
       name: String,
       address: String,
@@ -412,25 +409,23 @@ const organizationProfileSchema = new mongoose.Schema({
 // ═══════════════════════════════════════════════════════════
 
 // Geospatial index
-organizationProfileSchema.index({ 
-  'companyInfo.headquarters.coordinates': '2dsphere' 
-});
+// organizationProfileSchema.index({ 
+//   'companyInfo.headquarters.coordinates': '2dsphere' 
+// });
 
 // Text search
-organizationProfileSchema.index({
-  'companyInfo.name': 'text',
-  'description.short': 'text',
-  'description.full': 'text'
-});
+// organizationProfileSchema.index({ 'companyInfo.name': 'text', });
+// organizationProfileSchema.index({ 'description.short': 'text' });
+// organizationProfileSchema.index({ 'description.full': 'text' });
 
 // Common queries
 organizationProfileSchema.index({ user: 1 });
-organizationProfileSchema.index({ 'companyInfo.name': 1 });
-organizationProfileSchema.index({ 'companyInfo.industry': 1 });
-organizationProfileSchema.index({ 'verification.status': 1 });
-organizationProfileSchema.index({ status: 1 });
-organizationProfileSchema.index({ 'verification.trustScore': -1 });
-organizationProfileSchema.index({ createdAt: -1 });
+// organizationProfileSchema.index({ 'companyInfo.name': 1 });
+// organizationProfileSchema.index({ 'companyInfo.industry': 1 });
+// organizationProfileSchema.index({ 'verification.status': 1 });
+// organizationProfileSchema.index({ status: 1 });
+// organizationProfileSchema.index({ 'verification.trustScore': -1 });
+// organizationProfileSchema.index({ createdAt: -1 });
 
 // ═══════════════════════════════════════════════════════════
 // VIRTUALS

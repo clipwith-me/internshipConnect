@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import connectDB from './config/database.js';
+import authRoutes from './routes/auth.routes.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -77,6 +78,10 @@ app.use(express.json({ limit: '10mb' })); // Allow up to 10MB JSON payloads
 // 4. URL ENCODED - Parse form data
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+app.use('/api/auth', authRoutes);
+ app.get("/api/auth/test", (req, res) => {
+  res.json({ message: "Backend is working ✅" });
+});
 // 5. LOGGING - Development only
 /**
  * 🎓 CUSTOM LOGGER MIDDLEWARE
