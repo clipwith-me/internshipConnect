@@ -148,16 +148,12 @@ const RegisterPage = () => {
       password: formData.password,
       role,
       ...(role === 'student' && {
-        personalInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        }
+        firstName: formData.firstName,
+        lastName: formData.lastName,
       }),
       ...(role === 'organization' && {
-        companyInfo: {
-          name: formData.companyName,
-          industry: formData.industry,
-        }
+        companyName: formData.companyName,
+        industry: formData.industry,
       }),
     };
     
