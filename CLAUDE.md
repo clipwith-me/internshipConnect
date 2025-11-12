@@ -231,7 +231,26 @@ Payment
 - Tailwind configured with custom tokens
 - Typography: Segoe UI font stack
 - Spacing: 8px base grid
-- Animations: fadeIn, slideIn*, scaleIn, pulse, shimmer
+- Animations: fadeIn, slideIn*, scaleIn, pulse, shimmer, blob
+- Background gradients with animated blobs for modern aesthetic
+
+**Styling Philosophy:**
+- Clean, modern, professional SaaS aesthetic
+- Centered layouts with cards for auth pages
+- Gradient backgrounds with subtle animated elements
+- Rounded corners (rounded-lg, rounded-2xl) for modern feel
+- Shadow hierarchy (shadow-md, shadow-lg, shadow-xl) for depth
+- Smooth transitions on all interactive elements
+- Focus states with rings for accessibility
+- Mobile-first responsive design
+
+**Layout Components:**
+- `AuthLayout`: Centered card layout with gradient background and animated blobs
+  - Replaces split-screen design with modern centered card
+  - Gradient background: `neutral-50 → primary-50 → neutral-100`
+  - White card with `rounded-2xl`, `shadow-xl`, responsive padding
+  - Animated gradient blobs using `animate-blob` with staggered delays
+- `DashboardLayout`: Sidebar navigation for authenticated users
 
 **Reusable Components:**
 - `Input`: Controlled input with icons, error display
@@ -486,6 +505,11 @@ const handleSubmit = async (e) => {
 
 3. **Hard refresh browser:** `Ctrl+Shift+R`
 
+4. **Custom animations not working:**
+   - Check `tailwind.config.js` includes custom keyframes and animations
+   - Verify `index.css` includes animation-delay utility classes
+   - Restart dev server after config changes
+
 ### API Requests Failing
 
 1. **Check backend is running:** http://localhost:5000/health
@@ -561,11 +585,13 @@ This is a **9-day MVP** project currently on Day 3 (Authentication complete).
 
 **Completed:**
 - ✅ Project setup and dependencies
-- ✅ Design system with Tailwind
+- ✅ Design system with Tailwind (including custom animations)
 - ✅ Database models (all 7 defined)
 - ✅ Authentication flow (register/login/token refresh)
 - ✅ Protected routes
 - ✅ Basic components library
+- ✅ Modern login page design (centered card layout with gradient background)
+- ✅ AuthLayout redesign (centered card replacing split-screen)
 
 **Next Steps:**
 - Dashboard implementation (student/organization views)
