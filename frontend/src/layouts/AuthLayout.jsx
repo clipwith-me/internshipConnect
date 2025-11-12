@@ -15,96 +15,47 @@ import { Outlet, Link } from 'react-router-dom';
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen bg-neutral-50 flex">
-      {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm lg:w-96">
-          {/* Logo */}
-          <div className="mb-8">
-            <Link to="/" className="inline-block">
-              <h1 className="text-3xl font-bold text-primary-500">
-                InternshipConnect
-              </h1>
-            </Link>
-          </div>
-          
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-primary-50 to-neutral-100 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Top-right gradient blob */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        {/* Bottom-left gradient blob */}
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        {/* Center gradient blob */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      {/* Main Card Container */}
+      <div className="relative w-full max-w-md z-10">
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-block group">
+            <h1 className="text-2xl font-bold text-primary-600 tracking-tight transition-transform duration-300 group-hover:scale-105">
+              InternshipConnect
+            </h1>
+            <p className="text-xs text-neutral-500 mt-1">AI-Powered Career Matching</p>
+          </Link>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 p-8 sm:p-10 backdrop-blur-sm">
           {/* Form Content (from Outlet) */}
           <Outlet />
-          
-          {/* Footer Links */}
-          <div className="mt-8 text-center text-sm text-neutral-500">
-            <p>
-              By continuing, you agree to our{' '}
-              <Link to="/terms" className="text-primary-500 hover:text-primary-600">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-primary-500 hover:text-primary-600">
-                Privacy Policy
-              </Link>
-            </p>
-          </div>
         </div>
-      </div>
-      
-      {/* Right Side - Branding/Image (hidden on mobile) */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern
-                id="grid"
-                width="32"
-                height="32"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 32 0 L 0 0 0 32"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="0.5"
-                />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
-        
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-20 text-white">
-          <h2 className="text-4xl font-bold mb-6">
-            Connect with your dream internship
-          </h2>
-          <p className="text-xl text-primary-100 mb-8">
-            Join thousands of students and organizations using AI-powered matching to find the perfect fit.
+
+        {/* Footer Links */}
+        <div className="mt-6 text-center text-xs text-neutral-500">
+          <p>
+            By continuing, you agree to our{' '}
+            <Link to="/terms" className="text-primary-600 hover:text-primary-700 font-medium transition-colors">
+              Terms
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-primary-600 hover:text-primary-700 font-medium transition-colors">
+              Privacy Policy
+            </Link>
           </p>
-          
-          {/* Features */}
-          <div className="space-y-4">
-            <Feature
-              icon="✨"
-              title="AI-Powered Matching"
-              description="Smart algorithms connect you with relevant opportunities"
-            />
-            <Feature
-              icon="📄"
-              title="AI Resume Builder"
-              description="Generate professional resumes tailored to each position"
-            />
-            <Feature
-              icon="🚀"
-              title="Priority Applications"
-              description="Stand out with featured and priority application options"
-            />
-          </div>
-          
-          {/* Stats */}
-          <div className="mt-12 grid grid-cols-3 gap-8">
-            <Stat number="10K+" label="Students" />
-            <Stat number="500+" label="Companies" />
-            <Stat number="2K+" label="Internships" />
-          </div>
         </div>
       </div>
     </div>
