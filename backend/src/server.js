@@ -1,12 +1,31 @@
+// ✅ FIX: Load environment variables FIRST before any imports
+import dotenv from 'dotenv';
+dotenv.config(); // Must run before other imports that use process.env
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
-
-// Load environment variables from .env file
-dotenv.config();
+import internshipRoutes from './routes/internship.routes.js';
+import applicationRoutes from './routes/application.routes.js';
+import resumeRoutes from './routes/resume.routes.js';
+import matchingRoutes from './routes/matching.routes.js';
+import studentRoutes from './routes/student.routes.js';
+import organizationRoutes from './routes/organization.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import {
+  apiLimiter,
+  authLimiter,
+  sanitizeInput,
+  preventXSS,
+  validateInput,
+  securityHeaders,
+  enforceHTTPS,
+  secureErrorHandler
+} from './middleware/security.middleware.js';
 
 /**
  * 🎓 WHAT IS EXPRESS?
@@ -34,58 +53,111 @@ const app = express();
  * Flow: Request → Middleware 1 → Middleware 2 → Route Handler → Response
  */
 
-// 1. HELMET - Security headers
+// 1. HTTPS ENFORCEMENT (Production only)
+app.use(enforceHTTPS);
+
+// 2. HELMET - Security headers
 /**
  * 🎓 WHY HELMET?
- * 
+ *
  * Helmet sets HTTP headers that protect against common attacks:
  * - XSS (Cross-Site Scripting)
  * - Clickjacking
  * - MIME type sniffing
- * 
+ *
  * It's like putting a security guard at the door of your API.
  */
 app.use(helmet());
 
-// 2. CORS - Cross-Origin Resource Sharing
+// 3. MICROSOFT-GRADE SECURITY HEADERS
+app.use(securityHeaders);
+
+// 4. CORS - Cross-Origin Resource Sharing
 /**
  * 🎓 WHY CORS?
- * 
+ *
  * Your frontend (localhost:5173) and backend (localhost:5000) are on
  * different origins. Browsers block this by default for security.
- * 
+ *
  * CORS tells the browser: "It's okay, these two can talk to each other"
+ *
+ * ✅ FIX: Allow both localhost AND LAN IP for development
  */
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://10.86.112.186:5173',
+  process.env.FRONTEND_URL
+].filter(Boolean); // Remove undefined/null values
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  CORS blocked origin: ${origin}`);
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
   credentials: true, // Allow cookies to be sent
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // Cache preflight for 24 hours
 }));
 
-// 3. JSON PARSER - Parse request bodies
+// 5. STRIPE WEBHOOK ROUTE - BEFORE JSON PARSER
+/**
+ * 🎓 CRITICAL: Payment Webhook Route Registration
+ *
+ * Stripe webhooks MUST be registered BEFORE express.json() because:
+ * - Stripe needs the raw request body to verify webhook signatures
+ * - If express.json() runs first, it parses the body and breaks verification
+ *
+ * Note: The webhook route in payment.routes.js uses express.raw() instead
+ */
+app.use('/api/payments', paymentRoutes);
+
+// 6. JSON PARSER - Parse request bodies
 /**
  * 🎓 WHY express.json()?
- * 
+ *
  * When frontend sends data like { email: 'test@test.com' },
  * it comes as a string. express.json() converts it to a JavaScript object.
- * 
+ *
  * Without this: req.body = "[object Object]" (useless)
  * With this: req.body = { email: 'test@test.com' } (useful!)
  */
 app.use(express.json({ limit: '10mb' })); // Allow up to 10MB JSON payloads
 
-// 4. URL ENCODED - Parse form data
+// 7. URL ENCODED - Parse form data
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use('/api/auth', authRoutes);
- app.get("/api/auth/test", (req, res) => {
-  res.json({ message: "Backend is working ✅" });
-});
-// 5. LOGGING - Development only
+// 7.5. STATIC FILES - Serve uploaded files
+/**
+ * 🎓 STATIC FILE SERVING
+ *
+ * Serve uploaded profile pictures and other static files
+ * Files in uploads/ directory will be accessible via /uploads/...
+ */
+app.use('/uploads', express.static('uploads'));
+
+// 8. INPUT SANITIZATION & XSS PROTECTION
+app.use(sanitizeInput); // Prevent NoSQL injection
+app.use(preventXSS); // Prevent XSS attacks
+app.use(validateInput); // Additional input validation
+
+// 9. GENERAL API RATE LIMITING
+// ⚠️ TEMPORARILY DISABLED - Re-enable after testing login
+// app.use('/api/', apiLimiter);
+
+// 10. LOGGING - Development only
 /**
  * 🎓 CUSTOM LOGGER MIDDLEWARE
- * 
+ *
  * Logs every request to help with debugging
  */
 if (process.env.NODE_ENV === 'development') {
@@ -96,20 +168,38 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ROUTES
+// API ROUTES
 // ═══════════════════════════════════════════════════════════
 
 /**
  * 🎓 WHAT ARE ROUTES?
- * 
+ *
  * Routes are URL patterns that your API responds to.
  * They map HTTP methods + paths to handler functions.
- * 
+ *
  * Example:
  * GET /api/students → Get all students
  * POST /api/students → Create a student
  * GET /api/students/:id → Get one student
+ *
+ * IMPORTANT: /api/payments is registered BEFORE json() middleware (line 100)
  */
+
+app.use('/api/auth', authRoutes);
+app.use('/api/internships', internshipRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/resumes', resumeRoutes);
+app.use('/api/matching', matchingRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/organizations', organizationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+// Note: /api/payments already registered on line 100 (before JSON parser)
+
+// Test endpoint
+app.get("/api/auth/test", (req, res) => {
+  res.json({ message: "Backend is working ✅" });
+});
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -201,12 +291,8 @@ app.use((err, req, res, next) => {
     });
   }
   
-  // Default error
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
+  // Default error - use secure error handler
+  secureErrorHandler(err, req, res, next);
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -226,17 +312,22 @@ const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDB();
-    
+
+    // ✅ FIX: Verify SMTP connection on server startup
+    const { verifyEmailConnection } = await import('./services/email.service.js');
+    await verifyEmailConnection();
+
     // Get port from environment or use 5000
     const PORT = process.env.PORT || 5000;
-    
-    // Start listening for requests
-    app.listen(PORT, () => {
+
+    // ✅ Listen on all network interfaces (0.0.0.0) to allow mobile access
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📝 API URL: http://localhost:${PORT}`);
+      console.log(`📝 Local API URL: http://localhost:${PORT}`);
+      console.log(`📱 Network API URL: http://10.86.112.186:${PORT}`);
     });
-    
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
@@ -259,3 +350,4 @@ process.on('unhandledRejection', (err) => {
   // Close server & exit
   process.exit(1);
 });
+
