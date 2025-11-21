@@ -8,14 +8,14 @@ This guide walks you through deploying InternshipConnect using only free service
 
 ## 🎯 Free Services We'll Use
 
-| Service | Free Tier | Limitations |
-|---------|-----------|-------------|
-| **Render** | Free | Backend sleeps after 15 min inactivity, 750 hours/month |
-| **Vercel** | Free | Unlimited bandwidth, automatic HTTPS |
-| **MongoDB Atlas** | M0 Free | 512MB storage, 100 connections |
-| **Cloudinary** | Free | 25GB storage, 25GB bandwidth/month |
-| **OpenAI** | $5 free credit | New accounts get free credits |
-| **Stripe** | Free | Pay only 2.9% + 30¢ per transaction |
+| Service           | Free Tier      | Limitations                                             |
+| ----------------- | -------------- | ------------------------------------------------------- |
+| **Render**        | Free           | Backend sleeps after 15 min inactivity, 750 hours/month |
+| **Vercel**        | Free           | Unlimited bandwidth, automatic HTTPS                    |
+| **MongoDB Atlas** | M0 Free        | 512MB storage, 100 connections                          |
+| **Cloudinary**    | Free           | 25GB storage, 25GB bandwidth/month                      |
+| **OpenAI**        | $5 free credit | New accounts get free credits                           |
+| **Stripe**        | Free           | Pay only 2.9% + 30¢ per transaction                     |
 
 **Total Monthly Cost**: **$0** 🎉
 
@@ -24,12 +24,14 @@ This guide walks you through deploying InternshipConnect using only free service
 ## ⚠️ Important: Free Tier Limitations
 
 ### Render Free Tier
+
 - **Sleep After Inactivity**: Server goes to sleep after 15 minutes of no requests
 - **Wake-up Time**: First request after sleep takes 30-60 seconds to respond
 - **Hours Limit**: 750 hours/month (enough for testing and MVP)
 - **Best For**: Development, testing, MVPs, portfolio projects
 
 ### How to Handle Sleep Issue
+
 1. **Option A**: Accept the delay (fine for portfolio/testing)
 2. **Option B**: Use a free uptime monitor to ping every 14 minutes (keeps server awake)
 3. **Option C**: Upgrade to paid tier later ($7/month for always-on)
@@ -81,6 +83,7 @@ Copy this output. This is your new `JWT_REFRESH_SECRET`.
 **Save the password** - you'll need it for connection string.
 
 Your new connection string:
+
 ```
 mongodb+srv://internship-prod-user:YOUR_NEW_PASSWORD@johnhub.v83kzkf.mongodb.net/?appName=Johnhub
 ```
@@ -113,6 +116,7 @@ Replace `YOUR_NEW_PASSWORD` with the password you copied.
 7. **Copy the new secret**
 
 Your Cloudinary credentials:
+
 - Cloud Name: `dxevtwkds` (stays the same)
 - API Key: `936296564823629` (stays the same)
 - API Secret: `[new secret you just copied]`
@@ -194,6 +198,7 @@ Fill in these exact values:
 **Name**: `internship-connect-backend`
 
 **Region**: Choose closest to you:
+
 - **Oregon (US West)** - Best for West Coast/Asia
 - **Ohio (US East)** - Best for East Coast/Europe
 - **Frankfurt (EU)** - Best for Europe/Africa
@@ -253,7 +258,7 @@ SMTP_USER=internshipconnects@gmail.com
 SMTP_PASS=paste_new_16_char_password_here
 
 # Stripe (keep test keys for now - it's free!)
-STRIPE_SECRET_KEY=sk_test_51SD056PtISWTDaPfSw9VF1UgaLTdZ1TP5p4dN2oOmQ0n6M7jzX58FNaP6l1Je1hTzGLIrKnO0D3gbBQioT148aMD00rlaikC8H
+STRIPE_SECRET_KEY=sk_test_YOUR_STRIPE_SECRET_KEY_HERE
 STRIPE_STUDENT_PREMIUM_MONTHLY=price_1STSH2PtISWTDaPfu9b9nT2h
 STRIPE_STUDENT_PREMIUM_YEARLY=price_1STSLJPtISWTDaPfDLLvCKiC
 STRIPE_STUDENT_PRO_MONTHLY=price_1STSMjPtISWTDaPfQwihSTDF
@@ -265,6 +270,7 @@ STRIPE_ORG_ENTERPRISE_YEARLY=price_1STUZqPtISWTDaPfTigyB4h3
 ```
 
 **⚠️ Important**:
+
 - Replace `YOUR_NEW_PASSWORD` with MongoDB password from Step 1.2
 - Replace JWT secrets with values from Step 1.1
 - Replace OpenAI key with value from Step 1.3
@@ -309,6 +315,7 @@ curl https://internship-connect-backend.onrender.com/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "OK",
@@ -318,11 +325,13 @@ Expected response:
 ```
 
 Also test API:
+
 ```bash
 curl https://internship-connect-backend.onrender.com/api/auth/test
 ```
 
 Expected:
+
 ```json
 {
   "message": "Backend is working ✅"
@@ -468,6 +477,7 @@ If you see this, database is working! ✅
 ### 5.1 Open Your App
 
 Visit your Vercel URL:
+
 ```
 https://internship-connect-xyz123.vercel.app
 ```
@@ -515,6 +525,7 @@ Go to **"Console"** tab.
 Should see **NO red errors**.
 
 If you see any errors, check:
+
 - CORS errors? → Verify `FRONTEND_URL` in Render matches Vercel URL exactly
 - 401 errors? → Check JWT secrets are set correctly
 - Network errors? → Check backend URL in Vercel environment variables
@@ -560,26 +571,31 @@ This will ping your backend every 5 minutes, keeping it awake!
 ### What You Have Now
 
 ✅ **Backend**: Deployed on Render (Free)
+
 - URL: `https://internship-connect-backend.onrender.com`
 - Sleeps after 15 min inactivity
 - 750 hours/month limit
 
 ✅ **Frontend**: Deployed on Vercel (Free)
+
 - URL: `https://internship-connect-xyz123.vercel.app`
 - Unlimited bandwidth
 - Global CDN
 - Automatic HTTPS
 
 ✅ **Database**: MongoDB Atlas (Free M0)
+
 - 512MB storage
 - 100 connections
 - Sufficient for MVP
 
 ✅ **File Storage**: Cloudinary (Free)
+
 - 25GB storage
 - 25GB bandwidth/month
 
 ✅ **Payments**: Stripe Test Mode (Free)
+
 - Unlimited test transactions
 - Switch to live mode when ready
 
@@ -588,17 +604,20 @@ This will ping your backend every 5 minutes, keeping it awake!
 ### Limitations to Be Aware Of
 
 **Backend (Render Free)**:
+
 - ⏱️ Sleeps after 15 minutes of inactivity
 - 🐌 First request after sleep: 30-60 seconds response time
 - 📊 750 hours/month limit (~31 days if always awake)
 - 💡 **Solution**: Use UptimeRobot to keep awake OR upgrade to $7/month
 
 **Database (MongoDB M0)**:
+
 - 💾 512MB storage limit
 - 🔌 100 max connections
 - 💡 **Upgrade when**: Storage > 400MB or users > 50
 
 **Storage (Cloudinary Free)**:
+
 - 📦 25GB storage
 - 🌐 25GB bandwidth/month
 - 💡 **Upgrade when**: Uploading many high-res images
@@ -612,6 +631,7 @@ This will ping your backend every 5 minutes, keeping it awake!
 **Symptom**: First request takes 30-60 seconds
 
 **Solutions**:
+
 1. Wait patiently (it's waking up)
 2. Set up UptimeRobot (Step 6)
 3. Upgrade to Render Starter ($7/mo)
@@ -623,6 +643,7 @@ This will ping your backend every 5 minutes, keeping it awake!
 **Symptom**: Console shows "Access-Control-Allow-Origin" error
 
 **Fix**:
+
 1. Go to Render → Environment
 2. Verify `FRONTEND_URL` exactly matches Vercel URL
 3. No trailing slash: `https://your-app.vercel.app` ✅
@@ -636,6 +657,7 @@ This will ping your backend every 5 minutes, keeping it awake!
 **Symptom**: Backend logs show "MongoNetworkError"
 
 **Fix**:
+
 1. Go to MongoDB Atlas → Network Access
 2. Verify `0.0.0.0/0` is added
 3. Check connection string in Render environment variables
@@ -648,6 +670,7 @@ This will ping your backend every 5 minutes, keeping it awake!
 **Symptom**: Feature not working, logs show "undefined"
 
 **Fix**:
+
 1. Go to Render → Environment
 2. Check variable name spelling (case-sensitive!)
 3. Check no extra spaces in value
@@ -660,6 +683,7 @@ This will ping your backend every 5 minutes, keeping it awake!
 **Symptom**: Deployment failed with error message
 
 **Common Fixes**:
+
 1. Check `VITE_API_URL` is set correctly
 2. Verify `npm run build` works locally
 3. Check Vercel logs for specific error
@@ -669,13 +693,13 @@ This will ping your backend every 5 minutes, keeping it awake!
 
 ## 💰 Cost Tracking
 
-| Service | Free Limit | Current Usage | Status |
-|---------|------------|---------------|--------|
-| Render | 750 hrs/mo | Check dashboard | 🟢 Free |
-| Vercel | Unlimited | Unlimited | 🟢 Free |
-| MongoDB | 512MB | Check Atlas | 🟢 Free |
-| Cloudinary | 25GB/mo | Check console | 🟢 Free |
-| OpenAI | $5 credit | Check usage | 🟢 Free credits |
+| Service    | Free Limit | Current Usage   | Status          |
+| ---------- | ---------- | --------------- | --------------- |
+| Render     | 750 hrs/mo | Check dashboard | 🟢 Free         |
+| Vercel     | Unlimited  | Unlimited       | 🟢 Free         |
+| MongoDB    | 512MB      | Check Atlas     | 🟢 Free         |
+| Cloudinary | 25GB/mo    | Check console   | 🟢 Free         |
+| OpenAI     | $5 credit  | Check usage     | 🟢 Free credits |
 
 **Total**: **$0/month** 🎉
 
@@ -684,19 +708,25 @@ This will ping your backend every 5 minutes, keeping it awake!
 ## 🚀 When to Upgrade?
 
 ### Render ($7/month)
+
 Upgrade when:
+
 - ⏱️ Wake-up delay is annoying users
 - 📊 Hitting 750 hour limit
 - 🚀 Need better performance
 
 ### MongoDB Atlas ($57/month for M10)
+
 Upgrade when:
+
 - 💾 Storage > 400MB
 - 🔌 Connections > 80
 - 👥 Users > 50 active
 
 ### Vercel ($20/month)
+
 Upgrade when:
+
 - 👥 Team collaboration needed
 - 📊 Advanced analytics wanted
 - 🎨 Password protection needed
@@ -733,6 +763,7 @@ Your InternshipConnect platform is now **LIVE** on the internet for **FREE**! �
 - ✅ Total Cost: **$0/month**
 
 **Your Live URLs**:
+
 - Frontend: `https://your-app.vercel.app`
 - Backend: `https://your-backend.onrender.com`
 - Health Check: `https://your-backend.onrender.com/health`
@@ -747,6 +778,7 @@ Share your app with the world! 🌍
 **Cost**: FREE! 💰
 
 Need help? Refer to:
+
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Full deployment guide
 - [PRODUCTION_READY_REPORT.md](PRODUCTION_READY_REPORT.md) - Security audit
 - [README.md](README.md) - Project documentation

@@ -14,9 +14,11 @@ All pricing plan content has been **fully created and implemented** for both stu
 ## 📊 Student Pricing Plans
 
 ### 1. **Free Plan** (Current Default)
+
 **Price:** $0/month
 
 **Features:**
+
 - ✅ Browse all internship listings
 - ✅ Apply to unlimited internships
 - ✅ Basic profile creation
@@ -26,12 +28,14 @@ All pricing plan content has been **fully created and implemented** for both stu
 - ✅ 3 AI-generated resumes (backend limit)
 
 **Limitations:**
+
 - ❌ No AI resume generation (limited to 3)
 - ❌ No AI matching recommendations
 - ❌ Basic search filters only
 - ❌ No profile customization
 
 **Backend Features:**
+
 ```javascript
 {
   aiResumeBuilder: true,
@@ -46,15 +50,19 @@ All pricing plan content has been **fully created and implemented** for both stu
 ---
 
 ### 2. **Premium Plan** (Most Popular)
+
 **Price:**
+
 - Monthly: $9.99/month
 - Yearly: $99/year (17% savings)
 
 **Stripe Product IDs:**
+
 - Monthly: `prod_TQIsI4mwO6puiN`
 - Yearly: `prod_TQIxMTN14avxh2`
 
 **Features:**
+
 - ✅ Everything in Free
 - ✅ **10 AI-generated resumes per month**
 - ✅ AI-powered internship matching
@@ -65,6 +73,7 @@ All pricing plan content has been **fully created and implemented** for both stu
 - ✅ Priority customer support
 
 **Backend Features:**
+
 ```javascript
 {
   aiResumeBuilder: true,
@@ -80,15 +89,19 @@ All pricing plan content has been **fully created and implemented** for both stu
 ---
 
 ### 3. **Pro Plan**
+
 **Price:**
+
 - Monthly: $19.99/month
 - Yearly: $199/year (17% savings)
 
 **Stripe Product IDs:**
+
 - Monthly: `prod_TQIyIGzX34IDQs`
 - Yearly: `prod_TQKm4zmhkOAqec`
 
 **Features:**
+
 - ✅ Everything in Premium
 - ✅ **Unlimited AI resume generation**
 - ✅ Personalized career coaching
@@ -99,6 +112,7 @@ All pricing plan content has been **fully created and implemented** for both stu
 - ✅ Dedicated account manager
 
 **Backend Features:**
+
 ```javascript
 {
   aiResumeBuilder: true,
@@ -117,9 +131,11 @@ All pricing plan content has been **fully created and implemented** for both stu
 ## 🏢 Organization Pricing Plans
 
 ### 1. **Basic Plan** (Current Default)
+
 **Price:** $0/month
 
 **Features:**
+
 - ✅ Post up to 3 internship listings
 - ✅ Basic candidate search
 - ✅ Application management dashboard
@@ -127,11 +143,13 @@ All pricing plan content has been **fully created and implemented** for both stu
 - ✅ Standard support
 
 **Limitations:**
+
 - ❌ No featured listings
 - ❌ No AI candidate matching
 - ❌ Limited analytics
 
 **Backend Features:**
+
 ```javascript
 {
   internshipListings: 3,
@@ -144,15 +162,19 @@ All pricing plan content has been **fully created and implemented** for both stu
 ---
 
 ### 2. **Professional Plan** (Most Popular)
+
 **Price:**
+
 - Monthly: $49/month
 - Yearly: $490/year (17% savings)
 
 **Stripe Product IDs:**
+
 - Monthly: `prod_TQKtRirDuwXw9i`
 - Yearly: `prod_TQKvDt8z3NY1bD`
 
 **Features:**
+
 - ✅ Everything in Basic
 - ✅ **Unlimited internship postings**
 - ✅ 5 featured listings per month
@@ -163,6 +185,7 @@ All pricing plan content has been **fully created and implemented** for both stu
 - ✅ Team collaboration tools
 
 **Backend Features:**
+
 ```javascript
 {
   internshipListings: 20,
@@ -177,15 +200,19 @@ All pricing plan content has been **fully created and implemented** for both stu
 ---
 
 ### 3. **Enterprise Plan**
+
 **Price:**
+
 - Monthly: $199/month
 - Yearly: $1,990/year (17% savings)
 
 **Stripe Product IDs:**
+
 - Monthly: `prod_TQLDAxJdYAsweY`
 - Yearly: `prod_TQLGvXT9h2hyDl`
 
 **Features:**
+
 - ✅ Everything in Professional
 - ✅ **Unlimited featured listings**
 - ✅ Dedicated account manager
@@ -197,6 +224,7 @@ All pricing plan content has been **fully created and implemented** for both stu
 - ✅ Custom contract & SLA
 
 **Backend Features:**
+
 ```javascript
 {
   internshipListings: -1, // unlimited
@@ -215,9 +243,11 @@ All pricing plan content has been **fully created and implemented** for both stu
 ## 🎨 Frontend Implementation
 
 ### Pricing Page Features
+
 **Location:** `frontend/src/pages/PricingPage.jsx`
 
 **Features:**
+
 - ✅ **Monthly/Yearly Toggle** with 17% savings badge
 - ✅ **3 Plan Cards** for each user type (student/organization)
 - ✅ **"Most Popular" Badge** on middle tier
@@ -231,6 +261,7 @@ All pricing plan content has been **fully created and implemented** for both stu
 - ✅ **Responsive Design** (mobile, tablet, desktop)
 
 ### UI Components Used
+
 - **Icons:** Sparkles (Free/Basic), Zap (Premium/Professional), Crown (Pro/Enterprise)
 - **Colors:**
   - Free/Basic: Neutral gray
@@ -244,30 +275,37 @@ All pricing plan content has been **fully created and implemented** for both stu
 ## 🔧 Backend Implementation
 
 ### Payment Controller
+
 **Location:** `backend/src/controllers/payment.controller.js`
 
 **Endpoints:**
+
 1. **POST /api/payments/create-checkout**
+
    - Creates Stripe checkout session
    - Validates plan and user role
    - Redirects to Stripe hosted checkout
 
 2. **POST /api/payments/webhook**
+
    - Handles Stripe webhook events
    - Updates user subscription status
    - Records payments in database
 
 3. **GET /api/payments/subscription**
+
    - Returns current subscription status
    - Fetches live data from Stripe
    - Falls back to cached data if Stripe fails
 
 4. **POST /api/payments/portal**
+
    - Creates Stripe customer portal session
    - Allows users to manage subscription
    - Update payment method, cancel, etc.
 
 5. **POST /api/payments/cancel**
+
    - Cancels subscription at period end
    - Doesn't cancel immediately
    - Returns cancellation date
@@ -277,9 +315,11 @@ All pricing plan content has been **fully created and implemented** for both stu
    - Formatted for frontend consumption
 
 ### Payment Service
+
 **Location:** `backend/src/services/payment.service.js`
 
 **Features:**
+
 - ✅ Stripe integration with checkout sessions
 - ✅ Subscription management (create, update, cancel)
 - ✅ Webhook signature verification
@@ -292,8 +332,9 @@ All pricing plan content has been **fully created and implemented** for both stu
 ## 💳 Stripe Configuration
 
 ### Environment Variables (`.env`)
+
 ```bash
-STRIPE_SECRET_KEY=sk_test_51SD056PtISWTDaPfSw9VF1UgaLTdZ1TP5p4dN2oOmQ0n6M7jzX58FNaP6l1Je1hTzGLIrKnO0D3gbBQioT148aMD00rlaikC8H
+STRIPE_SECRET_KEY=sk_test_YOUR_STRIPE_SECRET_KEY_HERE
 
 # Student Plans
 STRIPE_STUDENT_PREMIUM_MONTHLY=prod_TQIsI4mwO6puiN
@@ -315,11 +356,13 @@ STRIPE_ORG_ENTERPRISE_YEARLY=prod_TQLGvXT9h2hyDl
 ## 🔄 Payment Flow
 
 ### 1. User Clicks "Upgrade to Premium"
+
 ```
 User → PricingPage → handlePlanSelect()
 ```
 
 ### 2. Create Checkout Session
+
 ```
 Frontend API Call → POST /api/payments/create-checkout
 {
@@ -329,18 +372,21 @@ Frontend API Call → POST /api/payments/create-checkout
 ```
 
 ### 3. Backend Creates Stripe Session
+
 ```
 Backend → Stripe API → Create Checkout Session
 Returns: { sessionId, url }
 ```
 
 ### 4. Redirect to Stripe
+
 ```
 Frontend → window.location.href = stripeCheckoutUrl
 User completes payment on Stripe hosted page
 ```
 
 ### 5. Stripe Webhook
+
 ```
 Stripe → POST /api/payments/webhook
 Backend updates User.subscription:
@@ -355,6 +401,7 @@ Backend updates User.subscription:
 ```
 
 ### 6. Success Redirect
+
 ```
 Stripe → /dashboard/settings?payment=success&session_id=xxx
 User sees success message
@@ -367,16 +414,20 @@ User sees success message
 The pricing page includes 5 comprehensive FAQs:
 
 1. **Can I switch plans at any time?**
+
    - Yes, instant upgrades/downgrades with pro-rata billing
 
 2. **What happens when I upgrade?**
+
    - Instant access to all premium features
    - Pro-rata billing adjustment
 
 3. **Do you offer refunds?**
+
    - 14-day money-back guarantee for all premium plans
 
 4. **How does AI resume generation work?**
+
    - AI analyzes profile to create tailored, ATS-friendly resumes
 
 5. **Is my data secure?**
@@ -387,6 +438,7 @@ The pricing page includes 5 comprehensive FAQs:
 ## 🎯 Call-to-Action Section
 
 Bottom of page includes:
+
 - **Heading:** "Still have questions?"
 - **Subheading:** "Our team is here to help you find the perfect plan for your needs"
 - **Buttons:**
@@ -398,6 +450,7 @@ Bottom of page includes:
 ## ✅ Implementation Checklist
 
 ### Frontend
+
 - [x] Pricing page with all 3 plans per user type
 - [x] Monthly/yearly billing toggle
 - [x] Savings badge (17%)
@@ -413,6 +466,7 @@ Bottom of page includes:
 - [x] Stripe checkout integration
 
 ### Backend
+
 - [x] Payment controller with 6 endpoints
 - [x] Payment service with Stripe integration
 - [x] Subscription plan definitions
@@ -424,6 +478,7 @@ Bottom of page includes:
 - [x] Error handling
 
 ### Stripe Configuration
+
 - [x] Stripe secret key configured
 - [x] 8 product price IDs configured
 - [x] Webhook endpoint ready (needs public URL)
@@ -431,6 +486,7 @@ Bottom of page includes:
 - [x] Customer portal enabled
 
 ### Database
+
 - [x] User model with subscription fields
 - [x] Payment model for transaction records
 - [x] Subscription status tracking
@@ -441,6 +497,7 @@ Bottom of page includes:
 ## 💡 Usage Example
 
 ### For Students
+
 1. Navigate to `/dashboard/pricing`
 2. Toggle between monthly/yearly
 3. Click "Upgrade to Premium" on Premium plan
@@ -451,6 +508,7 @@ Bottom of page includes:
 8. Subscription activated with 10 AI resumes/month
 
 ### For Organizations
+
 1. Navigate to `/dashboard/pricing`
 2. See organization-specific plans
 3. Click "Upgrade Now" on Professional plan
@@ -462,13 +520,16 @@ Bottom of page includes:
 ## 🎨 Design Highlights
 
 ### Visual Hierarchy
+
 1. **Most Popular Plan** (middle tier)
+
    - Scale: 105% (slightly larger)
    - Border: Primary blue (2px)
    - Shadow: Extra large
    - Badge: "Most Popular" at top
 
 2. **Free/Basic Plan** (left)
+
    - Neutral colors
    - "Current Plan" badge
    - Clear limitations list
@@ -479,11 +540,13 @@ Bottom of page includes:
    - Premium features highlighted
 
 ### Color Coding
+
 - **Sparkles Icon:** Free/Basic (gray)
 - **Zap Icon:** Premium/Professional (blue)
 - **Crown Icon:** Pro/Enterprise (amber/gold)
 
 ### Interaction States
+
 - **Default:** Clean, minimal shadow
 - **Hover:** Shadow increases, subtle scale
 - **Current Plan:** Disabled button, gray background
@@ -518,6 +581,7 @@ Bottom of page includes:
 3. **Product IDs:** All 8 product IDs are configured and ready. These are Stripe product IDs, not price IDs. The backend maps them correctly.
 
 4. **Savings Calculation:** 17% savings for yearly plans is hardcoded. This matches the actual pricing:
+
    - Premium: $9.99 × 12 = $119.88 → Yearly: $99 (17% off)
    - Pro: $19.99 × 12 = $239.88 → Yearly: $199 (17% off)
    - Professional: $49 × 12 = $588 → Yearly: $490 (17% off)
