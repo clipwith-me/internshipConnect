@@ -31,24 +31,35 @@ const applicationSchema = new mongoose.Schema({
   // APPLICATION MATERIALS
   // ═══════════════════════════════════════════════════════════
   
+  // Resume attachment (optional - student can apply without resume)
   resume: {
     fileName: String,
-    fileUrl: {
-      type: String,
-      required: true
-    },
+    fileUrl: String, // ✅ FIX: Made optional - not all applications require resume upload
     publicId: String,
     uploadedAt: {
       type: Date,
       default: Date.now
     }
   },
-  
+
+  // Cover letter text (optional)
   coverLetter: {
     type: String,
     maxlength: [3000, 'Cover letter cannot exceed 3000 characters']
   },
-  
+
+  // ✅ NEW: Cover letter file upload support
+  coverLetterFile: {
+    fileName: String,
+    fileUrl: String,
+    mimeType: String,
+    fileSize: Number,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  },
+
   portfolio: {
     url: String,
     description: String

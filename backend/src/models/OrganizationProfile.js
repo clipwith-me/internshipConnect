@@ -81,12 +81,14 @@ const organizationProfileSchema = new mongoose.Schema({
   address: String,
   city: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   state: String,
   country: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   zipCode: String
   // Removed coordinates
@@ -408,24 +410,13 @@ const organizationProfileSchema = new mongoose.Schema({
 // INDEXES
 // ═══════════════════════════════════════════════════════════
 
-// Geospatial index
-// organizationProfileSchema.index({ 
-//   'companyInfo.headquarters.coordinates': '2dsphere' 
-// });
-
-// Text search
-// organizationProfileSchema.index({ 'companyInfo.name': 'text', });
-// organizationProfileSchema.index({ 'description.short': 'text' });
-// organizationProfileSchema.index({ 'description.full': 'text' });
-
-// Common queries
-organizationProfileSchema.index({ user: 1 });
-// organizationProfileSchema.index({ 'companyInfo.name': 1 });
-// organizationProfileSchema.index({ 'companyInfo.industry': 1 });
-// organizationProfileSchema.index({ 'verification.status': 1 });
-// organizationProfileSchema.index({ status: 1 });
-// organizationProfileSchema.index({ 'verification.trustScore': -1 });
-// organizationProfileSchema.index({ createdAt: -1 });
+// ✅ PERFORMANCE: Critical indexes for fast queries
+// Note: 'user' and 'companyInfo.name' already have unique:true which creates indexes
+// Only add indexes that don't have unique:true or index:true in schema
+organizationProfileSchema.index({ 'companyInfo.industry': 1 });
+organizationProfileSchema.index({ 'verification.status': 1 });
+organizationProfileSchema.index({ status: 1 });
+organizationProfileSchema.index({ createdAt: -1 });
 
 // ═══════════════════════════════════════════════════════════
 // VIRTUALS

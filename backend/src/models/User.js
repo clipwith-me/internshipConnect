@@ -68,12 +68,14 @@ const userSchema = new mongoose.Schema({
   subscription: {
     plan: {
       type: String,
-      enum: ['free', 'premium', 'enterprise'],
-      default: 'free'
+      enum: ['free', 'basic', 'premium', 'pro', 'professional', 'enterprise'],
+      default: function() {
+        return this.role === 'student' ? 'free' : 'basic';
+      }
     },
     status: {
       type: String,
-      enum: ['active', 'cancelled', 'expired', 'trialing'],
+      enum: ['active', 'cancelled', 'expired', 'trialing', 'inactive', 'past_due'],
       default: 'active'
     },
     startDate: {
@@ -81,7 +83,13 @@ const userSchema = new mongoose.Schema({
       default: Date.now
     },
     endDate: Date,
-    
+    currentPeriodEnd: Date,
+    billingPeriod: {
+      type: String,
+      enum: ['monthly', 'yearly'],
+      default: 'monthly'
+    },
+
     // Stripe integration
     stripeCustomerId: String,
     stripeSubscriptionId: String,
@@ -117,15 +125,12 @@ const userSchema = new mongoose.Schema({
 // ═══════════════════════════════════════════════════════════
 
 // Single field indexes
-userSchema.index({ email: 1 });  // 1 = ascending order
+// Note: email already has unique index from schema definition (line 19)
 userSchema.index({ role: 1 });
 
 // Compound index for common queries
 userSchema.index({ email: 1, role: 1 });
 userSchema.index({ 'subscription.plan': 1, 'subscription.status': 1 });
-
-// Text index for search
-userSchema.index({ email: 'text' });
 
 // ═══════════════════════════════════════════════════════════
 // 🎓 VIRTUAL PROPERTIES - Computed fields not stored in DB

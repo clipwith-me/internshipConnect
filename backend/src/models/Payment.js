@@ -29,8 +29,7 @@ const paymentSchema = new mongoose.Schema({
   transactionId: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true // unique automatically creates an index
   },
   
   // ═══════════════════════════════════════════════════════════
@@ -222,7 +221,7 @@ const paymentSchema = new mongoose.Schema({
 paymentSchema.index({ user: 1, createdAt: -1 });
 paymentSchema.index({ status: 1, createdAt: -1 });
 paymentSchema.index({ 'purchase.type': 1 });
-paymentSchema.index({ transactionId: 1 });
+// Note: transactionId already has unique index from schema definition (line 32)
 paymentSchema.index({ 'providerData.customerId': 1 });
 paymentSchema.index({ 'providerData.subscriptionId': 1 });
 paymentSchema.index({ completedAt: -1 });

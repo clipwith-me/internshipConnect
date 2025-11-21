@@ -5,6 +5,7 @@ import Internship from './Internship.js';
 import Application from './Application.js';
 import Resume from './Resume.js';
 import Payment from './Payment.js';
+import Notification from './Notification.js';
 
 export {
   User,
@@ -13,7 +14,8 @@ export {
   Internship,
   Application,
   Resume,
-  Payment
+  Payment,
+  Notification
 };
 
 export default {
@@ -23,5 +25,6 @@ export default {
   Internship,
   Application,
   Resume,
-  Payment
+  Payment,
+  Notification
 };

@@ -15,40 +15,48 @@ import { Outlet, Link } from 'react-router-dom';
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen bg-neutral-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm lg:w-96">
-          {/* Logo */}
-          <div className="mb-8">
-            <Link to="/" className="inline-block">
-              <h1 className="text-3xl font-bold text-primary-500">
-                InternshipConnect
-              </h1>
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24 py-12">
+        <div className="mx-auto w-full max-w-sm lg:w-[440px]">
+          {/* Logo - Microsoft Style: Clean, moderate size, centered on auth pages */}
+          <div className="mb-12 text-center">
+            <Link to="/" className="inline-block group">
+              <img
+                src="/intern-logo.png"
+                alt="InternshipConnect"
+                className="h-32 w-auto object-contain mx-auto group-hover:opacity-80 transition-opacity duration-200"
+                onError={(e) => {
+                  e.target.src = '/intern-logo.jpeg';
+                }}
+              />
+              <p className="text-sm text-neutral-600 mt-3 font-medium tracking-wide">AI-Powered Career Matching</p>
             </Link>
           </div>
-          
-          {/* Form Content (from Outlet) */}
-          <Outlet />
-          
+
+          {/* Form Content Card */}
+          <div className="bg-white rounded-2xl shadow-lg border border-neutral-200/50 p-8 sm:p-10 backdrop-blur-sm">
+            <Outlet />
+          </div>
+
           {/* Footer Links */}
-          <div className="mt-8 text-center text-sm text-neutral-500">
+          <div className="mt-8 text-center text-xs text-neutral-500">
             <p>
               By continuing, you agree to our{' '}
-              <Link to="/terms" className="text-primary-500 hover:text-primary-600">
+              <Link to="/terms" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link to="/privacy" className="text-primary-500 hover:text-primary-600">
+              <Link to="/privacy" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
                 Privacy Policy
               </Link>
             </p>
           </div>
         </div>
       </div>
-      
+
       {/* Right Side - Branding/Image (hidden on mobile) */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
+      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -70,18 +78,22 @@ const AuthLayout = () => {
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
         </div>
-        
+
+        {/* Decorative gradient orbs */}
+        <div className="absolute top-20 right-20 w-72 h-72 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-primary-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-20 text-white">
-          <h2 className="text-4xl font-bold mb-6">
+        <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20 text-white">
+          <h2 className="text-4xl xl:text-5xl font-bold mb-6 leading-tight">
             Connect with your dream internship
           </h2>
-          <p className="text-xl text-primary-100 mb-8">
+          <p className="text-lg xl:text-xl text-primary-100 mb-12 leading-relaxed">
             Join thousands of students and organizations using AI-powered matching to find the perfect fit.
           </p>
-          
+
           {/* Features */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             <Feature
               icon="✨"
               title="AI-Powered Matching"
@@ -98,9 +110,9 @@ const AuthLayout = () => {
               description="Stand out with featured and priority application options"
             />
           </div>
-          
+
           {/* Stats */}
-          <div className="mt-12 grid grid-cols-3 gap-8">
+          <div className="mt-16 grid grid-cols-3 gap-8">
             <Stat number="10K+" label="Students" />
             <Stat number="500+" label="Companies" />
             <Stat number="2K+" label="Internships" />

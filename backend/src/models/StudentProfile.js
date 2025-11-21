@@ -430,29 +430,15 @@ const studentProfileSchema = new mongoose.Schema({
 // INDEXES
 // ═══════════════════════════════════════════════════════════
 
-// Geospatial index for location-based search
-// studentProfileSchema.index({ 'personalInfo.location.coordinates': '2dsphere' });
-
-// Text search index
-// studentProfileSchema.index({
-//   'personalInfo.firstName': 'text',
-//   'personalInfo.lastName': 'text',
-//   'bio': 'text',
-//   'headline': 'text'
-// });
-
-// Common query indexes
-studentProfileSchema.index({ user: 1 });
-// studentProfileSchema.index({ 'skills.name': 1 });
-// studentProfileSchema.index({ 'education.graduationYear': 1 });
-// studentProfileSchema.index({ 'education.institution': 1 });
-// studentProfileSchema.index({ profileCompleteness: -1 });
-studentProfileSchema.index({ createdAt: -1 });
-
-// Compound indexes for filtering
-// Separate indexes - MongoDB can't compound index multiple arrays
-//  studentProfileSchema.index({ 'preferences.internshipTypes': 1 });
-//  studentProfileSchema.index({ 'preferences.industries': 1 });
+// ✅ PERFORMANCE: Critical indexes for fast queries
+// Note: 'user' already has unique:true which creates an index
+// createdAt has an index from earlier (line 451), so we don't duplicate it
+// Only add indexes that don't have unique:true or index:true in schema
+studentProfileSchema.index({ 'skills.name': 1 });
+studentProfileSchema.index({ 'education.graduationYear': 1 });
+studentProfileSchema.index({ 'education.institution': 1 });
+studentProfileSchema.index({ profileCompleteness: -1 });
+studentProfileSchema.index({ status: 1 });
 
 // ═══════════════════════════════════════════════════════════
 // VIRTUALS

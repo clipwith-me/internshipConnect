@@ -1,6 +1,7 @@
 // backend/src/controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
 import { User, StudentProfile, OrganizationProfile } from '../models/index.js';
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/email.service.js';
 /**
  * 🎓 LEARNING: Authentication Controller
  * 
@@ -102,12 +103,17 @@ export const register = async (req, res) => {
       profile = await OrganizationProfile.create({
         user: user._id,
         companyInfo: {
-          name: profileData.companyName || '',
-          industry: profileData.industry || 'technology'
+          name: profileData.companyName || 'New Organization',
+          industry: profileData.industry || 'technology',
+          companySize: profileData.companySize || '1-10',
+          headquarters: {
+            city: profileData.city || 'Not specified',
+            country: profileData.country || 'Not specified'
+          }
         },
         description: {
-          short: '',
-          full: ''
+          short: profileData.shortDescription || 'A new organization on InternshipConnect',
+          full: profileData.fullDescription || 'This organization is setting up their profile. Check back soon for more information!'
         },
         contactInfo: {
           primaryEmail: email
@@ -117,7 +123,25 @@ export const register = async (req, res) => {
     
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
-    
+
+    // Send welcome email (don't block registration if it fails)
+    try {
+      const userName = role === 'student'
+        ? (profileData.firstName || user.email.split('@')[0])
+        : (profileData.companyName || 'there');
+
+      await sendWelcomeEmail({
+        to: email,
+        userName,
+        role
+      });
+
+      console.log(`📧 Welcome email sent to: ${email}`);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail registration if email fails
+    }
+
     // Return user data (without password)
     res.status(201).json({
       success: true,
@@ -140,10 +164,30 @@ export const register = async (req, res) => {
     
   } catch (error) {
     console.error('Register error:', error);
+
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors
+      });
+    }
+
+    // Handle duplicate key error (E11000)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({
+        success: false,
+        message: `${field === 'email' ? 'Email' : field.charAt(0).toUpperCase() + field.slice(1)} already exists`
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Registration failed',
-      error: error.message
+      message: 'Registration failed. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -288,8 +332,8 @@ export const refreshToken = async (req, res) => {
  */
 export const getMe = async (req, res) => {
   try {
-    // req.user is set by auth middleware
-    const user = await User.findById(req.user.userId);
+    // ✅ FIX: req.user is set by auth middleware with _id property, not userId
+    const user = await User.findById(req.user._id);
     
     if (!user) {
       return res.status(404).json({
@@ -387,11 +431,21 @@ export const forgotPassword = async (req, res) => {
     // Generate reset token
     const resetToken = user.generateResetToken();
     await user.save();
-    
-    // TODO: Send email with reset link
-    // const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password/${resetToken}`;
-    // await sendEmail({ to: email, subject: 'Password Reset', resetUrl });
-    
+
+    // Send password reset email
+    try {
+      await sendPasswordResetEmail({
+        to: email,
+        resetToken,
+        userName: user.email.split('@')[0] // Use email username as fallback
+      });
+
+      console.log(`📧 Password reset email sent to: ${email}`);
+    } catch (emailError) {
+      console.error('Failed to send reset email:', emailError);
+      // Don't fail the request if email fails
+    }
+
     res.json({
       success: true,
       message: 'Password reset link sent to email',
@@ -467,14 +521,81 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════
+// CHANGE PASSWORD (AUTHENTICATED)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * @route   PUT /api/auth/change-password
+ * @desc    Change password for authenticated user
+ * @access  Private
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters'
+      });
+    }
+
+    // Get user with password
+    const user = await User.findById(req.user._id).select('+password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to change password',
+      error: error.message
+    });
+  }
+};
+
 /**
  * 🎓 USAGE IN ROUTES:
- * 
+ *
  * import * as authController from '../controllers/auth.controller.js';
- * 
+ *
  * router.post('/register', authController.register);
  * router.post('/login', authController.login);
  * router.post('/refresh', authController.refreshToken);
  * router.get('/me', authMiddleware, authController.getMe);
  * router.post('/logout', authMiddleware, authController.logout);
+ * router.put('/change-password', authMiddleware, authController.changePassword);
  */

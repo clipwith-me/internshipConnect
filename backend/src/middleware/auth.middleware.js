@@ -60,7 +60,7 @@ export const authenticate = async (req, res, next) => {
     
     // Attach user info to request
     req.user = {
-      userId: user._id,
+      _id: user._id,
       email: user.email,
       role: user.role,
       subscription: user.subscription
@@ -174,8 +174,9 @@ export const requireFeature = (featureName) => {
         message: 'Not authenticated'
       });
     }
-    
-    const user = await User.findById(req.user.userId);
+
+    // ✅ FIX: Use req.user._id (set by authenticate middleware), not req.user.userId
+    const user = await User.findById(req.user._id);
     
     if (!user.hasFeature(featureName)) {
       return res.status(403).json({

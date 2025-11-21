@@ -2,6 +2,7 @@
 import express from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
+import { authLimiter, passwordResetLimiter } from '../middleware/security.middleware.js';
 import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
@@ -51,6 +52,7 @@ const validate = (req, res, next) => {
  * @access  Public
  */
 router.post('/register',
+  authLimiter, // Rate limiting for brute-force protection
   [
     body('email')
       .isEmail()
@@ -90,6 +92,7 @@ router.post('/register',
  * @access  Public
  */
 router.post('/login',
+  authLimiter, // Rate limiting for brute-force protection
   [
     body('email')
       .isEmail()
@@ -144,6 +147,7 @@ router.post('/logout',
  * @access  Public
  */
 router.post('/forgot-password',
+  passwordResetLimiter, // Strict rate limiting for password reset
   [
     body('email')
       .isEmail()
@@ -160,6 +164,7 @@ router.post('/forgot-password',
  * @access  Public
  */
 router.post('/reset-password/:token',
+  passwordResetLimiter, // Strict rate limiting for password reset
   [
     body('password')
       .isLength({ min: 8 })
@@ -169,6 +174,25 @@ router.post('/reset-password/:token',
     validate
   ],
   authController.resetPassword
+);
+
+/**
+ * @route   PUT /api/auth/change-password
+ * @desc    Change password for authenticated user
+ * @access  Private
+ */
+router.put('/change-password',
+  authenticate,
+  [
+    body('currentPassword')
+      .notEmpty()
+      .withMessage('Current password is required'),
+    body('newPassword')
+      .isLength({ min: 8 })
+      .withMessage('New password must be at least 8 characters'),
+    validate
+  ],
+  authController.changePassword
 );
 
 export default router;

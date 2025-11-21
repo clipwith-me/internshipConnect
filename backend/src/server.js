@@ -81,19 +81,31 @@ app.use(securityHeaders);
  *
  * CORS tells the browser: "It's okay, these two can talk to each other"
  *
- * ✅ FIX: Allow both localhost AND LAN IP for development
+ * ✅ PRODUCTION-READY: Environment-based origin checking
  */
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://10.86.112.186:5173',
-  process.env.FRONTEND_URL
-].filter(Boolean); // Remove undefined/null values
+const isProduction = process.env.NODE_ENV === 'production';
+
+// In production: Only allow FRONTEND_URL
+// In development: Allow localhost, 127.0.0.1, and FRONTEND_URL
+const allowedOrigins = isProduction
+  ? [process.env.FRONTEND_URL].filter(Boolean)
+  : [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+    // In production: Require origin header (no null origins)
+    // In development: Allow no origin (Postman, mobile apps, etc.)
+    if (!origin) {
+      if (isProduction) {
+        console.warn('⚠️  CORS blocked: Missing origin header in production');
+        return callback(new Error('Origin header required'));
+      }
+      return callback(null, true);
+    }
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -151,8 +163,8 @@ app.use(preventXSS); // Prevent XSS attacks
 app.use(validateInput); // Additional input validation
 
 // 9. GENERAL API RATE LIMITING
-// ⚠️ TEMPORARILY DISABLED - Re-enable after testing login
-// app.use('/api/', apiLimiter);
+// ✅ ENABLED: Protection against API abuse and DoS attacks
+app.use('/api/', apiLimiter);
 
 // 10. LOGGING - Development only
 /**
@@ -320,13 +332,33 @@ const startServer = async () => {
     // Get port from environment or use 5000
     const PORT = process.env.PORT || 5000;
 
+    // Get network IP dynamically (development only)
+    let networkIP = null;
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const os = await import('os');
+        const networkInterfaces = os.networkInterfaces();
+        networkIP = Object.values(networkInterfaces)
+          .flat()
+          .find(iface => iface.family === 'IPv4' && !iface.internal)?.address;
+      } catch (err) {
+        // Silently fail - network IP is just for convenience
+      }
+    }
+
     // ✅ Listen on all network interfaces (0.0.0.0) to allow mobile access
-    app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`📝 Local API URL: http://localhost:${PORT}`);
-      console.log(`📱 Network API URL: http://10.86.112.186:${PORT}`);
+
+      if (networkIP) {
+        console.log(`📱 Network API URL: http://${networkIP}:${PORT}`);
+      }
     });
+
+    // Store server reference for graceful shutdown
+    global.server = server;
 
   } catch (error) {
     console.error('Failed to start server:', error);
@@ -339,15 +371,45 @@ startServer();
 
 /**
  * 🎓 GRACEFUL SHUTDOWN
- * 
+ *
  * Handle server shutdown properly:
  * - Close database connections
  * - Finish pending requests
  * - Clean up resources
  */
+const gracefulShutdown = async (signal) => {
+  console.log(`\n${signal} received: Starting graceful shutdown...`);
+
+  if (global.server) {
+    global.server.close(async () => {
+      console.log('✅ HTTP server closed');
+
+      try {
+        const mongoose = await import('mongoose');
+        await mongoose.connection.close();
+        console.log('✅ MongoDB connection closed');
+        process.exit(0);
+      } catch (error) {
+        console.error('❌ Error during shutdown:', error);
+        process.exit(1);
+      }
+    });
+
+    // Force close after 10 seconds
+    setTimeout(() => {
+      console.error('⚠️  Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  } else {
+    process.exit(0);
+  }
+};
+
 process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled Rejection:', err);
-  // Close server & exit
-  process.exit(1);
+  gracefulShutdown('UNHANDLED_REJECTION');
 });
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 

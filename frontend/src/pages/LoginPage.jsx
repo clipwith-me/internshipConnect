@@ -103,28 +103,28 @@ const LoginPage = () => {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-neutral-900 mb-2">
+      <div className="mb-10">
+        <h2 className="text-3xl font-bold text-neutral-900 mb-3 tracking-tight">
           Welcome back
         </h2>
-        <p className="text-neutral-600">
+        <p className="text-base text-neutral-600">
           Sign in to your account to continue
         </p>
       </div>
-      
+
       {/* Error Alert */}
       {authError && (
-        <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-md flex items-start gap-3">
+        <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-lg flex items-start gap-3 animate-slideInDown">
           <AlertCircle className="text-error-500 flex-shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
-            <p className="text-sm font-medium text-error-800">Login Failed</p>
+            <p className="text-sm font-semibold text-error-800">Login Failed</p>
             <p className="text-sm text-error-700 mt-1">{authError}</p>
           </div>
         </div>
       )}
-      
+
       {/* Login Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Email Input */}
         <Input
           id="email"
@@ -138,7 +138,7 @@ const LoginPage = () => {
           required
           autoComplete="email"
         />
-        
+
         {/* Password Input */}
         <Input
           id="password"
@@ -152,52 +152,53 @@ const LoginPage = () => {
           required
           autoComplete="current-password"
         />
-        
-        {/* Forgot Password Link */}
+
+        {/* Remember Me & Forgot Password */}
         <div className="flex items-center justify-between">
-          <label className="flex items-center">
+          <label className="flex items-center cursor-pointer group">
             <input
               type="checkbox"
-              className="w-4 h-4 text-primary-500 border-neutral-300 rounded focus:ring-primary-500"
+              className="w-4 h-4 text-primary-500 border-neutral-300 rounded focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all cursor-pointer"
             />
-            <span className="ml-2 text-sm text-neutral-700">
+            <span className="ml-2 text-sm text-neutral-700 group-hover:text-neutral-900 transition-colors">
               Remember me
             </span>
           </label>
-          
+
           <Link
             to="/auth/forgot-password"
-            className="text-sm font-medium text-primary-500 hover:text-primary-600"
+            className="text-sm font-medium text-primary-500 hover:text-primary-700 transition-colors"
           >
             Forgot password?
           </Link>
         </div>
-        
+
         {/* Submit Button */}
         <Button
           type="submit"
           fullWidth
           loading={loading}
           disabled={loading}
+          className="h-12 text-base font-semibold shadow-sm hover:shadow-md transition-all duration-200"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
-      
+
       {/* Divider */}
-      <div className="mt-8 flex items-center">
-        <div className="flex-1 border-t border-neutral-200"></div>
-        <span className="px-4 text-sm text-neutral-500">Or continue with</span>
-        <div className="flex-1 border-t border-neutral-200"></div>
+      <div className="mt-8 mb-6 flex items-center">
+        <div className="flex-1 border-t border-neutral-300"></div>
+        <span className="px-4 text-sm text-neutral-500 font-medium">Or continue with</span>
+        <div className="flex-1 border-t border-neutral-300"></div>
       </div>
-      
-      {/* Social Login (Optional) */}
-      <div className="mt-6 grid grid-cols-2 gap-3">
+
+      {/* Social Login Buttons */}
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          className="flex items-center justify-center px-4 py-2 border border-neutral-300 rounded-md hover:bg-neutral-50 transition-colors"
+          className="flex items-center justify-center px-4 py-3 bg-white border-2 border-neutral-300 rounded-lg hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-200 shadow-sm hover:shadow group"
         >
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-2 flex-shrink-0" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -215,26 +216,26 @@ const LoginPage = () => {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          <span className="text-sm font-medium text-neutral-700">Google</span>
+          <span className="text-sm font-medium text-neutral-700 group-hover:text-neutral-900">Google</span>
         </button>
-        
+
         <button
           type="button"
-          className="flex items-center justify-center px-4 py-2 border border-neutral-300 rounded-md hover:bg-neutral-50 transition-colors"
+          className="flex items-center justify-center px-4 py-3 bg-white border-2 border-neutral-300 rounded-lg hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-200 shadow-sm hover:shadow group"
         >
-          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
           </svg>
-          <span className="text-sm font-medium text-neutral-700">GitHub</span>
+          <span className="text-sm font-medium text-neutral-700 group-hover:text-neutral-900">GitHub</span>
         </button>
       </div>
-      
+
       {/* Register Link */}
       <p className="mt-8 text-center text-sm text-neutral-600">
         Don't have an account?{' '}
         <Link
           to="/auth/register"
-          className="font-medium text-primary-500 hover:text-primary-600"
+          className="font-semibold text-primary-500 hover:text-primary-700 transition-colors"
         >
           Sign up for free
         </Link>

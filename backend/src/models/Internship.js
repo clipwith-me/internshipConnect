@@ -31,17 +31,16 @@ const internshipSchema = new mongoose.Schema({
   description: {
     type: String,
     required: [true, 'Description is required'],
-    minlength: [100, 'Description must be at least 100 characters'],
+    minlength: [50, 'Description must be at least 50 characters'],
     maxlength: [5000, 'Description cannot exceed 5000 characters']
   },
-  
+
   // ═══════════════════════════════════════════════════════════
   // RESPONSIBILITIES & REQUIREMENTS
   // ═══════════════════════════════════════════════════════════
-  
+
   responsibilities: [{
     type: String,
-    required: true,
     maxlength: 500
   }],
   
@@ -465,9 +464,53 @@ internshipSchema.virtual('availablePositions').get(function() {
 
 // Check if currently accepting applications
 internshipSchema.virtual('isAcceptingApplications').get(function() {
-  return this.status === 'active' && 
-         !this.isExpired && 
+  return this.status === 'active' &&
+         !this.isExpired &&
          this.hasOpenings;
+});
+
+// ✅ FIX: Format compensation for display to avoid "$[object Object]"
+internshipSchema.virtual('compensationDisplay').get(function() {
+  if (!this.compensation) return 'Not specified';
+
+  const { type, amount } = this.compensation;
+
+  // Handle unpaid internships
+  if (type === 'unpaid') {
+    return 'Unpaid';
+  }
+
+  // Handle negotiable compensation
+  if (type === 'negotiable') {
+    return 'Negotiable';
+  }
+
+  // Handle paid/stipend/commission with amount
+  if (amount && (amount.min !== undefined || amount.max !== undefined)) {
+    const currency = amount.currency || 'USD';
+    const currencySymbols = {
+      'USD': '$',
+      'NGN': '₦',
+      'EUR': '€',
+      'GBP': '£',
+      'INR': '₹'
+    };
+    const symbol = currencySymbols[currency] || currency;
+
+    // Format numbers with commas
+    const formatNum = (num) => num?.toLocaleString('en-US') || '0';
+
+    if (amount.min && amount.max) {
+      return `${symbol}${formatNum(amount.min)} - ${symbol}${formatNum(amount.max)}`;
+    } else if (amount.min) {
+      return `${symbol}${formatNum(amount.min)}+`;
+    } else if (amount.max) {
+      return `Up to ${symbol}${formatNum(amount.max)}`;
+    }
+  }
+
+  // Fallback for type
+  return type.charAt(0).toUpperCase() + type.slice(1);
 });
 
 // ═══════════════════════════════════════════════════════════

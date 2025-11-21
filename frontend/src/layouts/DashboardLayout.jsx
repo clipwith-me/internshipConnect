@@ -1,6 +1,7 @@
 // frontend/src/layouts/DashboardLayout.jsx
-import { useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Home,
   Briefcase,
@@ -13,8 +14,9 @@ import {
   User,
   Search,
   ChevronDown,
+  CreditCard,
 } from 'lucide-react';
-import { Badge } from '../components';
+import { Badge, NotificationBell } from '../components';
 
 /**
  * 🎓 LEARNING: Dashboard Layout
@@ -33,68 +35,203 @@ import { Badge } from '../components';
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [menuFocusIndex, setMenuFocusIndex] = useState(-1);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-  
-  // Mock user data (replace with actual auth context)
-  const user = {
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'student',
-    avatar: null,
-    notifications: 3,
+  const { user, profile, loading, logout } = useAuth();
+  const userMenuRef = useRef(null);
+  const menuButtonRef = useRef(null);
+
+  // Handle search submission
+  const handleSearch = useCallback((e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/dashboard/internships?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  }, [searchQuery, navigate]);
+
+  // Handle search input with Enter key
+  const handleSearchKeyDown = useCallback((e) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    }
+  }, [handleSearch]);
+
+  // ✅ SECURITY FIX: Wait for user to be loaded - don't assume a default role
+  // This prevents showing wrong navigation items during initial load
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-neutral-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ FIX: Derive display name from profile (firstName + lastName) which updates in real-time
+  // This ensures the header updates immediately when user saves profile changes
+  const getDisplayName = () => {
+    if (user.role === 'student' && profile?.personalInfo) {
+      const { firstName, lastName } = profile.personalInfo;
+      if (firstName || lastName) {
+        return `${firstName || ''} ${lastName || ''}`.trim();
+      }
+    } else if (user.role === 'organization' && profile?.companyInfo?.name) {
+      return profile.companyInfo.name;
+    }
+    return user.name || user.email?.split('@')[0] || 'User';
   };
+
+  // Get profile picture URL from profile
+  const getAvatarUrl = () => {
+    if (user.role === 'student') {
+      return profile?.personalInfo?.profilePicture || null;
+    } else if (user.role === 'organization') {
+      return profile?.companyInfo?.logo || null;
+    }
+    return null;
+  };
+
+  const displayUser = {
+    name: getDisplayName(),
+    email: user.email || '',
+    role: user.role,
+    avatar: getAvatarUrl(),
+    notifications: 0,
+  };
+
+  // Memoized handlers to prevent unnecessary re-renders
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen(prev => !prev);
+  }, []);
+
+  const toggleUserMenu = useCallback(() => {
+    setUserMenuOpen(prev => !prev);
+    setMenuFocusIndex(-1);
+  }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenuOpen]);
+
+  // Keyboard navigation for dropdown menu (accessibility)
+  const handleMenuKeyDown = useCallback((e) => {
+    const menuItems = userMenuRef.current?.querySelectorAll('button[role="menuitem"]');
+    if (!menuItems) return;
+
+    switch (e.key) {
+      case 'Escape':
+        setUserMenuOpen(false);
+        menuButtonRef.current?.focus();
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        setMenuFocusIndex(prev => Math.min(prev + 1, menuItems.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setMenuFocusIndex(prev => Math.max(prev - 1, 0));
+        break;
+      case 'Home':
+        e.preventDefault();
+        setMenuFocusIndex(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        setMenuFocusIndex(menuItems.length - 1);
+        break;
+      default:
+        break;
+    }
+  }, []);
+
+  // Focus menu item when index changes
+  useEffect(() => {
+    if (menuFocusIndex >= 0 && userMenuOpen) {
+      const menuItems = userMenuRef.current?.querySelectorAll('button[role="menuitem"]');
+      menuItems?.[menuFocusIndex]?.focus();
+    }
+  }, [menuFocusIndex, userMenuOpen]);
   
   // Navigation items based on role
   const studentNavItems = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
-    { to: '/internships', icon: Briefcase, label: 'Internships' },
-    { to: '/applications', icon: FileText, label: 'My Applications' },
-    { to: '/resumes', icon: FileText, label: 'Resumes' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
+    { to: '/dashboard/internships', icon: Briefcase, label: 'Internships' },
+    { to: '/dashboard/applications', icon: FileText, label: 'My Applications' },
+    { to: '/dashboard/resumes', icon: FileText, label: 'Resumes' },
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
+    { to: '/dashboard/pricing', icon: CreditCard, label: 'Pricing' },
+    { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
-  
+
   const organizationNavItems = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
-    { to: '/internships', icon: Briefcase, label: 'My Internships' },
-    { to: '/applications', icon: FileText, label: 'Applications' },
-    { to: '/analytics', icon: FileText, label: 'Analytics' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
+    { to: '/dashboard/my-internships', icon: Briefcase, label: 'My Internships' },
+    { to: '/dashboard/applications', icon: FileText, label: 'Applications' },
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
+    { to: '/dashboard/pricing', icon: CreditCard, label: 'Pricing' },
+    { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
   
-  const navItems = user.role === 'student' ? studentNavItems : organizationNavItems;
-  
-  const handleLogout = () => {
-    // Add logout logic here
-    console.log('Logging out...');
-    navigate('/login');
-  };
+  const navItems = displayUser.role === 'student' ? studentNavItems : organizationNavItems;
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+  }, [logout]);
+
+  const handleNavigate = useCallback((path) => {
+    navigate(path);
+    setUserMenuOpen(false);
+  }, [navigate]);
   
   return (
     <div className="min-h-screen bg-neutral-50">
-      {/* Top Navigation Bar */}
-      <nav className="bg-white border-b border-neutral-200 sticky top-0 z-50">
+      {/* Top Navigation Bar - Microsoft Style */}
+      <nav className="bg-white border-b border-neutral-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left side - Logo and Mobile Menu */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden text-neutral-600 hover:text-neutral-900 p-2"
+                onClick={toggleSidebar}
+                className="lg:hidden text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 p-2 rounded-md transition-colors"
+                aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
+                aria-expanded={sidebarOpen}
               >
-                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
-              
-              {/* Logo */}
-              <div className="flex items-center">
-                <h1 className="text-xl font-semibold text-primary-500">
-                  InternshipConnect
-                </h1>
-              </div>
+
+              {/* Logo - Microsoft Style: Left-aligned, moderate size, clickable */}
+              <a href="/dashboard" className="flex items-center py-2 group">
+                <img
+                  src="/intern-logo.png"
+                  alt="InternshipConnect"
+                  className="h-20 w-auto object-contain transition-opacity group-hover:opacity-80"
+                  onError={(e) => {
+                    e.target.src = '/intern-logo.jpeg';
+                  }}
+                />
+              </a>
             </div>
             
             {/* Search bar (desktop) */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl mx-8">
               <div className="relative w-full">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search size={18} className="text-neutral-400" />
@@ -102,35 +239,46 @@ const DashboardLayout = () => {
                 <input
                   type="text"
                   placeholder="Search internships..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
                   className="w-full pl-10 pr-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  aria-label="Search internships"
                 />
               </div>
-            </div>
+            </form>
             
             {/* Right side - Notifications and User Menu */}
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <button className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors">
-                <Bell size={20} />
-                {user.notifications > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
-                )}
-              </button>
-              
+              <NotificationBell />
+
               {/* User Menu */}
-              <div className="relative">
+              <div className="relative" ref={userMenuRef} onKeyDown={handleMenuKeyDown}>
                 <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  ref={menuButtonRef}
+                  onClick={toggleUserMenu}
                   className="flex items-center gap-2 p-2 rounded-md hover:bg-neutral-100 transition-colors"
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
+                  aria-label="User menu"
                 >
                   {/* Avatar */}
-                  <div className="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center font-medium">
-                    {user.name.charAt(0)}
+                  <div className="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center font-medium overflow-hidden">
+                    {displayUser?.avatar ? (
+                      <img
+                        src={displayUser.avatar}
+                        alt={displayUser.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      displayUser?.name?.charAt(0) || 'G'
+                    )}
                   </div>
-                  
+
                   {/* Name (desktop only) */}
                   <span className="hidden md:block text-sm font-medium text-neutral-700">
-                    {user.name}
+                    {displayUser?.name || 'Guest'}
                   </span>
                   
                   <ChevronDown size={16} className="text-neutral-400" />
@@ -138,35 +286,46 @@ const DashboardLayout = () => {
                 
                 {/* Dropdown Menu */}
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 animate-slideInTop">
+                  <div
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 animate-slideInTop"
+                    role="menu"
+                    aria-orientation="vertical"
+                    aria-labelledby="user-menu-button"
+                  >
                     <div className="px-4 py-2 border-b border-neutral-200">
-                      <p className="text-sm font-medium text-neutral-900">{user.name}</p>
-                      <p className="text-xs text-neutral-500">{user.email}</p>
+                      <p className="text-sm font-medium text-neutral-900">{displayUser?.name || 'Guest'}</p>
+                      <p className="text-xs text-neutral-500">{displayUser?.email || 'guest@example.com'}</p>
                     </div>
-                    
+
                     <button
-                      onClick={() => navigate('/profile')}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                      role="menuitem"
+                      onClick={() => handleNavigate('/dashboard/profile')}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 focus:bg-neutral-100 focus:outline-none"
+                      tabIndex={-1}
                     >
-                      <User size={16} />
+                      <User size={16} aria-hidden="true" />
                       Profile
                     </button>
-                    
+
                     <button
-                      onClick={() => navigate('/settings')}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                      role="menuitem"
+                      onClick={() => handleNavigate('/dashboard/settings')}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 focus:bg-neutral-100 focus:outline-none"
+                      tabIndex={-1}
                     >
-                      <Settings size={16} />
+                      <Settings size={16} aria-hidden="true" />
                       Settings
                     </button>
-                    
-                    <div className="border-t border-neutral-200 my-1" />
-                    
+
+                    <div className="border-t border-neutral-200 my-1" role="separator" />
+
                     <button
+                      role="menuitem"
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-error-600 hover:bg-error-50"
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-error-600 hover:bg-error-50 focus:bg-error-50 focus:outline-none"
+                      tabIndex={-1}
                     >
-                      <LogOut size={16} />
+                      <LogOut size={16} aria-hidden="true" />
                       Logout
                     </button>
                   </div>

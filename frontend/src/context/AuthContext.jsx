@@ -1,5 +1,6 @@
 // frontend/src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
 /**
@@ -25,6 +26,7 @@ const AuthContext = createContext(null);
 // ═══════════════════════════════════════════════════════════
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,26 +34,48 @@ export const AuthProvider = ({ children }) => {
   
   /**
    * Load user on mount if token exists
+   *
+   * ✅ FIX: Don't call /auth/me on app load to avoid issues with expired tokens.
+   * The Axios interceptor will handle token refresh automatically when the first
+   * protected API call is made. This prevents the app from logging out users who
+   * have expired access tokens but valid refresh tokens.
    */
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('accessToken');
-      
-      if (token) {
+      const refreshToken = localStorage.getItem('refreshToken');
+
+      if (token && refreshToken) {
+        // ✅ Tokens exist - user will be loaded when first protected route is accessed
+        // The Axios interceptor will refresh the token if it's expired
         try {
+          // Try to get user data, but don't fail if token is expired
           const response = await authAPI.getMe();
           setUser(response.data.data.user);
           setProfile(response.data.data.profile);
         } catch (error) {
-          console.error('Failed to load user:', error);
-          // Token invalid, clear storage
-          localStorage.clear();
+          // ✅ FIX: Don't clear localStorage on 401 - Axios interceptor will handle refresh
+          if (error.response?.status === 401) {
+            console.log('Access token expired - will refresh on next request');
+            // Don't clear storage - let the Axios interceptor refresh the token
+          } else if (error.name === 'AbortError' || error.name === 'CanceledError') {
+            // Request was cancelled, ignore
+            console.log('Initial auth request cancelled');
+          } else {
+            // Other error - clear storage and logout
+            console.error('Failed to load user:', error);
+            localStorage.clear();
+          }
         }
+      } else if (token && !refreshToken) {
+        // Have access token but no refresh token - clear and require login
+        console.log('No refresh token found - clearing storage');
+        localStorage.clear();
       }
-      
+
       setLoading(false);
     };
-    
+
     initAuth();
   }, []);
   
@@ -104,27 +128,40 @@ export const AuthProvider = ({ children }) => {
       
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed';
-      setError(message);
-      return { success: false, error: message };
+      const errors = error.response?.data?.errors;
+      const errorMessage = errors ? errors.join(', ') : message;
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     }
   };
   
   /**
    * Logout function
+   *
+   * 🎓 MICROSOFT-GRADE SECURITY:
+   * - Invalidates session on backend
+   * - Clears all local storage tokens
+   * - Resets authentication state
+   * - Redirects to login page to prevent unauthorized access
    */
   const logout = async () => {
     try {
+      // Call backend to invalidate session (if using session-based auth)
       await authAPI.logout();
     } catch (error) {
       console.error('Logout error:', error);
+      // Continue with logout even if API call fails
     } finally {
-      // Clear local storage
+      // Clear all local storage (tokens, cached data)
       localStorage.clear();
-      
-      // Clear state
+
+      // Reset authentication state
       setUser(null);
       setProfile(null);
       setError(null);
+
+      // Redirect to login page
+      navigate('/auth/login', { replace: true });
     }
   };
   
