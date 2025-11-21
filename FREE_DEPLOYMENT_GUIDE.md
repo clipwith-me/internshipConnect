@@ -117,8 +117,8 @@ Replace `YOUR_NEW_PASSWORD` with the password you copied.
 
 Your Cloudinary credentials:
 
-- Cloud Name: `dxevtwkds` (stays the same)
-- API Key: `936296564823629` (stays the same)
+- Cloud Name: `your_cloud_name` (stays the same)
+- API Key: `your_api_key` (stays the same)
 - API Secret: `[new secret you just copied]`
 
 ---
@@ -247,8 +247,8 @@ OPENAI_API_KEY=sk-proj-YOUR_NEW_KEY_HERE
 AI_PROVIDER=openai
 
 # Cloudinary (use NEW secret from Step 1.4)
-CLOUDINARY_CLOUD_NAME=dxevtwkds
-CLOUDINARY_API_KEY=936296564823629
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=paste_new_secret_here
 
 # Email (use NEW password from Step 1.5)
