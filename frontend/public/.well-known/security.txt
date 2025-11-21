@@ -1,0 +1,15 @@
+Contact: security@internshipconnect.com
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://internshipconnect.com/.well-known/security.txt
+Policy: https://github.com/your-org/internship-connect/blob/main/SECURITY.md
+
+# Security Policy
+
+Thank you for helping keep InternshipConnect secure!
+
+Please report security vulnerabilities to security@internshipconnect.com
+Do not report security issues through public GitHub issues.
+
+We aim to respond within 48 hours and will work with you to address
+any confirmed vulnerabilities as quickly as possible.
