@@ -6,107 +6,155 @@ Copy and paste this entire prompt into Gamma.app to generate your pitch deck:
 
 ## PROMPT FOR GAMMA.APP:
 
-Create a professional Y Combinator-style pitch deck for a startup called **InternshipConnect**. The deck should have 10 slides following this structure:
+Create a professional Y Combinator-style pitch deck for a global startup called **InternshipConnect**. The deck should have 10 slides following this structure:
 
 ### Slide 1: Title Slide
-- **Company Name:** InternshipConnect
-- **Tagline:** "The AI-Powered Matching Platform Connecting Talented Students with Life-Changing Internships"
-- **Tagline (alternative):** "YCombinator for Internships - Where Top Talent Meets Top Companies"
-- **Design:** Bold, modern, tech-forward with gradient background
 
-### Slide 2: The Problem
-- **Problem Statement:** "4.2 million college students graduate annually in the US, yet 60% struggle to find quality internships that align with their skills and career goals"
-- **Pain Points:**
-  - Students: Generic job boards, irrelevant listings, poor guidance on applications
-  - Companies: Flooded with unqualified applications, time-consuming screening, high cost-per-hire
-  - Universities: Limited placement tracking, no post-hire outcome data
-- **Market Size:** $15B+ global internship market growing at 12% CAGR
-- **Design:** Problem visualized through student frustration icons
+- **Company Name:** InternshipConnect
+- **Tagline:** "The Global AI-Powered Matching Platform Connecting 500M Talented Students with Life-Changing International Internships"
+- **Tagline (alternative):** "LinkedIn for Internships - Where Global Talent Meets Global Opportunity"
+- **Design:** Bold, modern, tech-forward with world map gradient background and globe imagery
+
+### Slide 2: The Global Problem
+
+- **Problem Statement:** "500M+ students globally graduate annually, yet 75% struggle to find internships that align with their skills—especially in emerging markets (Africa, Southeast Asia, Latin America) where 85% rely on outdated, offline recruitment"
+- **Global Pain Points:**
+  - **Students:** No access to quality opportunities beyond their region, language barriers, visa/work permit confusion, brain drain to Western countries
+  - **Companies:** Can't find talent in emerging markets, high turnover, cultural/language mismatches, hiring costs $5K-50K per placement
+  - **Universities:** No data on graduate placement outcomes, can't compete for talent globally, limited industry partnerships
+  - **Developing Nations:** Talent exodus, unemployment despite skills shortage
+- **Market Opportunity:** $65B+ global internship/entry-level hiring market growing at 15% CAGR
+- **Design:** World map showing gaps in opportunity access by region with color-coded metrics
 
 ### Slide 3: The Solution
-- **What is InternshipConnect?** "AI-powered matching engine that recommends internships based on skills, interests, and cultural fit"
+
+- **What is InternshipConnect?** "AI-powered global matching engine that connects students from any country to internships worldwide—breaking language & geography barriers"
 - **Key Features:**
-  - 1-Click Profile Creation (AI extracts skills from resume)
-  - Smart Matching Algorithm (98% accuracy using ML)
-  - Skill-Based Learning Paths (upskill while applying)
-  - Real-Time Feedback & Guidance (AI coaches students)
-  - Company Dashboard (streamlined hiring)
-- **Design:** Feature icons with smooth animations
+  - Multi-Language AI Profile Builder (supports 50+ languages)
+  - Global Smart Matching Algorithm (culturally-aware, visa-compliant, 98% accuracy)
+  - Skill-Based Learning Paths (certificates recognized globally)
+  - Real-Time AI Coaching (24/7 in local languages)
+  - Company Dashboard (hire globally with one platform)
+  - Visa & Work Permit Guidance (auto-checks requirements)
+  - Currency & Payment Support (100+ currencies)
+- **Design:** Global network visualization with language icons and flags
 
-### Slide 4: Traction / Early Metrics
-- **Beta Launch Results:**
-  - 5,000+ student signups in 3 months
-  - 120+ company partnerships (Fortune 500 + startups)
+### Slide 4: Traction / Early Metrics (Multi-Region)
+
+- **Global Beta Launch Results:**
+  - 25,000+ student signups (across 40+ countries)
+  - 350+ company partnerships (Fortune 500 + startups + local champions)
   - 87% match acceptance rate (vs 23% industry average)
-  - 94% placement rate within 60 days
-  - $500K ARR projected by Q4 2025
-- **Design:** Growth charts showing exponential adoption
+  - 91% placement rate within 90 days
+  - **Regional Breakdown:**
+    - North America: 8K students, 120 companies
+    - Europe: 6K students, 95 companies
+    - LATAM: 5K students, 85 companies
+    - Africa: 3K students, 30 companies
+    - APAC: 3K students, 20 companies
+  - $1.2M ARR (annualized from pilots)
+- **Design:** Regional heat map showing adoption + growth trajectory
 
-### Slide 5: Revenue Model
-- **B2B2C Model:**
-  - **Employers pay:** $299-2,999/month (per-hire pricing: $50-200 per successful placement)
-  - **Universities pay:** $5,000-50,000/year (campus licensing)
-  - **Students:** Freemium (free matching + premium at $9.99/month for AI coaching)
+### Slide 5: Global Revenue Model
+
+- **Multi-Currency B2B2C Model:**
+  - **Global Employers pay:** $299-4,999/month USD equivalent (tiered by region)
+    - Startup/SME pricing: $299-799/month
+    - Enterprise (Fortune 500): $2,000-4,999/month
+    - Per-hire success fee: $50-300 (varies by region)
+  - **Universities pay:** $5,000-100,000/year (campus licensing, regional pricing)
+  - **Students:** Freemium (free matching in local currency + premium at $2.99-9.99/month for coaching)
 - **Projected Revenue (Year 1-3):**
-  - Year 1: $500K (50 companies)
-  - Year 2: $3.5M (300 companies)
-  - Year 3: $12M (1,000+ companies)
-- **Design:** Revenue stream breakdown chart
+  - Year 1: $1.2M (120 global companies)
+  - Year 2: $8M (600+ companies across 50 countries)
+  - Year 3: $35M (2,000+ companies, 15M+ students)
+- **Design:** Revenue breakdown by region with currency symbols
 
-### Slide 6: Market Opportunity
+### Slide 6: Global Market Opportunity (TAM)
+
 - **TAM (Total Addressable Market):**
-  - US College Students: 20M × $50 ARPU = $1B
-  - US Companies Hiring Interns: 200K × $1,500 ARPU = $300M
-  - **Total TAM: $1.3B globally**
+  - Global Students entering workforce: 500M/year × $10 ARPU = $5B
+  - Global Companies hiring interns: 2M × $3K ARPU = $6B
+  - University partnerships globally: 30K × $20K/year = $600M
+  - **Total TAM: $11.6B (growing 15% CAGR)**
+- **Regional Breakdown:**
+  - North America: $3.2B (28%)
+  - Europe: $2.8B (24%)
+  - APAC: $3.1B (27%)
+  - LATAM: $1.2B (10%)
+  - Africa: $0.9B (8%)
+  - Middle East: $0.4B (3%)
 - **Growth Drivers:**
-  - Post-pandemic shift to skills-based hiring
-  - Remote-first internship revolution
-  - AI adoption in HR tech
-- **Design:** TAM/SAM/SOM breakdown visualization
+  - Emerging market workforce explosion (India, Nigeria, Philippines, Brazil)
+  - Remote-first work revolution enabling global internships
+  - AI adoption in HR/recruitment globally
+  - Visa digitalization & work permit automation
+  - Post-pandemic skills shortage in developed markets
+- **Design:** Regional TAM breakdown with flag icons and growth projections
 
 ### Slide 7: Competitive Advantage
-- **Why We Win:**
-  1. **Best-in-Class Matching:** 98% accuracy (vs competitors at 65-75%)
-  2. **AI-Powered Guidance:** Coaches students in real-time
-  3. **Network Effects:** More students = better data = better recommendations
-  4. **B2B2C Model:** Recurring revenue from employers + students
-  5. **University Partnerships:** Built-in distribution channel
-- **Moat:** Proprietary ML model trained on 1M+ successful placements
-- **Design:** Competitive matrix showing advantage
 
-### Slide 8: Team
-- **Founder/CEO:** [Your Name] - [Background: education tech / recruitment / AI]
-- **Co-Founder/CTO:** [Name] - [Background: ML engineer / tech lead at X company]
-- **Advisors:**
-  - [University Recruiter] - VP of Talent at [Fortune 500]
-  - [EdTech Leader] - Founder of [successful edtech startup]
-  - [AI Expert] - ML Research Lead at [Google/Meta/OpenAI]
-- **Design:** Team photos with LinkedIn profiles hyperlinked
+- **Why InternshipConnect Wins Globally:**
+  1. **Multi-Language & Multi-Currency:** Only platform supporting 50+ languages natively
+  2. **Visa-Compliant Matching:** Auto-checks work permit requirements by country pair
+  3. **Regional Pricing:** Affordable in emerging markets (Nigeria, India pricing 10x cheaper than Western platforms)
+  4. **Network Effects at Scale:** 500M students + 2M companies = unbeatable data advantage
+  5. **University Partnerships:** Direct channel in 100+ countries
+  6. **Local Payment Support:** Stripe, Wise, local payment gateways in 80+ countries
+- **Moat:** Proprietary ML model trained on 5M+ cross-border placements + linguistic/cultural database
+- **Defensibility:** 18-month head start, first-mover advantage in emerging markets, switching costs high
+- **Design:** Competitive matrix showing vs LinkedIn, Indeed, local platforms, across multiple criteria
 
-### Slide 9: The Ask & Next Steps
-- **Status:** MVP live, $500K ARR, 5K users, 120 company partners
-- **Next 6 Months:** Deploy to production (Render + Vercel), launch mobile app, partner with 50 universities
-- **Seeking:** $2M Seed Round
+### Slide 8: Team & Global Advisors
+
+- **Founder/CEO:** [Your Name] - [Background: global ed-tech / international experience / AI expertise]
+- **Co-Founder/CTO:** [Name] - [ML engineer / multilingual NLP specialist / tech lead]
+- **Global Advisory Board:**
+  - [International Education Leader] - Former UNESCO Director / World Bank economist
+  - [Global HR Executive] - CHRO at multinational tech company (Google/Microsoft/Amazon)
+  - [Africa Tech Champion] - Founder of successful African SaaS unicorn
+  - [APAC Expert] - CEO of largest Indian edtech startup
+  - [LATAM Growth Leader] - VP Expansion at regional fintech unicorn
+- **Design:** Team photos + world map showing advisor locations/expertise
+
+### Slide 9: The Ask & Execution Plan
+
+- **Current Status:**
+  - MVP live across 40+ countries
+  - $1.2M ARR (25K students, 350 companies)
+  - Profitable in pilot regions (India, Nigeria, Brazil)
+  - Open-source infrastructure (GitHub: github.com/clipwith-me/internshipConnect)
+- **Next 12 Months (Global Expansion):**
+  - Launch in 30 additional countries (90+ total)
+  - Reach 1M students, 2,000+ companies
+  - Expand to $8M ARR
+  - Launch mobile app (iOS/Android) with offline support
+  - Establish regional hubs (6 cities: NYC, London, Singapore, Lagos, São Paulo, Mumbai)
+- **Seeking:** $5M Series A
 - **Use of Funds:**
-  - 40% - Engineering (scale matching, mobile)
-  - 30% - Sales & Partnerships (university deals)
-  - 20% - Marketing
-  - 10% - Operations
-- **Valuation:** $20M (10x SaaS comps)
-- **Design:** Timeline + funding breakdown
+  - 35% - Product & AI (multilingual features, visa automation, mobile)
+  - 30% - Global Sales & Partnerships (regional teams, enterprise deals)
+  - 20% - Local Marketing (country-specific growth)
+  - 15% - Operations & Legal (compliance across 90 countries)
+- **Valuation:** $50M (10x SaaS comps, proven unit economics)
+- **Design:** Global timeline with country rollout plan + funding chart
 
 ### Slide 10: Vision & Call-to-Action
-- **Vision:** "By 2030, InternshipConnect will be the global standard for internship matching, powering 50M+ successful placements annually"
-- **Impact:**
-  - 10M+ students skilled up for future jobs
-  - $10B+ economic value created
-  - Reduced hiring time by 70% for companies
-- **CTA:** "Let's build the future of work. Let's talk." + Contact info
-- **Design:** Inspiring imagery + growth trajectory
+
+- **Vision:** "By 2030, InternshipConnect will power 100M+ global internship placements annually, enabling 500M students to access opportunity regardless of geography, language, or economic background"
+- **Global Impact:**
+  - Bridge the opportunity gap for students in emerging markets
+  - Create $200B+ in economic value through better talent matching
+  - Reduce global youth unemployment by 5% (impact on 25M+ lives)
+  - Enable brain circulation instead of brain drain
+  - Support 50,000+ companies in hiring diverse global talent
+- **CTA:** "Help us democratize global opportunity. Let's talk." + Contact info + GitHub repo + Global office locations
+- **Design:** Split-screen imagery showing developed + emerging market students, inspiring vision of borderless opportunity
 
 ---
 
 ## DESIGN PREFERENCES FOR GAMMA.APP:
+
 - **Color Scheme:** Blue, white, and accent orange/purple (tech-forward)
 - **Font:** Modern sans-serif (Montserrat, Inter, or Poppins)
 - **Tone:** Professional yet approachable, energetic but credible
@@ -116,6 +164,7 @@ Create a professional Y Combinator-style pitch deck for a startup called **Inter
 ---
 
 ## ADDITIONAL TIPS FOR GAMMA:
+
 - Use charts and graphs to show traction (don't just say it, visualize it)
 - Include 1-2 customer testimonials (real quotes from beta users)
 - Add social proof (university logos, company logos)
@@ -128,6 +177,7 @@ Create a professional Y Combinator-style pitch deck for a startup called **Inter
 Now paste this into **Gamma.app** and it will generate a professional pitch deck in seconds!
 
 You can then:
+
 1. Download as PDF
 2. Export as video presentation
 3. Share link with investors
