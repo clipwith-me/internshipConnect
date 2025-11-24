@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: internship-connect-backend
+    env: node
+    region: oregon
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: DB_NAME
+        value: internship_connect
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_PROVIDER
+        value: openai
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_STUDENT_PREMIUM_MONTHLY
+        sync: false
+      - key: STRIPE_STUDENT_PREMIUM_YEARLY
+        sync: false
+      - key: STRIPE_STUDENT_PRO_MONTHLY
+        sync: false
+      - key: STRIPE_STUDENT_PRO_YEARLY
+        sync: false
+      - key: STRIPE_ORG_PROFESSIONAL_MONTHLY
+        sync: false
+      - key: STRIPE_ORG_PROFESSIONAL_YEARLY
+        sync: false
+      - key: STRIPE_ORG_ENTERPRISE_MONTHLY
+        sync: false
+      - key: STRIPE_ORG_ENTERPRISE_YEARLY
+        sync: false
+    healthCheckPath: /health
