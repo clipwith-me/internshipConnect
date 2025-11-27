@@ -3,17 +3,11 @@
 import OrganizationProfile from '../models/OrganizationProfile.js';
 import multer from 'multer';
 import path from 'path';
+import { uploadCompanyLogo, deleteFromCloudinary } from '../services/upload.service.js';
+import { isCloudinaryConfigured } from '../config/cloudinary.js';
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/profile-pictures/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for file uploads - use memory storage for Cloudinary
+const storage = multer.memoryStorage(); // Store in memory buffer for Cloudinary upload
 
 const fileFilter = (req, file, cb) => {
   // Accept images only
@@ -262,12 +256,46 @@ export const uploadLogo = async (req, res) => {
       });
     }
 
-    // Store the file path (in production, this would be a Cloudinary URL)
-    // ✅ FIX: Store URL string directly for frontend compatibility
-    const fileUrl = `http://localhost:5000/uploads/profile-pictures/${req.file.filename}`;
+    let uploadResult;
 
-    // Store as string for consistency with frontend expectations
-    profile.companyInfo.logo = fileUrl;
+    // ✅ FIX: Use Cloudinary for logo upload (production-ready)
+    if (isCloudinaryConfigured()) {
+      try {
+        // Delete old logo from Cloudinary if exists
+        if (profile.companyInfo.logoPublicId &&
+            !profile.companyInfo.logoPublicId.startsWith('mock_')) {
+          try {
+            await deleteFromCloudinary(profile.companyInfo.logoPublicId);
+          } catch (deleteError) {
+            console.warn('Failed to delete old logo:', deleteError.message);
+          }
+        }
+
+        // Upload new logo to Cloudinary
+        uploadResult = await uploadCompanyLogo(req.file.buffer, req.user._id.toString());
+
+        console.log('✅ Company logo uploaded to Cloudinary:', uploadResult.url);
+
+        // Store both URL and publicId
+        profile.companyInfo.logo = uploadResult.url;
+        profile.companyInfo.logoPublicId = uploadResult.publicId;
+      } catch (cloudinaryError) {
+        console.error('Cloudinary upload failed:', cloudinaryError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to upload logo to cloud storage'
+        });
+      }
+    } else {
+      // Fallback: Local file storage (development only)
+      console.warn('⚠️  Cloudinary not configured - using placeholder logo');
+      uploadResult = {
+        url: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.companyInfo.name || 'Company')}&size=200&background=random`,
+        publicId: `local_${Date.now()}`
+      };
+      profile.companyInfo.logo = uploadResult.url;
+      profile.companyInfo.logoPublicId = uploadResult.publicId;
+    }
 
     await profile.save();
 
@@ -275,8 +303,8 @@ export const uploadLogo = async (req, res) => {
       success: true,
       message: 'Logo uploaded successfully',
       data: {
-        logo: fileUrl,
-        url: fileUrl // Backwards compatibility
+        logo: uploadResult.url,
+        url: uploadResult.url // Backwards compatibility
       }
     });
   } catch (error) {

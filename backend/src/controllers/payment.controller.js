@@ -11,6 +11,7 @@ import {
 } from '../services/payment.service.js';
 import User from '../models/User.js';
 import Payment from '../models/Payment.js';
+import envConfig from '../config/env.config.js';
 
 /**
  * @desc    Create Stripe checkout session
@@ -19,6 +20,16 @@ import Payment from '../models/Payment.js';
  */
 export const createCheckoutSession = async (req, res) => {
   try {
+    // ✅ FIX: Check if Stripe is configured
+    if (!envConfig.isServiceConfigured('stripe')) {
+      console.warn('⚠️  Stripe not configured - payment request blocked');
+      return res.status(503).json({
+        success: false,
+        error: 'Payment processing is temporarily unavailable. Please try again later or contact support.',
+        message: 'Stripe payment provider not configured'
+      });
+    }
+
     const { plan, billingPeriod = 'monthly' } = req.body;
     const userId = req.user._id;
     const userEmail = req.user.email;

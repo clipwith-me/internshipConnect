@@ -10,16 +10,16 @@
 ```bash
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=internshipconnects@gmail.com
-SMTP_PASS=hiea durv spno epvv  # ❌ Has spaces
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=xxxx xxxx xxxx xxxx  # ❌ Has spaces
 ```
 
 ### Fixed Configuration
 ```bash
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=internshipconnects@gmail.com
-SMTP_PASS=hieadurvspnoepvv  # ✅ No spaces
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=xxxxxxxxxxxxxxxx  # ✅ No spaces (16 characters)
 ```
 
 ---
@@ -31,12 +31,12 @@ Remove all spaces from the `SMTP_PASS` value:
 
 **Before:**
 ```bash
-SMTP_PASS=hiea durv spno epvv
+SMTP_PASS=xxxx xxxx xxxx xxxx
 ```
 
 **After:**
 ```bash
-SMTP_PASS=hieadurvspnoepvv
+SMTP_PASS=xxxxxxxxxxxxxxxx
 ```
 
 ### 2. Restart Backend Server
@@ -75,10 +75,10 @@ Instead of:
 ### Test Password Reset
 1. Go to: http://localhost:5173/auth/login
 2. Click "Forgot password?"
-3. Enter email: `internshipconnects@gmail.com` (or any registered email)
+3. Enter email: `your_email@gmail.com` (or any registered email)
 4. Check backend console for:
    ```
-   📧 Password reset email sent to: internshipconnects@gmail.com
+   📧 Password reset email sent to: your_email@gmail.com
    ```
 5. Check your email inbox
 
@@ -87,9 +87,9 @@ Instead of:
 ## ⚠️ Important Notes
 
 ### Gmail App Password Format
-- **Correct:** `hieadurvspnoepvv` (no spaces, lowercase)
-- **Incorrect:** `hiea durv spno epvv` (has spaces)
-- **Incorrect:** `HIEA DURV SPNO EPVV` (uppercase with spaces)
+- **Correct:** `xxxxxxxxxxxxxxxx` (no spaces, 16 characters)
+- **Incorrect:** `xxxx xxxx xxxx xxxx` (has spaces)
+- **Incorrect:** `XXXX XXXX XXXX XXXX` (uppercase with spaces)
 
 ### If Emails Still Don't Send
 
@@ -203,7 +203,7 @@ Registration successful
 
 **In Email Inbox:**
 - Professional HTML email
-- From: "InternshipConnect <internshipconnects@gmail.com>"
+- From: "InternshipConnect <your_email@gmail.com>"
 - With logo, gradient header, CTA button
 - May be in spam folder initially (mark as "Not Spam")
 
@@ -238,8 +238,8 @@ npm run dev
 
 ## 📝 Summary
 
-**Problem:** App password has spaces (`hiea durv spno epvv`)
-**Solution:** Remove spaces (`hieadurvspnoepvv`)
+**Problem:** App password has spaces (`xxxx xxxx xxxx xxxx`)
+**Solution:** Remove spaces (`xxxxxxxxxxxxxxxx`)
 **Test:** Restart backend, register new user, check email inbox
 
 After fixing, emails will be sent to real inboxes instead of just logged to console! 📧✨

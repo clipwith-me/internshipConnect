@@ -15,10 +15,10 @@
 
 ### **2. Cloudinary API Keys**
 - **Files:** `DEPLOYMENT_CHECKLIST.md`, `FREE_DEPLOYMENT_GUIDE.md`
-- **Old Values:** 
-  - `CLOUDINARY_CLOUD_NAME=dxevtwkds`
-  - `CLOUDINARY_API_KEY=936296564823629`
-  - `CLOUDINARY_API_SECRET=HxdP3E0g3ZXgnt27rPUicsy4yY4`
+- **Old Values:** Removed (sanitized)
+  - `CLOUDINARY_CLOUD_NAME=***`
+  - `CLOUDINARY_API_KEY=***`
+  - `CLOUDINARY_API_SECRET=***`
 - **New Values:** Replaced with placeholders
 - **Impact:** ✅ None - These are documentation files, not used by code
 

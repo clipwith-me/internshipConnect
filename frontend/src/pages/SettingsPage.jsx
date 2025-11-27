@@ -1,7 +1,7 @@
 // frontend/src/pages/SettingsPage.jsx
 import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { studentAPI, organizationAPI, authAPI } from '../services/api';
+import { studentAPI, organizationAPI, authAPI, paymentAPI } from '../services/api';
 import { User, Bell, Lock, Globe, CreditCard, Shield, Save, Camera, Upload } from 'lucide-react';
 
 const SettingsPage = () => {
@@ -462,7 +462,11 @@ const SecuritySettings = ({ user, setMessage }) => {
 
     try {
       setLoading(true);
-      await authAPI.changePassword(formData.currentPassword, formData.newPassword);
+      // ✅ FIX: Send correct payload structure
+      await authAPI.changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword
+      });
       setMessage({ type: 'success', text: 'Password changed successfully' });
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
@@ -534,9 +538,15 @@ const SecuritySettings = ({ user, setMessage }) => {
         <p className="text-sm text-neutral-600 mb-4">
           Add an extra layer of security to your account
         </p>
-        <button className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors">
-          Enable 2FA
+        <button
+          onClick={() => setMessage({ type: 'info', text: '2FA functionality will be available in the next update. We recommend using a strong password and enabling account recovery options.' })}
+          className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
+        >
+          Enable 2FA (Coming Soon)
         </button>
+        <p className="text-xs text-neutral-500 mt-2">
+          2FA with authenticator apps (Google Authenticator, Authy) is coming soon
+        </p>
       </div>
     </div>
   );
@@ -638,6 +648,32 @@ const PreferenceSettings = ({ user, setMessage }) => {
 
 const BillingSettings = ({ user, setMessage }) => {
   const subscription = user?.subscription || { plan: 'free', status: 'active' };
+  const [loading, setLoading] = useState(false);
+
+  const handleUpgrade = async (plan = 'premium', billingPeriod = 'monthly') => {
+    try {
+      setLoading(true);
+      const response = await paymentAPI.createCheckout(plan, billingPeriod);
+
+      if (response.data.success && response.data.data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = response.data.data.url;
+      } else {
+        setMessage({ type: 'error', text: 'Failed to create checkout session' });
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Payment system temporarily unavailable';
+
+      // Check if Stripe is not configured
+      if (errorMessage.includes('not configured') || errorMessage.includes('Payment') || err.response?.status === 503) {
+        setMessage({ type: 'info', text: 'Payment processing is being set up. Please check back soon or contact support.' });
+      } else {
+        setMessage({ type: 'error', text: errorMessage });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -656,11 +692,15 @@ const BillingSettings = ({ user, setMessage }) => {
           <CreditCard className="w-12 h-12 text-primary-600" />
         </div>
 
-        {subscription.plan === 'free' && (
-          <button className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium">
-            Upgrade to Premium
+        {subscription.plan === 'free' || subscription.plan === 'basic' ? (
+          <button
+            onClick={() => handleUpgrade('premium', 'monthly')}
+            disabled={loading}
+            className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Processing...' : 'Upgrade to Premium'}
           </button>
-        )}
+        ) : null}
       </div>
 
       {subscription.plan !== 'free' && (

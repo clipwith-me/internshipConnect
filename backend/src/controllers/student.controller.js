@@ -3,17 +3,11 @@
 import StudentProfile from '../models/StudentProfile.js';
 import multer from 'multer';
 import path from 'path';
+import { uploadProfileImage, deleteFromCloudinary } from '../services/upload.service.js';
+import { isCloudinaryConfigured } from '../config/cloudinary.js';
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/profile-pictures/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for file uploads - use memory storage for Cloudinary
+const storage = multer.memoryStorage(); // Store in memory buffer for Cloudinary upload
 
 const fileFilter = (req, file, cb) => {
   // Accept images only
@@ -169,13 +163,45 @@ export const uploadProfilePicture = async (req, res) => {
       });
     }
 
-    // Store the file path (in production, this would be a Cloudinary URL)
-    const fileUrl = `http://localhost:5000/uploads/profile-pictures/${req.file.filename}`;
+    let uploadResult;
 
-    // ✅ FIX: Store as object matching schema (profilePicture: { url, publicId })
+    // ✅ FIX: Use Cloudinary for image upload (production-ready)
+    if (isCloudinaryConfigured()) {
+      try {
+        // Delete old image from Cloudinary if exists
+        if (profile.personalInfo.profilePicture?.publicId &&
+            !profile.personalInfo.profilePicture.publicId.startsWith('mock_')) {
+          try {
+            await deleteFromCloudinary(profile.personalInfo.profilePicture.publicId);
+          } catch (deleteError) {
+            console.warn('Failed to delete old profile picture:', deleteError.message);
+          }
+        }
+
+        // Upload new image to Cloudinary
+        uploadResult = await uploadProfileImage(req.file.buffer, req.user._id.toString());
+
+        console.log('✅ Profile picture uploaded to Cloudinary:', uploadResult.url);
+      } catch (cloudinaryError) {
+        console.error('Cloudinary upload failed:', cloudinaryError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to upload image to cloud storage'
+        });
+      }
+    } else {
+      // Fallback: Local file storage (development only)
+      console.warn('⚠️  Cloudinary not configured - using placeholder image');
+      uploadResult = {
+        url: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.personalInfo.firstName || 'User')}&size=400&background=0078D4&color=fff`,
+        publicId: `local_${Date.now()}`
+      };
+    }
+
+    // Store as object matching schema (profilePicture: { url, publicId })
     profile.personalInfo.profilePicture = {
-      url: fileUrl,
-      publicId: req.file.filename  // For local storage, use filename as ID
+      url: uploadResult.url,
+      publicId: uploadResult.publicId
     };
 
     await profile.save();
@@ -184,8 +210,8 @@ export const uploadProfilePicture = async (req, res) => {
       success: true,
       message: 'Profile picture uploaded successfully',
       data: {
-        profilePicture: fileUrl,
-        url: fileUrl // Backwards compatibility
+        profilePicture: uploadResult.url,
+        url: uploadResult.url // Backwards compatibility
       }
     });
   } catch (error) {

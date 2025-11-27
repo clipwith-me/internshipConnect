@@ -2,6 +2,10 @@
 import dotenv from 'dotenv';
 dotenv.config(); // Must run before other imports that use process.env
 
+// ✅ Initialize environment configuration
+import envConfig from './config/env.config.js';
+const config = envConfig.init(); // Validates and logs configuration status
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -208,6 +212,32 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 // Note: /api/payments already registered on line 100 (before JSON parser)
 
+// ✅ ROOT ROUTE - Fixes "Route GET / not found" error on Render
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    service: 'InternshipConnect API',
+    version: '1.0.0',
+    status: 'running',
+    environment: process.env.NODE_ENV || 'development',
+    documentation: '/api',
+    health: '/health',
+    endpoints: {
+      auth: '/api/auth',
+      internships: '/api/internships',
+      applications: '/api/applications',
+      students: '/api/students',
+      organizations: '/api/organizations',
+      resumes: '/api/resumes',
+      payments: '/api/payments',
+      notifications: '/api/notifications',
+      admin: '/api/admin',
+      matching: '/api/matching'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Test endpoint
 app.get("/api/auth/test", (req, res) => {
   res.json({ message: "Backend is working ✅" });
@@ -215,10 +245,17 @@ app.get("/api/auth/test", (req, res) => {
 
 // Health check route
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    services: {
+      database: config.database.isConfigured,
+      smtp: config.smtp.isConfigured,
+      stripe: config.stripe.isConfigured,
+      cloudinary: config.cloudinary.isConfigured,
+      ai: config.ai.isConfigured
+    }
   });
 });
 
