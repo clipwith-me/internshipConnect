@@ -101,26 +101,35 @@ const allowedOrigins = isProduction
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests without origin header (Render health checks, Postman, curl, etc.)
-    // These are typically server-to-server requests or monitoring tools
+    // Allow requests without origin header (Render health checks, server-to-server)
     if (!origin) {
       return callback(null, true);
     }
 
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️  CORS blocked origin: ${origin}`);
-      console.warn(`📋 Allowed origins:`, allowedOrigins);
-      callback(new Error(`Origin ${origin} not allowed by CORS`));
+      return callback(null, true);
     }
+
+    // Detailed logging for CORS debugging
+    console.warn(`\n⚠️  ════════════════════════════════════════`);
+    console.warn(`⚠️  CORS BLOCKED REQUEST`);
+    console.warn(`⚠️  ════════════════════════════════════════`);
+    console.warn(`❌ Blocked Origin: ${origin}`);
+    console.warn(`✅ Allowed Origins:`, allowedOrigins);
+    console.warn(`📋 NODE_ENV: ${process.env.NODE_ENV}`);
+    console.warn(`📋 FRONTEND_URL env var: ${process.env.FRONTEND_URL || 'NOT SET'}`);
+    console.warn(`⚠️  ════════════════════════════════════════\n`);
+
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
-  credentials: true, // Allow cookies to be sent
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // Cache preflight for 24 hours
+  maxAge: 86400, // Cache preflight for 24 hours
+  optionsSuccessStatus: 204, // Some legacy browsers choke on 204
+  preflightContinue: false
 }));
 
 // 5. STRIPE WEBHOOK ROUTE - BEFORE JSON PARSER
