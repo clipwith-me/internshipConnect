@@ -52,10 +52,10 @@ const getTransporter = async () => {
         ciphers: 'SSLv3',
         rejectUnauthorized: false // Accept self-signed certificates
       },
-      // ✅ FIX: Add connection timeouts
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
+      // ✅ FIX: Add connection timeouts (reduced for faster failures)
+      connectionTimeout: 5000, // 5 seconds
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
       // ✅ FIX: Enable debug mode in development
       logger: process.env.NODE_ENV === 'development',
       debug: process.env.NODE_ENV === 'development'

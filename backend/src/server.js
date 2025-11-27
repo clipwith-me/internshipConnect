@@ -101,20 +101,18 @@ const allowedOrigins = isProduction
 
 app.use(cors({
   origin: (origin, callback) => {
-    // In production: Require origin header (no null origins)
-    // In development: Allow no origin (Postman, mobile apps, etc.)
+    // Allow requests without origin header (Render health checks, Postman, curl, etc.)
+    // These are typically server-to-server requests or monitoring tools
     if (!origin) {
-      if (isProduction) {
-        console.warn('⚠️  CORS blocked: Missing origin header in production');
-        return callback(new Error('Origin header required'));
-      }
       return callback(null, true);
     }
 
+    // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.warn(`⚠️  CORS blocked origin: ${origin}`);
+      console.warn(`📋 Allowed origins:`, allowedOrigins);
       callback(new Error(`Origin ${origin} not allowed by CORS`));
     }
   },
@@ -362,9 +360,12 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
 
-    // ✅ FIX: Verify SMTP connection on server startup
+    // ✅ FIX: Verify SMTP connection on server startup (non-blocking)
     const { verifyEmailConnection } = await import('./services/email.service.js');
-    await verifyEmailConnection();
+    verifyEmailConnection().catch((err) => {
+      console.warn('⚠️  SMTP verification failed (non-critical):', err.message);
+      console.warn('⚠️  Server will continue running - emails will be logged to console');
+    });
 
     // Get port from environment or use 5000
     const PORT = process.env.PORT || 5000;
