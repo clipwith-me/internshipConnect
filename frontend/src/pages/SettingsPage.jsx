@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { studentAPI, organizationAPI, authAPI, paymentAPI } from '../services/api';
 import { User, Bell, Lock, Globe, CreditCard, Shield, Save, Camera, Upload } from 'lucide-react';
+import { CropModal } from '../components';
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -103,12 +104,15 @@ const AccountSettings = ({ user, setMessage }) => {
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
 
   // Get current profile picture URL
   const profilePictureUrl = profile?.personalInfo?.profilePicture || profile?.companyInfo?.logo || null;
 
-  const handleImageUpload = async (e) => {
+  // ✅ FIX: Open crop modal instead of uploading directly
+  const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -125,29 +129,45 @@ const AccountSettings = ({ user, setMessage }) => {
       return;
     }
 
+    // Convert file to data URL for crop modal
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedImage(reader.result);
+      setShowCropModal(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // ✅ NEW: Upload cropped image
+  const handleCropComplete = async (croppedBlob) => {
     try {
       setUploading(true);
-      const formData = new FormData();
+      const uploadFormData = new FormData();
+
+      // Create file from blob
+      const fileName = `profile_${Date.now()}.jpg`;
+      const croppedFile = new File([croppedBlob], fileName, { type: 'image/jpeg' });
 
       if (user?.role === 'student') {
-        formData.append('profilePicture', file);
-        const response = await studentAPI.uploadProfilePicture(formData);
+        uploadFormData.append('profilePicture', croppedFile);
+        const response = await studentAPI.uploadProfilePicture(uploadFormData);
         if (response.data.success) {
           updateProfile(response.data.data);
-          setMessage({ type: 'success', text: 'Profile picture updated successfully' });
+          setMessage({ type: 'success', text: '✅ Profile picture updated successfully!' });
         }
       } else if (user?.role === 'organization') {
-        formData.append('logo', file);
-        const response = await organizationAPI.uploadLogo(formData);
+        uploadFormData.append('logo', croppedFile);
+        const response = await organizationAPI.uploadLogo(uploadFormData);
         if (response.data.success) {
           updateProfile(response.data.data);
-          setMessage({ type: 'success', text: 'Company logo updated successfully' });
+          setMessage({ type: 'success', text: '✅ Company logo updated successfully!' });
         }
       }
     } catch (err) {
       setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to upload image' });
     } finally {
       setUploading(false);
+      setSelectedImage(null);
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -234,7 +254,7 @@ const AccountSettings = ({ user, setMessage }) => {
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleImageUpload}
+              onChange={handleImageSelect}
               className="hidden"
               id="profile-picture-upload"
             />
@@ -324,6 +344,23 @@ const AccountSettings = ({ user, setMessage }) => {
         <Save size={20} />
         {loading ? 'Saving...' : 'Save Changes'}
       </button>
+
+      {/* ✅ NEW: Crop Modal */}
+      {showCropModal && selectedImage && (
+        <CropModal
+          image={selectedImage}
+          onClose={() => {
+            setShowCropModal(false);
+            setSelectedImage(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+          }}
+          onCropComplete={handleCropComplete}
+          aspectRatio={1}
+          title={isStudent ? 'Crop Profile Picture' : 'Crop Company Logo'}
+        />
+      )}
     </form>
   );
 };

@@ -6,6 +6,8 @@ import Application from '../models/Application.js';
 import Internship from '../models/Internship.js';
 import User from '../models/User.js';
 import { generateResume as generateAIResumeContent } from '../services/ai.service.js';
+import { generateResumePDF } from '../services/pdf.service.js';
+import path from 'path';
 
 /**
  * @desc    Generate AI resume
@@ -50,7 +52,7 @@ export const generateAIResume = async (req, res) => {
       });
     }
 
-    // Generate AI resume using the AI service
+    // ✅ FIX: Generate AI resume using the AI service
     const aiResult = await generateAIResumeContent(studentProfile, customization || {});
     const { personalInfo } = studentProfile;
 
@@ -58,15 +60,33 @@ export const generateAIResume = async (req, res) => {
       .toLowerCase()
       .replace(/\s+/g, '_');
 
-    const mockFileUrl = `https://res.cloudinary.com/internshipconnect/resumes/${fileName}`;
-    const mockPublicId = `resumes/${Date.now()}`;
+    // ✅ FIX: Generate actual PDF file using pdfkit
+    let pdfFilePath;
+    let fileUrl;
+
+    try {
+      console.log('📄 Generating PDF resume...');
+      pdfFilePath = await generateResumePDF(studentProfile, {
+        ...aiResult.content,
+        targetRole: customization?.targetRole || 'Internship Position'
+      }, fileName);
+
+      // Create accessible URL for download (served via /uploads/resumes/)
+      fileUrl = `/uploads/resumes/${fileName}`;
+
+      console.log(`✅ PDF generated successfully: ${pdfFilePath}`);
+    } catch (pdfError) {
+      console.error('PDF generation error:', pdfError);
+      // Fallback to mock URL if PDF generation fails
+      fileUrl = `https://res.cloudinary.com/internshipconnect/resumes/${fileName}`;
+    }
 
     const resume = await Resume.create({
       student: studentProfile._id,
       aiGenerated: {
         fileName,
-        fileUrl: mockFileUrl,
-        publicId: mockPublicId,
+        fileUrl: fileUrl,
+        publicId: pdfFilePath ? path.basename(pdfFilePath, '.pdf') : `resumes/${Date.now()}`,
         generatedAt: new Date(),
         customization: {
           targetRole: customization?.targetRole || 'Internship Position',
@@ -217,6 +237,70 @@ export const deleteResume = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete resume'
+    });
+  }
+};
+
+/**
+ * @desc    Download resume PDF
+ * @route   GET /api/resumes/:id/download
+ * @access  Private (Student owner only)
+ */
+export const downloadResume = async (req, res) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        error: 'Resume not found'
+      });
+    }
+
+    const studentProfile = await StudentProfile.findOne({ user: req.user._id });
+
+    // Verify ownership (student or organization viewing application)
+    if (req.user.role === 'student' && resume.student.toString() !== studentProfile._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to download this resume'
+      });
+    }
+
+    // Get file path
+    const fileName = resume.aiGenerated?.fileName || resume.uploadedFile?.fileName;
+
+    if (!fileName) {
+      return res.status(404).json({
+        success: false,
+        error: 'Resume file not found'
+      });
+    }
+
+    const filePath = path.join(process.cwd(), 'uploads', 'resumes', fileName);
+
+    // Check if file exists
+    const fs = await import('fs');
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        error: 'Resume file not found on server'
+      });
+    }
+
+    // Set headers for download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    // Stream file to response
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+  } catch (error) {
+    console.error('Download resume error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to download resume'
     });
   }
 };

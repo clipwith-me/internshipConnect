@@ -7,3 +7,4 @@ export { default as Badge } from './Badge';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { GuestRoute } from './ProtectedRoute';
 export { default as NotificationBell } from './NotificationBell';
+export { default as CropModal } from './CropModal';

@@ -1,38 +1,54 @@
-// frontend/src/App.jsx - FIXED VERSION
+// frontend/src/App.jsx - OPTIMIZED WITH CODE SPLITTING
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute, { GuestRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+
+// ✅ PERFORMANCE: Keep critical layouts loaded immediately
 import DashboardLayout from './layouts/DashboardLayout';
 import AuthLayout from './layouts/AuthLayout';
-import ComponentShowcase from './pages/ComponentShowcase';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import InternshipsPage from './pages/InternshipsPage';
-import InternshipDetailPage from './pages/InternshipDetailPage';
-import MyInternshipsPage from './pages/MyInternshipsPage';
-import CreateInternshipPage from './pages/CreateInternshipPage';
-import EditInternshipPage from './pages/EditInternshipPage';
-import ApplicationsPage from './pages/ApplicationsPage';
-import DashboardPage from './pages/DashboardPage';
-import ResumesPage from './pages/ResumesPage';
-import SettingsPage from './pages/SettingsPage';
-import ProfilePage from './pages/ProfilePage';
-import PricingPage from './pages/PricingPage';
+
+// ✅ PERFORMANCE: Lazy load all page components for code splitting
+const ComponentShowcase = lazy(() => import('./pages/ComponentShowcase'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const InternshipsPage = lazy(() => import('./pages/InternshipsPage'));
+const InternshipDetailPage = lazy(() => import('./pages/InternshipDetailPage'));
+const MyInternshipsPage = lazy(() => import('./pages/MyInternshipsPage'));
+const CreateInternshipPage = lazy(() => import('./pages/CreateInternshipPage'));
+const EditInternshipPage = lazy(() => import('./pages/EditInternshipPage'));
+const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ResumesPage = lazy(() => import('./pages/ResumesPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+
+// ✅ PERFORMANCE: Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <div className="inline-block w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p className="text-neutral-600 text-sm">Loading...</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
-          <Routes>
-          {/* Redirect root to dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Redirect root to dashboard */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          {/* Component Showcase (for testing) */}
-          <Route path="/showcase" element={<ComponentShowcase />} />
+              {/* Component Showcase (for testing) */}
+              <Route path="/showcase" element={<ComponentShowcase />} />
 
           {/* Auth Routes (Guest only - redirect if logged in) */}
           <Route
@@ -89,9 +105,10 @@ function App() {
             <Route path="pricing" element={<PricingPage />} />
           </Route>
 
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+              {/* 404 Not Found */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

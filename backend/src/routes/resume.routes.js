@@ -6,6 +6,7 @@ import {
   getMyResumes,
   getResumeById,
   deleteResume,
+  downloadResume,
   viewApplicantProfile
 } from '../controllers/resume.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
@@ -28,6 +29,7 @@ const generateValidation = [
 router.post('/generate', generateValidation, generateAIResume);
 router.get('/', getMyResumes);
 router.get('/applicant/:applicationId', viewApplicantProfile); // Organization viewing applicant
+router.get('/:id/download', downloadResume); // ✅ NEW: Download PDF endpoint
 router.get('/:id', getResumeById);
 router.delete('/:id', deleteResume);
 

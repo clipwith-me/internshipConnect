@@ -47,7 +47,7 @@ export default defineConfig({
         manualChunks: {
           // Vendor chunks (libraries that rarely change)
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['lucide-react'],
+          'ui-vendor': ['lucide-react', 'react-easy-crop'],
           // Add more vendor chunks as needed
         },
         // Naming pattern for chunks

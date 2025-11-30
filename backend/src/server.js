@@ -9,6 +9,7 @@ const config = envConfig.init(); // Validates and logs configuration status
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import internshipRoutes from './routes/internship.routes.js';
@@ -76,7 +77,23 @@ app.use(helmet());
 // 3. MICROSOFT-GRADE SECURITY HEADERS
 app.use(securityHeaders);
 
-// 4. CORS - Cross-Origin Resource Sharing
+// 4. COMPRESSION - Gzip/Deflate compression
+/**
+ * 🎓 WHY COMPRESSION?
+ *
+ * Compresses response bodies for all requests, reducing bandwidth by 60-80%.
+ * - Gzip compression for text/JSON responses
+ * - Only compresses responses larger than 1KB
+ * - Level 6 compression (balance between speed and size)
+ *
+ * ✅ PERFORMANCE: Faster page loads, reduced bandwidth costs
+ */
+app.use(compression({
+  threshold: 1024, // Only compress responses larger than 1KB
+  level: 6 // Compression level (1-9, higher = better compression but slower)
+}));
+
+// 5. CORS - Cross-Origin Resource Sharing
 /**
  * 🎓 WHY CORS?
  *
@@ -132,7 +149,7 @@ app.use(cors({
   preflightContinue: false
 }));
 
-// 5. STRIPE WEBHOOK ROUTE - BEFORE JSON PARSER
+// 6. STRIPE WEBHOOK ROUTE - BEFORE JSON PARSER
 /**
  * 🎓 CRITICAL: Payment Webhook Route Registration
  *
@@ -144,7 +161,7 @@ app.use(cors({
  */
 app.use('/api/payments', paymentRoutes);
 
-// 6. JSON PARSER - Parse request bodies
+// 7. JSON PARSER - Parse request bodies
 /**
  * 🎓 WHY express.json()?
  *
@@ -156,10 +173,10 @@ app.use('/api/payments', paymentRoutes);
  */
 app.use(express.json({ limit: '10mb' })); // Allow up to 10MB JSON payloads
 
-// 7. URL ENCODED - Parse form data
+// 8. URL ENCODED - Parse form data
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 7.5. STATIC FILES - Serve uploaded files
+// 9. STATIC FILES - Serve uploaded files
 /**
  * 🎓 STATIC FILE SERVING
  *
@@ -168,16 +185,16 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
  */
 app.use('/uploads', express.static('uploads'));
 
-// 8. INPUT SANITIZATION & XSS PROTECTION
+// 10. INPUT SANITIZATION & XSS PROTECTION
 app.use(sanitizeInput); // Prevent NoSQL injection
 app.use(preventXSS); // Prevent XSS attacks
 app.use(validateInput); // Additional input validation
 
-// 9. GENERAL API RATE LIMITING
+// 11. GENERAL API RATE LIMITING
 // ✅ ENABLED: Protection against API abuse and DoS attacks
 app.use('/api/', apiLimiter);
 
-// 10. LOGGING - Development only
+// 12. LOGGING - Development only
 /**
  * 🎓 CUSTOM LOGGER MIDDLEWARE
  *

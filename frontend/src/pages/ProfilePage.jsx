@@ -394,46 +394,46 @@ const StudentProfile = memo(() => {
   }
 
   return (
-    <div className="py-8">
+    <div className="py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-semibold text-neutral-900">My Profile</h1>
-            <p className="text-sm text-neutral-600 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900">My Profile</h1>
+            <p className="text-xs sm:text-sm text-neutral-600 mt-1">
               Profile Completeness: {completeness}%
             </p>
-            <div className="w-64 h-2 bg-neutral-200 rounded-full mt-2">
+            <div className="w-full sm:w-64 h-2 bg-neutral-200 rounded-full mt-2">
               <div
                 className="h-2 bg-primary-600 rounded-full transition-all"
                 style={{ width: `${completeness}%` }}
               />
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             {editing ? (
               <>
                 <button
                   onClick={handleCancel}
                   disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
                 >
-                  <X size={20} /> Cancel
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Cancel</span>
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
                 >
-                  {saving ? 'Saving...' : <><Save size={20} /> Save Changes</>}
+                  {saving ? 'Saving...' : <><Save className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Save Changes</span></>}
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm sm:text-base"
               >
-                <Edit2 size={20} /> Edit Profile
+                <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Edit Profile</span>
               </button>
             )}
           </div>
@@ -514,7 +514,7 @@ StudentProfile.displayName = 'StudentProfile';
  * PERSONAL INFO SECTION
  */
 const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <User className="w-5 h-5 text-primary-600" />
@@ -542,7 +542,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">
           First Name <span className="text-red-500">*</span>
         </label>
         {editing ? (
@@ -562,7 +562,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">
           Last Name <span className="text-red-500">*</span>
         </label>
         {editing ? (
@@ -582,7 +582,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Phone className="w-4 h-4" /> Phone
         </label>
         {editing ? (
@@ -602,7 +602,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Calendar className="w-4 h-4" /> Date of Birth
         </label>
         {editing ? (
@@ -625,7 +625,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
       </div>
 
       <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <MapPin className="w-4 h-4" /> Location
         </label>
         {editing ? (
@@ -679,7 +679,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
       </div>
 
       <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-neutral-700 mb-1">Bio</label>
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Bio</label>
         {editing ? (
           <textarea
             value={formData.personalInfo?.bio || ''}
@@ -705,7 +705,7 @@ PersonalInfoSection.displayName = 'PersonalInfoSection';
  * SOCIAL LINKS SECTION
  */
 const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <LinkIcon className="w-5 h-5 text-primary-600" />
@@ -733,7 +733,7 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Linkedin className="w-4 h-4" /> LinkedIn
         </label>
         {editing ? (
@@ -748,14 +748,14 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
             placeholder="https://linkedin.com/in/username"
           />
         ) : (
-          <p className="text-neutral-900 truncate">
+          <p className="text-neutral-900 truncate break-all sm:break-normal">
             {formData.socialLinks?.linkedin || 'Not set'}
           </p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Github className="w-4 h-4" /> GitHub
         </label>
         {editing ? (
@@ -770,14 +770,14 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
             placeholder="https://github.com/username"
           />
         ) : (
-          <p className="text-neutral-900 truncate">
+          <p className="text-neutral-900 truncate break-all sm:break-normal">
             {formData.socialLinks?.github || 'Not set'}
           </p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Globe className="w-4 h-4" /> Portfolio
         </label>
         {editing ? (
@@ -792,14 +792,14 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
             placeholder="https://yourportfolio.com"
           />
         ) : (
-          <p className="text-neutral-900 truncate">
+          <p className="text-neutral-900 truncate break-all sm:break-normal">
             {formData.socialLinks?.portfolio || 'Not set'}
           </p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Globe className="w-4 h-4" /> Website
         </label>
         {editing ? (
@@ -814,7 +814,7 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
             placeholder="https://yourwebsite.com"
           />
         ) : (
-          <p className="text-neutral-900 truncate">
+          <p className="text-neutral-900 truncate break-all sm:break-normal">
             {formData.socialLinks?.website || 'Not set'}
           </p>
         )}
@@ -829,7 +829,7 @@ SocialLinksSection.displayName = 'SocialLinksSection';
  * EDUCATION SECTION
  */
 const EducationSection = memo(({ formData, editing, addEducation, removeEducation, updateEducation, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <GraduationCap className="w-5 h-5 text-primary-600" />
@@ -841,7 +841,7 @@ const EducationSection = memo(({ formData, editing, addEducation, removeEducatio
             onClick={addEducation}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
           >
-            <Plus size={16} /> Add Education
+            <Plus size={16} /> <span className="hidden sm:inline">Add Education</span>
           </button>
           <button
             onClick={onSave}
@@ -856,7 +856,7 @@ const EducationSection = memo(({ formData, editing, addEducation, removeEducatio
             ) : (
               <>
                 <Save size={16} />
-                Save Section
+                <span className="hidden sm:inline">Save Section</span>
               </>
             )}
           </button>
@@ -876,7 +876,7 @@ const EducationSection = memo(({ formData, editing, addEducation, removeEducatio
               </button>
             )}
             {editing ? (
-              <div className="grid grid-cols-2 gap-3 pr-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
                 <input
                   type="text"
                   value={edu.institution || ''}
@@ -943,7 +943,7 @@ EducationSection.displayName = 'EducationSection';
  * SKILLS SECTION
  */
 const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSkill, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <Code className="w-5 h-5 text-primary-600" />
@@ -955,7 +955,7 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
             onClick={addSkill}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
           >
-            <Plus size={16} /> Add Skill
+            <Plus size={16} /> <span className="hidden sm:inline">Add Skill</span>
           </button>
           <button
             onClick={onSave}
@@ -970,7 +970,7 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
             ) : (
               <>
                 <Save size={16} />
-                Save Section
+                <span className="hidden sm:inline">Save Section</span>
               </>
             )}
           </button>
@@ -1043,7 +1043,7 @@ SkillsSection.displayName = 'SkillsSection';
  * EXPERIENCE SECTION
  */
 const ExperienceSection = memo(({ formData, editing, addExperience, removeExperience, updateExperience, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <Briefcase className="w-5 h-5 text-primary-600" />
@@ -1055,7 +1055,7 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
             onClick={addExperience}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
           >
-            <Plus size={16} /> Add Experience
+            <Plus size={16} /> <span className="hidden sm:inline">Add Experience</span>
           </button>
           <button
             onClick={onSave}
@@ -1070,7 +1070,7 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
             ) : (
               <>
                 <Save size={16} />
-                Save Section
+                <span className="hidden sm:inline">Save Section</span>
               </>
             )}
           </button>
@@ -1090,7 +1090,7 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
               </button>
             )}
             {editing ? (
-              <div className="grid grid-cols-2 gap-3 pr-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
                 <input
                   type="text"
                   value={exp.title || ''}
@@ -1373,35 +1373,35 @@ const OrganizationProfile = memo(() => {
   }
 
   return (
-    <div className="py-8">
+    <div className="py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-semibold text-neutral-900">Company Profile</h1>
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900">Company Profile</h1>
+          <div className="flex gap-2 flex-shrink-0">
             {editing ? (
               <>
                 <button
                   onClick={handleCancel}
                   disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
                 >
-                  <X size={20} /> Cancel
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Cancel</span>
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
                 >
-                  {saving ? 'Saving...' : <><Save size={20} /> Save Changes</>}
+                  {saving ? 'Saving...' : <><Save className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Save Changes</span></>}
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm sm:text-base"
               >
-                <Edit2 size={20} /> Edit Profile
+                <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Edit Profile</span>
               </button>
             )}
           </div>
@@ -1452,7 +1452,7 @@ const OrganizationProfile = memo(() => {
 OrganizationProfile.displayName = 'OrganizationProfile';
 
 const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <Building2 className="w-5 h-5 text-primary-600" />
@@ -1495,7 +1495,7 @@ const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSa
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-xl font-semibold"
               placeholder="Company Name"
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <select
                 value={formData.companyInfo?.industry || ''}
                 onChange={(e) => setFormData(prev => ({
@@ -1617,7 +1617,7 @@ const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSa
 CompanyInfoSection.displayName = 'CompanyInfoSection';
 
 const DescriptionSection = memo(({ profile, formData, setFormData, editing, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-lg font-semibold text-neutral-900">Company Description</h3>
       {editing && (
@@ -1643,7 +1643,7 @@ const DescriptionSection = memo(({ profile, formData, setFormData, editing, onSa
     {editing ? (
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Short Description</label>
+          <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Short Description</label>
           <input
             type="text"
             value={formData.description?.short || ''}
@@ -1656,7 +1656,7 @@ const DescriptionSection = memo(({ profile, formData, setFormData, editing, onSa
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Full Description</label>
+          <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Full Description</label>
           <textarea
             value={formData.description?.full || ''}
             onChange={(e) => setFormData(prev => ({
@@ -1681,7 +1681,7 @@ const DescriptionSection = memo(({ profile, formData, setFormData, editing, onSa
 DescriptionSection.displayName = 'DescriptionSection';
 
 const ContactInfoSection = memo(({ formData, setFormData, editing, onSave, saving }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
+  <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <Mail className="w-5 h-5 text-primary-600" />
@@ -1709,7 +1709,7 @@ const ContactInfoSection = memo(({ formData, setFormData, editing, onSave, savin
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Mail size={16} /> Primary Email
         </label>
         {editing ? (
@@ -1728,7 +1728,7 @@ const ContactInfoSection = memo(({ formData, setFormData, editing, onSave, savin
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Phone size={16} /> Phone
         </label>
         {editing ? (
@@ -1747,7 +1747,7 @@ const ContactInfoSection = memo(({ formData, setFormData, editing, onSave, savin
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
+        <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 flex items-center gap-1">
           <Mail size={16} /> HR Email
         </label>
         {editing ? (

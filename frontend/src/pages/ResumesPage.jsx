@@ -1,6 +1,6 @@
 // frontend/src/pages/ResumesPage.jsx
 import { useState, useEffect } from 'react';
-import { resumeAPI } from '../services/api';
+import { resumeAPI, studentAPI } from '../services/api';
 import { FileText, Download, Trash2, Plus, Calendar, Eye } from 'lucide-react';
 
 const ResumesPage = () => {
@@ -31,13 +31,66 @@ const ResumesPage = () => {
   const handleGenerate = async (customization) => {
     try {
       setGenerating(true);
+
+      // ✅ FIX: Validate profile completeness before generation
+      const profileResponse = await studentAPI.getProfile();
+      const profile = profileResponse.data.data;
+
+      // Check education
+      if (!profile.education || profile.education.length === 0) {
+        alert('📚 Please add at least one education entry to your profile before generating a resume.\n\nGo to Profile → Education section to add your educational background.');
+        setGenerating(false);
+        setShowGenerateModal(false);
+        return;
+      }
+
+      // Check skills
+      if (!profile.skills || profile.skills.length < 3) {
+        alert('💼 Please add at least 3 skills to your profile before generating a resume.\n\nGo to Profile → Skills section to add your skills.');
+        setGenerating(false);
+        setShowGenerateModal(false);
+        return;
+      }
+
+      // Check basic personal info
+      if (!profile.personalInfo?.firstName || !profile.personalInfo?.lastName) {
+        alert('👤 Please complete your name in your profile before generating a resume.\n\nGo to Profile → Personal Information section.');
+        setGenerating(false);
+        setShowGenerateModal(false);
+        return;
+      }
+
+      // Generate resume
       const response = await resumeAPI.generate({ customization });
+
       if (response.data.success) {
         setShowGenerateModal(false);
         fetchResumes();
+
+        // ✅ FIX: Show success message with details
+        const usage = response.data.usage;
+        const message = usage
+          ? `✅ Resume generated successfully!\n\nUsage: ${usage.current}/${usage.limit === 'unlimited' ? '∞' : usage.limit} resumes this month`
+          : '✅ Resume generated successfully!';
+        alert(message);
       }
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to generate resume');
+      // ✅ FIX: Better error messages
+      const error = err.response?.data?.error || 'Failed to generate resume';
+
+      if (error.includes('plan allows') || err.response?.data?.upgradeRequired) {
+        // Subscription limit reached
+        alert(`⚠️ ${error}\n\n💳 Upgrade your plan to generate more resumes.\n\nGo to Settings → Billing to upgrade.`);
+      } else if (error.includes('AI') || error.includes('service')) {
+        // AI service issue
+        alert('🤖 AI service is temporarily unavailable.\n\nPlease try again in a few minutes. If the problem persists, contact support.');
+      } else if (error.includes('profile')) {
+        // Profile incomplete
+        alert(`📋 ${error}\n\nPlease complete your profile before generating a resume.`);
+      } else {
+        // Generic error
+        alert(`❌ ${error}\n\nPlease try again. If the problem persists, contact support.`);
+      }
     } finally {
       setGenerating(false);
     }
@@ -54,17 +107,41 @@ const ResumesPage = () => {
     }
   };
 
-  const handleDownload = (resume) => {
-    // If there's a file URL, open it in new tab
-    const fileUrl = resume.aiGenerated?.fileUrl;
-    if (fileUrl && !fileUrl.includes('cloudinary.com/internshipconnect')) {
-      // Real file URL - open in new tab
-      window.open(fileUrl, '_blank');
-      return;
-    }
+  const handleDownload = async (resume) => {
+    try {
+      // ✅ FIX: Use proper download endpoint for PDF files
+      const fileUrl = resume.aiGenerated?.fileUrl;
 
-    // Otherwise create a text download of the resume content
-    const content = `
+      // Check if it's a real PDF file (not mock Cloudinary URL)
+      if (fileUrl && !fileUrl.includes('cloudinary.com/internshipconnect')) {
+        // Use download endpoint for proper authenticated file download
+        const downloadUrl = `${import.meta.env.VITE_API_URL}/resumes/${resume._id}/download`;
+        const token = localStorage.getItem('accessToken');
+
+        if (token) {
+          const response = await fetch(downloadUrl, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = resume.aiGenerated?.fileName || 'resume.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+            return;
+          }
+        }
+      }
+
+      // Fallback: Create text file if PDF doesn't exist
+      const content = `
 ${resume.aiGenerated?.customization?.targetRole || 'Resume'}
 Generated: ${new Date(resume.createdAt).toLocaleDateString()}
 Template: ${resume.aiGenerated?.customization?.template || 'professional'}
@@ -81,15 +158,19 @@ Suggestions:
 ${resume.aiGenerated?.analysis?.suggestions?.map(s => `• ${s}`).join('\n') || '• Keep up the good work!'}
 `.trim();
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `resume-${resume.version || 1}-${new Date(resume.createdAt).toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume-${resume.version || 1}-${new Date(resume.createdAt).toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download resume. Please try again.');
+    }
   };
 
   if (loading) {
