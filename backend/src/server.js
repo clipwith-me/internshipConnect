@@ -42,6 +42,10 @@ import {
  */
 const app = express();
 
+// ✅ FIX: Enable trust proxy for Render deployment
+// This allows express-rate-limit to work correctly behind Render's proxy
+app.set('trust proxy', 1);
+
 // ═══════════════════════════════════════════════════════════
 // MIDDLEWARE SETUP
 // ═══════════════════════════════════════════════════════════
@@ -383,46 +387,32 @@ app.use((err, req, res, next) => {
  */
 const startServer = async () => {
   try {
-    // Connect to MongoDB
-    await connectDB();
+    // Get port from environment or use 5000
+    const PORT = process.env.PORT || 5000;
 
-    // ✅ FIX: Verify SMTP connection on server startup (non-blocking)
+    // ✅ CRITICAL FIX: Start server IMMEDIATELY to satisfy Render's port scanner
+    // This prevents "No open ports detected" errors on Render
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📝 Local API URL: http://localhost:${PORT}`);
+    });
+
+    // Store server reference for graceful shutdown
+    global.server = server;
+
+    // ✅ Connect to MongoDB AFTER server starts (non-blocking for Render)
+    connectDB().catch((err) => {
+      console.error('⚠️  MongoDB connection failed:', err.message);
+      console.error('⚠️  Server running but database unavailable');
+    });
+
+    // ✅ Verify SMTP connection in background (non-blocking, non-critical)
     const { verifyEmailConnection } = await import('./services/email.service.js');
     verifyEmailConnection().catch((err) => {
       console.warn('⚠️  SMTP verification failed (non-critical):', err.message);
       console.warn('⚠️  Server will continue running - emails will be logged to console');
     });
-
-    // Get port from environment or use 5000
-    const PORT = process.env.PORT || 5000;
-
-    // Get network IP dynamically (development only)
-    let networkIP = null;
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        const os = await import('os');
-        const networkInterfaces = os.networkInterfaces();
-        networkIP = Object.values(networkInterfaces)
-          .flat()
-          .find(iface => iface.family === 'IPv4' && !iface.internal)?.address;
-      } catch (err) {
-        // Silently fail - network IP is just for convenience
-      }
-    }
-
-    // ✅ Listen on all network interfaces (0.0.0.0) to allow mobile access
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📝 Local API URL: http://localhost:${PORT}`);
-
-      if (networkIP) {
-        console.log(`📱 Network API URL: http://${networkIP}:${PORT}`);
-      }
-    });
-
-    // Store server reference for graceful shutdown
-    global.server = server;
 
   } catch (error) {
     console.error('Failed to start server:', error);
