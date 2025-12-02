@@ -174,70 +174,76 @@ async function generateWithClaude(prompt) {
  * Generate mock resume (fallback)
  */
 function generateMockResume(studentProfile, customization) {
-  const { personalInfo, education, skills, experience } = studentProfile;
+  const { personalInfo, education, skills, experience, projects } = studentProfile;
   const { targetRole = 'Internship Position', targetCompany, targetIndustry = 'General' } = customization;
 
-  return `
-=================================
-${personalInfo?.firstName} ${personalInfo?.lastName}
-${personalInfo?.email} | ${personalInfo?.phone || ''}
-${personalInfo?.location?.city}, ${personalInfo?.location?.country}
-=================================
+  // ✅ FIX: Return structured object for PDF generation (not plain string)
+  return {
+    targetRole: targetRole,
+    summary: `Motivated ${education?.[0]?.degree || 'student'} seeking ${targetRole} ${targetCompany ? `at ${targetCompany}` : ''} in the ${targetIndustry} industry. Strong foundation in ${skills?.slice(0, 3).map(s => s.name).join(', ') || 'various technologies'} with hands-on experience in ${experience?.[0]?.title || 'professional settings'}.`,
 
-PROFESSIONAL SUMMARY
--------------------
-Motivated ${education?.[0]?.degree || 'student'} seeking ${targetRole} ${targetCompany ? `at ${targetCompany}` : ''} in the ${targetIndustry} industry.
-Strong foundation in ${skills?.slice(0, 3).map(s => s.name).join(', ') || 'various technologies'} with hands-on experience in ${experience?.[0]?.title || 'professional settings'}.
+    education: education?.map(edu => ({
+      institution: edu.institution || 'Institution',
+      degree: `${edu.degree} in ${edu.fieldOfStudy}`,
+      startDate: edu.startDate,
+      endDate: edu.endDate || 'Present',
+      gpa: edu.gpa
+    })) || [],
 
-EDUCATION
----------
-${education?.map(edu => `${edu.degree} in ${edu.fieldOfStudy}
-${edu.institution}
-${edu.startDate} - ${edu.endDate || 'Present'}
-GPA: ${edu.gpa || 'N/A'}
-`).join('\n') || 'Education details not provided'}
+    skills: skills?.reduce((acc, skill) => {
+      const category = skill.category || 'Technical';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(skill.name);
+      return acc;
+    }, {}) || {},
 
-SKILLS
-------
-${skills?.map(skill => `• ${skill.name} - ${skill.level}`).join('\n') || '• Skills not provided'}
+    experience: experience?.map(exp => ({
+      title: exp.title || 'Position',
+      company: exp.company || 'Company',
+      location: exp.location,
+      startDate: exp.startDate,
+      endDate: exp.endDate || 'Present',
+      description: exp.description,
+      achievements: exp.achievements && exp.achievements.length > 0
+        ? exp.achievements
+        : [
+          'Collaborated with cross-functional teams to achieve project goals',
+          'Demonstrated strong problem-solving and communication skills',
+          'Contributed to team success through innovative solutions'
+        ]
+    })) || [],
 
-EXPERIENCE
-----------
-${experience?.map(exp => `${exp.title}
-${exp.company} | ${exp.location}
-${exp.startDate} - ${exp.endDate || 'Present'}
-
-${exp.description}
-
-Achievements:
-${exp.achievements?.map(a => `• ${a}`).join('\n') || '• Key contributions to team success'}
-`).join('\n\n') || 'Experience details not provided'}
-
-ADDITIONAL INFORMATION
----------------------
-• Strong communication and teamwork skills
-• Passionate about ${targetIndustry} and continuous learning
-• Available for ${targetRole}
-`.trim();
+    projects: projects?.map(proj => ({
+      name: proj.name || 'Project',
+      description: proj.description,
+      technologies: proj.technologies?.join(', '),
+      url: proj.url
+    })) || []
+  };
 }
 
 /**
  * Analyze resume for ATS compatibility and quality
  */
 async function analyzeResume(resumeContent, targetRole) {
+  // ✅ FIX: Convert object to string for keyword analysis
+  const contentString = typeof resumeContent === 'string'
+    ? resumeContent
+    : JSON.stringify(resumeContent);
+
   // Extract keywords from resume
-  const keywords = extractKeywords(resumeContent);
+  const keywords = extractKeywords(contentString);
 
   // Calculate ATS score (80-100 range)
-  const atsScore = calculateATSScore(resumeContent, keywords);
+  const atsScore = calculateATSScore(contentString, keywords);
 
   // Calculate readability score
-  const readabilityScore = calculateReadabilityScore(resumeContent);
+  const readabilityScore = calculateReadabilityScore(contentString);
 
   // Generate strengths and suggestions
-  const strengths = identifyStrengths(resumeContent, keywords);
-  const suggestions = generateSuggestions(resumeContent, atsScore, readabilityScore);
-  const improvements = generateImprovements(resumeContent);
+  const strengths = identifyStrengths(contentString, keywords);
+  const suggestions = generateSuggestions(contentString, atsScore, readabilityScore);
+  const improvements = generateImprovements(contentString);
 
   return {
     atsScore,
