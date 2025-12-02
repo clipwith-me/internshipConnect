@@ -21,6 +21,7 @@ import organizationRoutes from './routes/organization.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import premiumRoutes from './routes/premium.routes.js';
 import {
   apiLimiter,
   authLimiter,
@@ -238,6 +239,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/premium', premiumRoutes);
 // Note: /api/payments already registered on line 100 (before JSON parser)
 
 // ✅ ROOT ROUTE - Fixes "Route GET / not found" error on Render
