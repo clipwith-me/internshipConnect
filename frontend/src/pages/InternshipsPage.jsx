@@ -1,25 +1,38 @@
 // frontend/src/pages/InternshipsPage.jsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { internshipAPI } from '../services/api';
-import { Search, MapPin, Briefcase, Clock, DollarSign, Building2, Filter, ChevronDown } from 'lucide-react';
+import { Search, MapPin, Briefcase, Clock, DollarSign, Building2, Filter, ChevronDown, Crown, Star } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDebounce } from '../hooks/useDebounce';
+import { useAuth } from '../context/AuthContext';
 
 const InternshipsPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pagination, setPagination] = useState({});
   const abortControllerRef = useRef(null);
 
+  // Check if user has premium plan
+  const userPlan = user?.subscription?.plan || 'free';
+  const hasPremium = ['premium', 'pro'].includes(userPlan);
+
   // Initialize filters from URL search params
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     location: searchParams.get('location') || '',
     type: searchParams.get('type') || '',
-    compensationType: searchParams.get('compensationType') || ''
+    compensationType: searchParams.get('compensationType') || '',
+    // Premium filters
+    industry: searchParams.get('industry') || '',
+    experienceLevel: searchParams.get('experienceLevel') || '',
+    duration: searchParams.get('duration') || '',
+    minSalary: searchParams.get('minSalary') || '',
+    maxSalary: searchParams.get('maxSalary') || '',
+    skills: searchParams.get('skills') || ''
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -45,7 +58,9 @@ const InternshipsPage = () => {
         abortControllerRef.current.abort();
       }
     };
-  }, [debouncedSearch, debouncedLocation, filters.type, filters.compensationType]);
+  }, [debouncedSearch, debouncedLocation, filters.type, filters.compensationType,
+      filters.industry, filters.experienceLevel, filters.duration, filters.minSalary,
+      filters.maxSalary, filters.skills]);
 
   const fetchInternships = async () => {
     try {
@@ -57,6 +72,16 @@ const InternshipsPage = () => {
       if (filters.location) params.location = filters.location;
       if (filters.type) params.type = filters.type;
       if (filters.compensationType) params.compensationType = filters.compensationType;
+
+      // Premium filters (only sent if user has premium)
+      if (hasPremium) {
+        if (filters.industry) params.industry = filters.industry;
+        if (filters.experienceLevel) params.experienceLevel = filters.experienceLevel;
+        if (filters.duration) params.duration = filters.duration;
+        if (filters.minSalary) params.minSalary = filters.minSalary;
+        if (filters.maxSalary) params.maxSalary = filters.maxSalary;
+        if (filters.skills) params.skills = filters.skills;
+      }
 
       const response = await internshipAPI.getAll(params);
 
@@ -82,7 +107,18 @@ const InternshipsPage = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ search: '', location: '', type: '', compensationType: '' });
+    setFilters({
+      search: '',
+      location: '',
+      type: '',
+      compensationType: '',
+      industry: '',
+      experienceLevel: '',
+      duration: '',
+      minSalary: '',
+      maxSalary: '',
+      skills: ''
+    });
   };
 
   return (
@@ -126,44 +162,158 @@ const InternshipsPage = () => {
 
           {/* Advanced Filters */}
           {showFilters && (
-            <div className="mt-6 pt-6 border-t border-neutral-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Location</label>
-                <input
-                  type="text"
-                  placeholder="City or remote"
-                  value={filters.location}
-                  onChange={(e) => handleFilterChange('location', e.target.value)}
-                  className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
+            <div className="mt-6 pt-6 border-t border-neutral-200">
+              {/* Basic Filters (Free + Premium) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Location</label>
+                  <input
+                    type="text"
+                    placeholder="City or remote"
+                    value={filters.location}
+                    onChange={(e) => handleFilterChange('location', e.target.value)}
+                    className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Type</label>
+                  <select
+                    value={filters.type}
+                    onChange={(e) => handleFilterChange('type', e.target.value)}
+                    className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="">All Types</option>
+                    <option value="remote">Remote</option>
+                    <option value="onsite">On-site</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Compensation</label>
+                  <select
+                    value={filters.compensationType}
+                    onChange={(e) => handleFilterChange('compensationType', e.target.value)}
+                    className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="">All Types</option>
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                    <option value="stipend">Stipend</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Type</label>
-                <select
-                  value={filters.type}
-                  onChange={(e) => handleFilterChange('type', e.target.value)}
-                  className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">All Types</option>
-                  <option value="remote">Remote</option>
-                  <option value="onsite">On-site</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Compensation</label>
-                <select
-                  value={filters.compensationType}
-                  onChange={(e) => handleFilterChange('compensationType', e.target.value)}
-                  className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">All Types</option>
-                  <option value="paid">Paid</option>
-                  <option value="unpaid">Unpaid</option>
-                  <option value="stipend">Stipend</option>
-                </select>
-              </div>
-              <div className="sm:col-span-3">
+
+              {/* Premium Filters */}
+              {hasPremium ? (
+                <div className="pt-6 border-t border-neutral-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    {userPlan === 'pro' ? (
+                      <Crown className="w-5 h-5 text-amber-500" />
+                    ) : (
+                      <Star className="w-5 h-5 text-blue-500" />
+                    )}
+                    <h4 className="text-sm font-semibold text-neutral-700">
+                      Premium Filters
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">Industry</label>
+                      <select
+                        value={filters.industry}
+                        onChange={(e) => handleFilterChange('industry', e.target.value)}
+                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="">All Industries</option>
+                        <option value="technology">Technology</option>
+                        <option value="finance">Finance</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="education">Education</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="consulting">Consulting</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="design">Design</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">Experience Level</label>
+                      <select
+                        value={filters.experienceLevel}
+                        onChange={(e) => handleFilterChange('experienceLevel', e.target.value)}
+                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="">All Levels</option>
+                        <option value="entry">Entry Level</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">Duration</label>
+                      <select
+                        value={filters.duration}
+                        onChange={(e) => handleFilterChange('duration', e.target.value)}
+                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="">Any Duration</option>
+                        <option value="1-3">1-3 months</option>
+                        <option value="3-6">3-6 months</option>
+                        <option value="6-12">6-12 months</option>
+                        <option value="12+">12+ months</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">Min Salary ($/month)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 1000"
+                        value={filters.minSalary}
+                        onChange={(e) => handleFilterChange('minSalary', e.target.value)}
+                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">Max Salary ($/month)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 5000"
+                        value={filters.maxSalary}
+                        onChange={(e) => handleFilterChange('maxSalary', e.target.value)}
+                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">Required Skills</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. React, Python"
+                        value={filters.skills}
+                        onChange={(e) => handleFilterChange('skills', e.target.value)}
+                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-6 border-t border-neutral-200 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 text-center">
+                  <Crown className="w-12 h-12 text-primary-500 mx-auto mb-3" />
+                  <h4 className="text-lg font-semibold text-neutral-900 mb-2">
+                    Unlock Advanced Search Filters
+                  </h4>
+                  <p className="text-neutral-600 mb-4 max-w-md mx-auto">
+                    Get access to industry, experience level, salary range, duration, and skills filters with Premium
+                  </p>
+                  <button
+                    onClick={() => navigate('/dashboard/pricing')}
+                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Upgrade to Premium
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-6">
                 <button
                   type="button"
                   onClick={clearFilters}
