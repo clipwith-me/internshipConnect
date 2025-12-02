@@ -285,6 +285,26 @@ export const resumeAPI = {
 };
 
 /**
+ * Premium features endpoints
+ */
+export const premiumAPI = {
+  // Get overall premium features status and usage
+  getFeatures: () => api.get('/premium/features'),
+
+  // Resume optimization tips (Premium/Pro)
+  getResumeTips: (resumeId) => api.get(`/premium/resume-tips/${resumeId}`),
+
+  // Interview preparation guide (Premium/Pro)
+  getInterviewGuide: (internshipId) => api.get(`/premium/interview-guide/${internshipId}`),
+
+  // Priority support eligibility
+  checkPrioritySupport: () => api.get('/premium/priority-support/check'),
+
+  // Priority badge data
+  getPriorityBadge: () => api.get('/premium/priority-badge'),
+};
+
+/**
  * Payment/Subscription endpoints
  */
 export const paymentAPI = {

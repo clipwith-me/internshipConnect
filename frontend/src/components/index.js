@@ -8,3 +8,5 @@ export { default as ProtectedRoute } from './ProtectedRoute';
 export { GuestRoute } from './ProtectedRoute';
 export { default as NotificationBell } from './NotificationBell';
 export { default as CropModal } from './CropModal';
+export { default as ResumeOptimizationTips } from './ResumeOptimizationTips';
+export { default as InterviewPrepGuide } from './InterviewPrepGuide';
