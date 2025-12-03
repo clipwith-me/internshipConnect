@@ -249,7 +249,10 @@ export const getInternshipApplications = async (req, res) => {
     }
 
     const applications = await Application.find({ internship: req.params.id })
-      .populate('student')
+      .populate({
+        path: 'student',
+        populate: { path: 'user', select: 'email subscription' }
+      })
       .sort({ createdAt: -1 });
 
     res.json({
@@ -426,7 +429,7 @@ export const getOrganizationApplications = async (req, res) => {
       .populate({
         path: 'student',
         select: 'personalInfo user',
-        populate: { path: 'user', select: 'email' }
+        populate: { path: 'user', select: 'email subscription' }
       })
       .populate({
         path: 'internship',

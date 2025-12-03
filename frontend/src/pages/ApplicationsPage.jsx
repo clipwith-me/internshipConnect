@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { applicationAPI, resumeAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Briefcase, Calendar, Eye, X, User, FileText, Building2, Download, Mail, GraduationCap, Code } from 'lucide-react';
+import { Briefcase, Calendar, Eye, X, User, FileText, Building2, Download, Mail, GraduationCap, Code, Crown, Star } from 'lucide-react';
 
 const ApplicationsPage = () => {
   const navigate = useNavigate();
@@ -145,6 +145,29 @@ const ApplicationsPage = () => {
   );
 };
 
+// Priority Badge Component for Premium/Pro applicants
+const PriorityBadge = ({ plan }) => {
+  if (plan === 'pro') {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 rounded-full">
+        <Crown className="w-4 h-4 text-amber-600" />
+        <span className="text-xs font-semibold text-amber-700">Pro Applicant</span>
+      </div>
+    );
+  }
+
+  if (plan === 'premium') {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300 rounded-full">
+        <Star className="w-4 h-4 text-blue-600" />
+        <span className="text-xs font-semibold text-blue-700">Premium Applicant</span>
+      </div>
+    );
+  }
+
+  return null;
+};
+
 // Card for students viewing their applications
 const StudentApplicationCard = ({ application, onView, onWithdraw }) => {
   const getStatusColor = (status) => {
@@ -249,6 +272,9 @@ const OrganizationApplicationCard = ({ application, onUpdateStatus }) => {
     ? `${application.student.personalInfo.firstName} ${application.student.personalInfo.lastName}`
     : 'Student';
 
+  // Get student's subscription plan from user object
+  const studentPlan = application.student?.user?.subscription?.plan || 'free';
+
   const handleViewProfile = async () => {
     try {
       setLoadingProfile(true);
@@ -274,6 +300,7 @@ const OrganizationApplicationCard = ({ application, onUpdateStatus }) => {
               <h3 className="text-lg font-semibold text-neutral-900">
                 {studentName}
               </h3>
+              <PriorityBadge plan={studentPlan} />
             </div>
             <div className="flex items-center gap-2 text-neutral-600 text-sm">
               <Building2 className="w-4 h-4" />
