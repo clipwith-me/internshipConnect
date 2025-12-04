@@ -305,6 +305,35 @@ export const premiumAPI = {
 };
 
 /**
+ * Messaging endpoints (Pro Feature)
+ */
+export const messagingAPI = {
+  // Get all conversations for current user
+  getConversations: () => api.get('/messages/conversations'),
+
+  // Start new conversation with organization
+  startConversation: (data) => api.post('/messages/conversations', data),
+  // data: { recipientId, internshipId?, initialMessage }
+
+  // Get messages in a conversation
+  getMessages: (conversationId, params = {}) =>
+    api.get(`/messages/conversations/${conversationId}`, { params }),
+  // params: { page, limit }
+
+  // Send message in conversation
+  sendMessage: (conversationId, data) =>
+    api.post(`/messages/conversations/${conversationId}/messages`, data),
+  // data: { content, attachments? }
+
+  // Archive conversation
+  archiveConversation: (conversationId) =>
+    api.delete(`/messages/conversations/${conversationId}`),
+
+  // Get unread message count
+  getUnreadCount: () => api.get('/messages/unread-count'),
+};
+
+/**
  * Payment/Subscription endpoints
  */
 export const paymentAPI = {
