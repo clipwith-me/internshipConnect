@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FeaturedBadge } from '../components';
+import { studentAPI } from '../services/api';
 import { Search, Filter, User, MapPin, BookOpen, Briefcase, Mail } from 'lucide-react';
 
 /**
@@ -36,97 +37,41 @@ const StudentSearchPage = () => {
     }
   }, [user, navigate]);
 
-  // Mock API call - replace with actual API when backend is ready
+  // Search students API call
   const searchStudents = async (page = 1) => {
     try {
       setLoading(true);
 
-      // TODO: Replace with actual API call
-      // const response = await studentAPI.search({
-      //   search: searchQuery,
-      //   skills: filters.skills,
-      //   education: filters.education,
-      //   location: filters.location,
-      //   page
-      // });
+      // Real API call
+      const response = await studentAPI.search({
+        search: searchQuery,
+        skills: filters.skills,
+        education: filters.education,
+        location: filters.location,
+        page,
+        limit: 20
+      });
 
-      // Mock data for demonstration
-      const mockStudents = [
-        {
-          _id: '1',
-          personalInfo: {
-            firstName: 'Sarah',
-            lastName: 'Johnson',
-            location: { city: 'San Francisco', country: 'USA' },
-            profilePicture: { url: null }
-          },
-          bio: 'Full-stack developer passionate about React and Node.js',
-          headline: 'Computer Science Student | Full Stack Developer',
-          skills: [
-            { name: 'JavaScript', level: 'advanced' },
-            { name: 'React', level: 'advanced' },
-            { name: 'Node.js', level: 'intermediate' }
-          ],
-          education: [
-            { institution: 'Stanford University', degree: 'bachelor', major: 'Computer Science' }
-          ],
-          experience: [
-            { title: 'Software Engineering Intern', company: 'Tech Corp' }
-          ],
-          featured: {
-            isFeatured: true,
-            priority: 90
-          },
-          user: {
-            email: 'sarah.j@example.com',
-            subscription: { plan: 'pro' }
-          },
-          profileCompleteness: 95
-        },
-        {
-          _id: '2',
-          personalInfo: {
-            firstName: 'Michael',
-            lastName: 'Chen',
-            location: { city: 'New York', country: 'USA' },
-            profilePicture: { url: null }
-          },
-          bio: 'Data science enthusiast with strong analytical skills',
-          headline: 'Data Science Student | Python Expert',
-          skills: [
-            { name: 'Python', level: 'advanced' },
-            { name: 'Machine Learning', level: 'intermediate' },
-            { name: 'SQL', level: 'advanced' }
-          ],
-          education: [
-            { institution: 'MIT', degree: 'bachelor', major: 'Data Science' }
-          ],
-          experience: [
-            { title: 'Data Analyst Intern', company: 'Analytics Inc' }
-          ],
-          featured: {
-            isFeatured: false,
-            priority: 0
-          },
-          user: {
-            email: 'michael.c@example.com',
-            subscription: { plan: 'free' }
-          },
-          profileCompleteness: 85
-        }
-      ];
-
-      setStudents(mockStudents);
-      setPagination({
+      setStudents(response.data.data.students || []);
+      setPagination(response.data.data.pagination || {
         current: page,
         total: 1,
-        count: mockStudents.length,
-        totalStudents: mockStudents.length
+        count: 0,
+        totalStudents: 0
       });
       setError(null);
     } catch (error) {
       console.error('Search error:', error);
-      setError('Failed to search students');
+      setError(error.response?.data?.error || 'Failed to search students');
+
+      // Set empty results on error
+      setStudents([]);
+      setPagination({
+        current: 1,
+        total: 1,
+        count: 0,
+        totalStudents: 0
+      });
     } finally {
       setLoading(false);
     }
