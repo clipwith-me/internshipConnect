@@ -222,3 +222,109 @@ export const uploadProfilePicture = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Search student profiles (for organizations)
+ * @route   GET /api/students/search
+ * @access  Private (Organization only)
+ */
+export const searchStudents = async (req, res) => {
+  try {
+    // Only organizations can search for students
+    if (req.user.role !== 'organization') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only organizations can search for students'
+      });
+    }
+
+    const {
+      search,
+      skills,
+      education,
+      experience,
+      location,
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    // Build query
+    const query = {
+      status: 'active',
+      visibility: 'public'
+    };
+
+    // Text search in name, bio, headline
+    if (search) {
+      query.$or = [
+        { 'personalInfo.firstName': { $regex: search, $options: 'i' } },
+        { 'personalInfo.lastName': { $regex: search, $options: 'i' } },
+        { bio: { $regex: search, $options: 'i' } },
+        { headline: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Filter by skills
+    if (skills) {
+      const skillsArray = skills.split(',').map(s => s.trim());
+      query['skills.name'] = { $in: skillsArray };
+    }
+
+    // Filter by education level
+    if (education) {
+      query['education.degree'] = education;
+    }
+
+    // Filter by experience (number of experiences)
+    if (experience) {
+      const expCount = parseInt(experience);
+      query['experience'] = { $exists: true, $not: { $size: 0 } };
+    }
+
+    // Filter by location
+    if (location) {
+      query.$or = [
+        { 'personalInfo.location.city': { $regex: location, $options: 'i' } },
+        { 'personalInfo.location.country': { $regex: location, $options: 'i' } }
+      ];
+    }
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Execute query with featured profile prioritization
+    const students = await StudentProfile.find(query)
+      .populate('user', 'email subscription')
+      .sort({
+        'featured.isFeatured': -1,     // Featured profiles first
+        'featured.priority': -1,        // Higher priority first within featured
+        profileCompleteness: -1,        // Complete profiles next
+        updatedAt: -1                   // Recent updates last
+      })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Get total count for pagination
+    const total = await StudentProfile.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        students,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          count: students.length,
+          totalStudents: total
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Search students error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search students'
+    });
+  }
+};

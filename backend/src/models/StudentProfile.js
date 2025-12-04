@@ -400,24 +400,43 @@ const studentProfileSchema = new mongoose.Schema({
   // ═══════════════════════════════════════════════════════════
   // PROFILE STATUS
   // ═══════════════════════════════════════════════════════════
-  
+
   profileCompleteness: {
     type: Number,
     min: 0,
     max: 100,
     default: 0
   },
-  
+
   status: {
     type: String,
     enum: ['active', 'inactive', 'hidden'],
     default: 'active'
   },
-  
+
   visibility: {
     type: String,
     enum: ['public', 'private', 'connections-only'],
     default: 'public'
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // FEATURED PROFILE (Pro Feature)
+  // ═══════════════════════════════════════════════════════════
+
+  featured: {
+    isFeatured: {
+      type: Boolean,
+      default: false
+    },
+    featuredSince: Date,
+    featuredUntil: Date,
+    priority: {
+      type: Number,
+      default: 0,  // Higher number = higher priority in search results
+      min: 0,
+      max: 100
+    }
   }
   
 }, {
@@ -439,6 +458,8 @@ studentProfileSchema.index({ 'education.graduationYear': 1 });
 studentProfileSchema.index({ 'education.institution': 1 });
 studentProfileSchema.index({ profileCompleteness: -1 });
 studentProfileSchema.index({ status: 1 });
+// Featured profile index for search prioritization
+studentProfileSchema.index({ 'featured.isFeatured': -1, 'featured.priority': -1 });
 
 // ═══════════════════════════════════════════════════════════
 // VIRTUALS

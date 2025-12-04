@@ -1,7 +1,7 @@
 // backend/src/routes/student.routes.js
 
 import express from 'express';
-import { getProfile, updateProfile, uploadProfilePicture, upload } from '../controllers/student.controller.js';
+import { getProfile, updateProfile, uploadProfilePicture, upload, searchStudents } from '../controllers/student.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { profileUpdateLimiter, uploadLimiter } from '../middleware/security.middleware.js';
 
@@ -9,6 +9,9 @@ const router = express.Router();
 
 // All routes require authentication
 router.use(authenticate);
+
+// Search students (for organizations)
+router.get('/search', searchStudents);
 
 // Profile routes
 router.get('/profile', getProfile);
