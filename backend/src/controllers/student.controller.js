@@ -328,3 +328,72 @@ export const searchStudents = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Toggle featured profile status (Pro feature)
+ * @route   PUT /api/students/featured
+ * @access  Private (Student with Pro subscription only)
+ */
+export const toggleFeatured = async (req, res) => {
+  try {
+    const profile = await StudentProfile.findOne({ user: req.user._id });
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        error: 'Profile not found'
+      });
+    }
+
+    // Check if user has Pro subscription
+    const hasPro = req.user.subscription?.plan === 'pro' &&
+                   req.user.subscription?.status === 'active';
+
+    if (!hasPro) {
+      return res.status(403).json({
+        success: false,
+        error: 'Featured profiles are only available with Pro subscription',
+        requiredPlan: 'pro'
+      });
+    }
+
+    // Toggle featured status
+    const { isFeatured } = req.body;
+
+    profile.featured.isFeatured = isFeatured;
+
+    if (isFeatured) {
+      // Set featured since date if enabling
+      if (!profile.featured.featuredSince) {
+        profile.featured.featuredSince = new Date();
+      }
+      // Set default priority if not set
+      if (!profile.featured.priority) {
+        profile.featured.priority = 50; // Default medium priority
+      }
+    } else {
+      // Clear featured until date when disabling
+      profile.featured.featuredUntil = new Date();
+    }
+
+    await profile.save();
+
+    res.json({
+      success: true,
+      message: isFeatured
+        ? 'Your profile is now featured! You\'ll appear higher in organization searches.'
+        : 'Featured profile disabled',
+      data: {
+        isFeatured: profile.featured.isFeatured,
+        featuredSince: profile.featured.featuredSince,
+        priority: profile.featured.priority
+      }
+    });
+  } catch (error) {
+    console.error('Toggle featured error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update featured status'
+    });
+  }
+};

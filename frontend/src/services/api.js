@@ -215,6 +215,8 @@ export const studentAPI = {
   uploadProfilePicture: (formData) => api.post('/students/profile/picture', formData),
   // Search students (for organizations)
   search: (params) => api.get('/students/search', { params }),
+  // Toggle featured profile (Pro feature)
+  toggleFeatured: (isFeatured) => api.put('/students/featured', { isFeatured }),
 };
 
 export const internshipAPI = {

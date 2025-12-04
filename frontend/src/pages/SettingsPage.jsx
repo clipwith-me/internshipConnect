@@ -36,6 +36,7 @@ const SettingsPage = () => {
                 return (
                   <button
                     key={tab.id}
+                    data-tab={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       activeTab === tab.id
@@ -590,6 +591,7 @@ const SecuritySettings = ({ user, setMessage }) => {
 };
 
 const PreferenceSettings = ({ user, setMessage }) => {
+  const { profile } = useAuth();
   const [preferences, setPreferences] = useState({
     language: 'en',
     timezone: 'UTC',
@@ -597,6 +599,8 @@ const PreferenceSettings = ({ user, setMessage }) => {
     theme: 'light',
   });
   const [loading, setLoading] = useState(false);
+  const [featuredLoading, setFeaturedLoading] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(profile?.featured?.isFeatured || false);
 
   const handleSave = async () => {
     try {
@@ -610,9 +614,115 @@ const PreferenceSettings = ({ user, setMessage }) => {
     }
   };
 
+  const handleFeaturedToggle = async (newValue) => {
+    try {
+      setFeaturedLoading(true);
+      const response = await studentAPI.toggleFeatured(newValue);
+
+      if (response.data.success) {
+        setIsFeatured(newValue);
+        setMessage({
+          type: 'success',
+          text: response.data.message
+        });
+      }
+    } catch (err) {
+      const error = err.response?.data?.error || 'Failed to update featured status';
+      const requiredPlan = err.response?.data?.requiredPlan;
+
+      if (requiredPlan) {
+        setMessage({
+          type: 'error',
+          text: `${error}. Please upgrade to ${requiredPlan.toUpperCase()} to use this feature.`
+        });
+      } else {
+        setMessage({ type: 'error', text: error });
+      }
+    } finally {
+      setFeaturedLoading(false);
+    }
+  };
+
+  const Toggle = ({ checked, onChange, disabled = false }) => (
+    <button
+      type="button"
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        disabled ? 'opacity-50 cursor-not-allowed' : ''
+      } ${
+        checked ? 'bg-primary-600' : 'bg-neutral-300'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  );
+
+  const isStudent = user?.role === 'student';
+  const hasPro = user?.subscription?.plan === 'pro' && user?.subscription?.status === 'active';
+
   return (
     <div>
       <h2 className="text-xl font-semibold text-neutral-900 mb-6">General Preferences</h2>
+
+      {/* Pro Features Section for Students */}
+      {isStudent && (
+        <div className="mb-8 pb-6 border-b border-neutral-200">
+          <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+            Featured Profile
+            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+              Pro
+            </span>
+          </h3>
+
+          <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="font-medium text-neutral-900 mb-1">
+                  Boost Your Profile Visibility
+                </p>
+                <p className="text-sm text-neutral-600 mb-3">
+                  Featured profiles appear at the top of organization searches, increasing your chances of being discovered by employers.
+                </p>
+                {hasPro ? (
+                  <div className="flex items-center gap-3">
+                    <Toggle
+                      checked={isFeatured}
+                      onChange={handleFeaturedToggle}
+                      disabled={featuredLoading}
+                    />
+                    <span className="text-sm font-medium text-neutral-700">
+                      {featuredLoading ? 'Updating...' : isFeatured ? 'Featured (Active)' : 'Not Featured'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-neutral-600">
+                      Upgrade to Pro to enable featured profile
+                    </span>
+                    <a
+                      href="/dashboard/settings"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Switch to billing tab
+                        const billingTab = document.querySelector('[data-tab="billing"]');
+                        if (billingTab) billingTab.click();
+                      }}
+                      className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                    >
+                      Upgrade Now
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4 mb-6">
         <div>
