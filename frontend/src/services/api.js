@@ -351,6 +351,23 @@ export const paymentAPI = {
 };
 
 /**
+ * Analytics endpoints (Organizations only)
+ */
+export const analyticsAPI = {
+  // Get organization overview analytics with time range
+  getOverview: (timeRange = '30d') =>
+    api.get(`/analytics/organization?timeRange=${timeRange}`),
+
+  // Get quick summary for dashboard
+  getSummary: () =>
+    api.get('/analytics/summary'),
+
+  // Get analytics for specific internship
+  getInternshipAnalytics: (internshipId) =>
+    api.get(`/analytics/internship/${internshipId}`)
+};
+
+/**
  * AI Matching endpoints
  */
 export const matchingAPI = {

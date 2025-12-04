@@ -13,3 +13,6 @@ export { default as InterviewPrepGuide } from './InterviewPrepGuide';
 export { default as ConversationList } from './ConversationList';
 export { default as MessageThread } from './MessageThread';
 export { default as MessageInput } from './MessageInput';
+export { default as MetricsCard } from './MetricsCard';
+export { default as ApplicationTrendChart } from './ApplicationTrendChart';
+export { default as DemographicsCharts } from './DemographicsCharts';
