@@ -15,6 +15,7 @@ import {
   Search,
   ChevronDown,
   CreditCard,
+  MessageCircle,
 } from 'lucide-react';
 import { Badge, NotificationBell } from '../components';
 
@@ -173,6 +174,7 @@ const DashboardLayout = () => {
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/dashboard/internships', icon: Briefcase, label: 'Internships' },
     { to: '/dashboard/applications', icon: FileText, label: 'My Applications' },
+    { to: '/dashboard/messages', icon: MessageCircle, label: 'Messages', badge: 'Pro' },
     { to: '/dashboard/resumes', icon: FileText, label: 'Resumes' },
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
     { to: '/dashboard/pricing', icon: CreditCard, label: 'Pricing' },
@@ -183,6 +185,7 @@ const DashboardLayout = () => {
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/dashboard/my-internships', icon: Briefcase, label: 'My Internships' },
     { to: '/dashboard/applications', icon: FileText, label: 'Applications' },
+    { to: '/dashboard/messages', icon: MessageCircle, label: 'Messages' },
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
     { to: '/dashboard/pricing', icon: CreditCard, label: 'Pricing' },
     { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
