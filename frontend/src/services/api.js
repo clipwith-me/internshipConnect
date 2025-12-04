@@ -213,6 +213,8 @@ export const studentAPI = {
   createApplication: (data) => api.post('/applications', data),
   // ✅ Profile picture upload
   uploadProfilePicture: (formData) => api.post('/students/profile/picture', formData),
+  // Search students (for organizations)
+  search: (params) => api.get('/students/search', { params }),
 };
 
 export const internshipAPI = {

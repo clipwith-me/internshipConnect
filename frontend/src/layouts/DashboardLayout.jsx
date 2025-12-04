@@ -17,6 +17,7 @@ import {
   CreditCard,
   MessageCircle,
   BarChart3,
+  Users,
 } from 'lucide-react';
 import { Badge, NotificationBell } from '../components';
 
@@ -186,6 +187,7 @@ const DashboardLayout = () => {
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/dashboard/my-internships', icon: Briefcase, label: 'My Internships' },
     { to: '/dashboard/applications', icon: FileText, label: 'Applications' },
+    { to: '/dashboard/students', icon: Users, label: 'Find Students' },
     { to: '/dashboard/messages', icon: MessageCircle, label: 'Messages' },
     { to: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
