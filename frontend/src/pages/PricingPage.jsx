@@ -1,5 +1,6 @@
 // frontend/src/pages/PricingPage.jsx
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Check, Zap, Crown, Sparkles, ArrowRight } from 'lucide-react';
 import { paymentAPI } from '../services/api';
@@ -390,12 +391,18 @@ const PricingPage = () => {
             Our team is here to help you find the perfect plan for your needs
           </p>
           <div className="flex items-center justify-center gap-4">
-            <button className="px-8 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-neutral-100 transition-colors">
+            <Link
+              to="/contact-sales"
+              className="px-8 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-neutral-100 transition-colors inline-block"
+            >
               Contact Sales
-            </button>
-            <button className="px-8 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors">
+            </Link>
+            <Link
+              to="/demo"
+              className="px-8 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors inline-block"
+            >
               View Demo
-            </button>
+            </Link>
           </div>
         </div>
       </div>
