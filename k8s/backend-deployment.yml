@@ -1,0 +1,319 @@
+# Kubernetes Deployment for Backend API
+# Target: Auto-scale from 100 to 10,000 pods based on load
+# Handles 1M+ RPS with horizontal pod autoscaling
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+  namespace: internship-connect
+  labels:
+    app: backend-api
+    tier: backend
+    version: v1
+spec:
+  replicas: 100 # Minimum replicas (HPA will adjust)
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25% # Create 25% extra pods during update
+      maxUnavailable: 10% # Max 10% pods unavailable during update
+
+  selector:
+    matchLabels:
+      app: backend-api
+      tier: backend
+
+  template:
+    metadata:
+      labels:
+        app: backend-api
+        tier: backend
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+
+    spec:
+      # Affinity: Spread pods across nodes and zones
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - backend-api
+                topologyKey: kubernetes.io/hostname
+
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - backend-api
+                topologyKey: topology.kubernetes.io/zone
+
+      # Container specification
+      containers:
+        - name: backend-api
+          image: internshipconnect/backend:latest # Replace with your image
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+
+          # Environment variables
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "5000"
+
+            # MongoDB (from secret)
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: uri
+            - name: DB_NAME
+              value: "internship_connect"
+
+            # JWT secrets
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: access-secret
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: refresh-secret
+
+            # Redis cluster
+            - name: REDIS_CLUSTER_ENABLED
+              value: "true"
+            - name: REDIS_NODE_1
+              value: "redis-cluster-0.redis-cluster.svc.cluster.local"
+            - name: REDIS_NODE_2
+              value: "redis-cluster-1.redis-cluster.svc.cluster.local"
+            - name: REDIS_NODE_3
+              value: "redis-cluster-2.redis-cluster.svc.cluster.local"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: password
+
+            # SMTP
+            - name: SMTP_HOST
+              value: "smtp.gmail.com"
+            - name: SMTP_PORT
+              value: "587"
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-secret
+                  key: user
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-secret
+                  key: password
+
+            # Stripe
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-secret
+                  key: secret-key
+
+            # Cloudinary
+            - name: CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: cloudinary-secret
+                  key: cloud-name
+            - name: CLOUDINARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudinary-secret
+                  key: api-key
+            - name: CLOUDINARY_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cloudinary-secret
+                  key: api-secret
+
+          # Resource limits (critical for autoscaling)
+          resources:
+            requests:
+              cpu: 500m # 0.5 CPU cores minimum
+              memory: 512Mi # 512 MB memory minimum
+            limits:
+              cpu: 2000m # 2 CPU cores maximum
+              memory: 2Gi # 2 GB memory maximum
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: 5000
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30 # 30 * 5 = 150 seconds max startup time
+
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          # Volume mounts for temp files
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      # Volumes
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      # Node selection
+      nodeSelector:
+        workload: backend
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-api-hpa
+  namespace: internship-connect
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-api
+
+  minReplicas: 100 # Minimum pods
+  maxReplicas: 10000 # Maximum pods
+
+  # Scaling metrics
+  metrics:
+    # CPU-based scaling
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70 # Scale when CPU > 70%
+
+    # Memory-based scaling
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80 # Scale when memory > 80%
+
+    # Custom metric: requests per second
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000" # Scale when > 1000 RPS per pod
+
+  # Scaling behavior
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300 # Wait 5 minutes before scaling down
+      policies:
+        - type: Percent
+          value: 10 # Scale down by 10% at a time
+          periodSeconds: 60
+        - type: Pods
+          value: 5 # Or 5 pods at a time
+          periodSeconds: 60
+      selectPolicy: Min # Use the slower scaling down policy
+
+    scaleUp:
+      stabilizationWindowSeconds: 0 # Scale up immediately
+      policies:
+        - type: Percent
+          value: 50 # Scale up by 50% at a time
+          periodSeconds: 15
+        - type: Pods
+          value: 10 # Or 10 pods at a time
+          periodSeconds: 15
+      selectPolicy: Max # Use the faster scaling up policy
+
+---
+# Service for Backend API
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-api
+  namespace: internship-connect
+  labels:
+    app: backend-api
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-api
+    tier: backend
+
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+      protocol: TCP
+
+  sessionAffinity: None # Use load balancer affinity instead
+
+---
+# Pod Disruption Budget (ensure availability during maintenance)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-api-pdb
+  namespace: internship-connect
+spec:
+  minAvailable: 80% # At least 80% of pods must be available
+  selector:
+    matchLabels:
+      app: backend-api

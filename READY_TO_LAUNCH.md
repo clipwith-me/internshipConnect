@@ -91,15 +91,15 @@
 
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
-   SMTP_USER=internshipconnects@gmail.com
-   SMTP_PASS=arpz xwui xgac epvv
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-app-password
 
    STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-   STRIPE_WEBHOOK_SECRET=your_webhook_secret
+   STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 
-   CLOUDINARY_CLOUD_NAME=dxevtwkds
-   CLOUDINARY_API_KEY=683742669893892
-   CLOUDINARY_API_SECRET=pBiStKs_c0OeQoQ8OQp_SN9gPRE
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
    ```
 
 4. **Deploy** - Render will auto-deploy. Note your backend URL: `https://your-app.onrender.com`

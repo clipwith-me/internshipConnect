@@ -1,0 +1,181 @@
+# Artillery Load Testing Configuration
+# Target: 1 Million RPS (Requests Per Second)
+#
+# Usage:
+#   npm install -g artillery
+#   artillery run load-tests/artillery-config.yml
+#
+# Phases:
+#   1. Warm-up: Gradually increase from 100 to 10K RPS over 5 minutes
+#   2. Sustained Load: Maintain 100K RPS for 30 minutes
+#   3. Peak Load: Spike to 1M RPS for 10 minutes
+#   4. Cool-down: Gradually decrease back to 10K RPS
+
+config:
+  target: "https://api.internshipconnect.com" # Change to your production URL
+  phases:
+    # Phase 1: Warm-up (5 minutes)
+    - duration: 300
+      arrivalRate: 100
+      rampTo: 10000
+      name: "Warm-up phase - 100 to 10K RPS"
+
+    # Phase 2: Sustained load (30 minutes)
+    - duration: 1800
+      arrivalRate: 100000
+      name: "Sustained load - 100K RPS"
+
+    # Phase 3: Peak load (10 minutes)
+    - duration: 600
+      arrivalRate: 1000000
+      name: "Peak load - 1M RPS"
+
+    # Phase 4: Cool-down (5 minutes)
+    - duration: 300
+      arrivalRate: 1000000
+      rampTo: 10000
+      name: "Cool-down - 1M to 10K RPS"
+
+  # Performance thresholds
+  ensure:
+    maxErrorRate: 1 # Max 1% error rate
+    p95: 500 # 95th percentile response time under 500ms
+    p99: 1000 # 99th percentile response time under 1000ms
+
+  # HTTP settings
+  http:
+    timeout: 30 # 30 second timeout
+    pool: 50 # Connection pool size
+
+  # Plugins for metrics
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+
+  # Variables for dynamic data
+  variables:
+    studentId: "{{ $randomUUID }}"
+    orgId: "{{ $randomUUID }}"
+    email: "test{{ $randomNumber }}@example.com"
+
+# Test scenarios
+scenarios:
+  # Scenario 1: Anonymous user browsing (40% of traffic)
+  - name: "Browse internships (anonymous)"
+    weight: 40
+    flow:
+      - get:
+          url: "/internships?status=active&limit=20"
+          expect:
+            - statusCode: 200
+            - contentType: application/json
+            - hasProperty: data
+
+      - get:
+          url: "/internships/featured"
+          expect:
+            - statusCode: 200
+
+      - think: 2 # Simulate 2 second pause
+
+      - get:
+          url: "/internships/{{ $randomString }}{{ $randomString }}"
+          capture:
+            json: "$.data.id"
+            as: "internshipId"
+
+  # Scenario 2: Student dashboard (30% of traffic)
+  - name: "Student dashboard"
+    weight: 30
+    beforeScenario: "login"
+    flow:
+      - get:
+          url: "/students/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/students/applications"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/students/recommendations"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 3: Organization dashboard (20% of traffic)
+  - name: "Organization dashboard"
+    weight: 20
+    beforeScenario: "login"
+    flow:
+      - get:
+          url: "/organizations/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/organizations/internships"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/organizations/applications"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 4: Search (10% of traffic)
+  - name: "Search internships"
+    weight: 10
+    flow:
+      - post:
+          url: "/internships/search"
+          json:
+            skills: ["JavaScript", "React", "Node.js"]
+            locationType: "remote"
+            compensationType: "paid"
+          expect:
+            - statusCode: 200
+            - contentType: application/json
+
+# Helper scenarios
+before:
+  flow:
+    # Login to get auth token (for authenticated scenarios)
+    - function: "generateTestUser"
+    - post:
+        url: "/auth/login"
+        json:
+          email: "{{ testEmail }}"
+          password: "{{ testPassword }}"
+        capture:
+          json: "$.accessToken"
+          as: "authToken"
+
+# Custom functions (defined in artillery-functions.js)
+processor: "./artillery-functions.js"
+
+# Reporting
+output:
+  - type: json
+    path: "./load-tests/results/artillery-report.json"
+  - type: html
+    path: "./load-tests/results/artillery-report.html"
+
+# Monitoring hooks
+hooks:
+  beforeScenario: "beforeScenarioHook"
+  afterScenario: "afterScenarioHook"
+  afterResponse: "collectResponseMetrics"
