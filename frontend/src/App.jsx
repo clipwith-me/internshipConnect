@@ -30,6 +30,7 @@ const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const AnalyticsDashboardPage = lazy(() => import('./pages/AnalyticsDashboardPage'));
 const StudentSearchPage = lazy(() => import('./pages/StudentSearchPage'));
+const ContactSalesPage = lazy(() => import('./pages/ContactSalesPage'));
 
 // ✅ PERFORMANCE: Loading fallback component
 const PageLoader = () => (
@@ -53,6 +54,9 @@ function App() {
 
               {/* Component Showcase (for testing) */}
               <Route path="/showcase" element={<ComponentShowcase />} />
+
+              {/* Public Routes */}
+              <Route path="/contact-sales" element={<ContactSalesPage />} />
 
           {/* Auth Routes (Guest only - redirect if logged in) */}
           <Route
