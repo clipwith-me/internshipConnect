@@ -17,6 +17,7 @@ import {
 
 const DashboardPage = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
   // ✅ SECURITY FIX: Wait for user to be loaded before rendering role-specific content
   // This prevents the wrong dashboard from flashing during initial load
@@ -31,10 +32,17 @@ const DashboardPage = () => {
   // ✅ SECURITY FIX: Explicit role check with proper validation
   const isStudent = user.role === 'student';
   const isOrganization = user.role === 'organization';
+  const isAdmin = user.role === 'admin';
+
+  // ✅ ADMIN: Redirect admins to their dedicated dashboard
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/dashboard/admin', { replace: true });
+    }
+  }, [isAdmin, navigate]);
 
   // ✅ SECURITY FIX: Handle invalid/unknown roles gracefully
-  if (!isStudent && !isOrganization) {
-    console.error('Invalid user role:', user.role);
+  if (!isStudent && !isOrganization && !isAdmin) {
     return (
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,6 +53,15 @@ const DashboardPage = () => {
             </p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show loading during admin redirect
+  if (isAdmin) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }

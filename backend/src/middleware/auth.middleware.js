@@ -69,26 +69,28 @@ export const authenticate = async (req, res, next) => {
     next(); // Proceed to next middleware/route handler
     
   } catch (error) {
-    console.error('Auth middleware error:', error);
-    
+    // ✅ PRODUCTION: Only log unexpected errors, not expected token validation failures
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
         message: 'Invalid token'
       });
     }
-    
+
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
         message: 'Token expired'
       });
     }
-    
+
+    // Log only unexpected authentication errors (database, network, etc.)
+    console.error('❌ Unexpected auth error:', error.message);
+
     res.status(500).json({
       success: false,
       message: 'Authentication failed',
-      error: error.message
+      error: process.env.NODE_ENV === 'production' ? 'Internal error' : error.message
     });
   }
 };

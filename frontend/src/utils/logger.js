@@ -15,9 +15,12 @@ const isDevelopment = import.meta.env.MODE === 'development';
 
 class Logger {
   info(message, ...args) {
-    if (isDevelopment) {
-      console.log(`ℹ️ [INFO] ${message}`, ...args);
-    }
+    // ✅ PRODUCTION: Disable info logs for cleaner console
+    // Keep console clean - only show errors and warnings
+    // Uncomment below for debugging during development
+    // if (isDevelopment) {
+    //   console.log(`ℹ️ [INFO] ${message}`, ...args);
+    // }
   }
 
   error(message, ...args) {
@@ -42,9 +45,12 @@ class Logger {
   }
 
   performance(label, duration) {
-    if (isDevelopment && duration > 300) {
-      console.warn(`⏱️ [PERF] ${label} took ${duration}ms (>300ms threshold)`);
-    }
+    // ✅ PRODUCTION: Disable performance warnings in console for cleaner output
+    // Performance monitoring should be done via external tools (e.g., Lighthouse, New Relic)
+    // Uncomment below for performance debugging during development
+    // if (isDevelopment && duration > 1000) {
+    //   console.warn(`⏱️ [PERF] ${label} took ${duration}ms (>1000ms threshold)`);
+    // }
   }
 }
 

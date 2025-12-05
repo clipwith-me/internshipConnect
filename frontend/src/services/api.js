@@ -93,13 +93,11 @@ api.interceptors.response.use(
       const errorMessage = error.response?.data?.message || '';
       // Only redirect to login if account is deactivated
       if (errorMessage.includes('deactivated')) {
-        console.error('403 Forbidden - Account deactivated');
         localStorage.clear();
         window.location.href = '/auth/login';
-      } else {
-        // For role-based access denials, just log and let component handle
-        console.warn('403 Forbidden - Access denied:', errorMessage);
       }
+      // ✅ PRODUCTION: Silently reject role-based access denials
+      // Components handle these gracefully, no need to pollute console
       return Promise.reject(error);
     }
 
