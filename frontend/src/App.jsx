@@ -32,6 +32,7 @@ const AnalyticsDashboardPage = lazy(() => import('./pages/AnalyticsDashboardPage
 const StudentSearchPage = lazy(() => import('./pages/StudentSearchPage'));
 const ContactSalesPage = lazy(() => import('./pages/ContactSalesPage'));
 const DemoPage = lazy(() => import('./pages/DemoPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 
 // ✅ PERFORMANCE: Loading fallback component
 const PageLoader = () => (
@@ -121,6 +122,12 @@ function App() {
             <Route path="students" element={
               <ProtectedRoute requiredRole="organization">
                 <StudentSearchPage />
+              </ProtectedRoute>
+            } />
+            {/* ✅ SECURITY: Admin-only route */}
+            <Route path="admin" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboardPage />
               </ProtectedRoute>
             } />
             <Route path="settings" element={<SettingsPage />} />
