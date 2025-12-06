@@ -8,7 +8,7 @@ We take the security of InternshipConnect seriously. If you have found a securit
 
 ### How to Report
 
-Email: **internshipconnects@gmail.com**
+Email: **your-email@gmail.com**
 
 Include:
 

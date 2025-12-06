@@ -219,7 +219,7 @@ STRIPE_WEBHOOK_SECRET=whsec_your_actual_webhook_secret_here
 ```bash
 # Go to: http://localhost:5173/auth/login
 # Click "Forgot Password"
-# Enter email: internshipconnects@gmail.com
+# Enter email: your-email@gmail.com
 # Check email inbox for reset link
 ```
 

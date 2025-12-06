@@ -37,7 +37,7 @@
    [ ] FRONTEND_URL=[will add after Vercel]
    [ ] SMTP_HOST=smtp.gmail.com
    [ ] SMTP_PORT=587
-   [ ] SMTP_USER=internshipconnects@gmail.com
+   [ ] SMTP_USER=your-email@gmail.com
    [ ] SMTP_PASS=[your app password]
    [ ] STRIPE_SECRET_KEY=[your Stripe key]
    [ ] CLOUDINARY_CLOUD_NAME=[your cloud name]

@@ -140,7 +140,7 @@ FRONTEND_URL=[Your Vercel URL after deployment]
 # Email
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=internshipconnects@gmail.com
+SMTP_USER=your-email@gmail.com
 SMTP_PASS=[Gmail app password]
 
 # Stripe

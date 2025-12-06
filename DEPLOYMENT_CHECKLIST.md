@@ -133,7 +133,7 @@ CLOUDINARY_API_SECRET=<new_cloudinary_secret>
 # Email (NEW password from Step 3)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=internshipconnects@gmail.com
+SMTP_USER=your-email@gmail.com
 SMTP_PASS=<new_16_char_app_password>
 
 # Stripe (LIVE keys from Step 4)
