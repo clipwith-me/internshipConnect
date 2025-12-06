@@ -126,7 +126,7 @@ Your Cloudinary credentials:
 ### 1.5 Create New Gmail App Password
 
 1. Go to: https://myaccount.google.com/apppasswords
-2. Login with your Gmail account (`internshipconnects@gmail.com`)
+2. Login with your Gmail account (your email)
 3. Delete the old app password if it exists
 4. Click **"Generate"** or **"Create"**
 5. App name: "InternshipConnect Production"
@@ -254,7 +254,7 @@ CLOUDINARY_API_SECRET=paste_new_secret_here
 # Email (use NEW password from Step 1.5)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=internshipconnects@gmail.com
+SMTP_USER=your-email@gmail.com
 SMTP_PASS=paste_new_16_char_password_here
 
 # Stripe (keep test keys for now - it's free!)
