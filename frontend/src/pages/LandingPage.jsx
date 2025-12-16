@@ -261,8 +261,9 @@ export default function LandingPage() {
                   icon={Mail}
                   className="flex-1"
                 />
-                <Button type="submit" size="lg" loading={loading} className="sm:w-auto">
-                  Join Waitlist <ArrowRight className="w-5 h-5 ml-2" />
+                <Button type="submit" size="lg" loading={loading} className="sm:w-auto flex items-center justify-center gap-2">
+                  Join Waitlist
+                  <ArrowRight className="w-5 h-5" />
                 </Button>
               </form>
             ) : (
@@ -512,9 +513,10 @@ export default function LandingPage() {
               onClick={() => navigate('/auth/register')}
               variant="secondary"
               size="lg"
-              className="bg-white text-blue-600 hover:bg-gray-100"
+              className="bg-white text-blue-600 hover:bg-gray-100 flex items-center justify-center gap-2"
             >
-              Get Started Free <ArrowRight className="w-5 h-5 ml-2" />
+              Get Started Free
+              <ArrowRight className="w-5 h-5" />
             </Button>
             <Button
               onClick={() => navigate('/auth/login')}

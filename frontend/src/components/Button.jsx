@@ -142,15 +142,15 @@ const Button = forwardRef(({
     >
       {/* Loading spinner */}
       {loading && <LoadingSpinner />}
-      
+
       {/* Left icon */}
       {!loading && icon && iconPosition === 'left' && (
         <span className="flex-shrink-0">{icon}</span>
       )}
-      
-      {/* Button text */}
-      <span>{children}</span>
-      
+
+      {/* Button content - render children directly without wrapper */}
+      {children}
+
       {/* Right icon */}
       {!loading && icon && iconPosition === 'right' && (
         <span className="flex-shrink-0">{icon}</span>
