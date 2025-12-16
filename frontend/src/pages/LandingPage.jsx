@@ -258,7 +258,7 @@ export default function LandingPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  icon={Mail}
+                  icon={<Mail className="w-5 h-5" />}
                   className="flex-1"
                 />
                 <Button type="submit" size="lg" loading={loading} className="sm:w-auto flex items-center justify-center gap-2">
