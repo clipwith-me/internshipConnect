@@ -10,6 +10,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import AuthLayout from './layouts/AuthLayout';
 
 // ✅ PERFORMANCE: Lazy load all page components for code splitting
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const ComponentShowcase = lazy(() => import('./pages/ComponentShowcase'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
@@ -51,8 +52,8 @@ function App() {
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* Redirect root to dashboard */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              {/* Landing Page */}
+              <Route path="/" element={<LandingPage />} />
 
               {/* Component Showcase (for testing) */}
               <Route path="/showcase" element={<ComponentShowcase />} />
