@@ -86,21 +86,31 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await authAPI.login({ email, password });
-      
+
       const { user, profile, tokens } = response.data.data;
-      
+
       // Save tokens
       localStorage.setItem('accessToken', tokens.accessToken);
       localStorage.setItem('refreshToken', tokens.refreshToken);
-      
+
       // Update state
       setUser(user);
       setProfile(profile);
-      
+
       return { success: true };
-      
+
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      let message = error.response?.data?.message || 'Login failed';
+
+      // Handle specific HTTP status codes
+      if (error.response?.status === 503) {
+        message = 'Service temporarily unavailable. The database may be offline. Please try again in a moment.';
+      } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        message = 'Cannot connect to server. Please check your internet connection or try again later.';
+      } else if (!error.response) {
+        message = 'Unable to reach the server. Please check if the backend is running.';
+      }
+
       setError(message);
       return { success: false, error: message };
     }
@@ -113,22 +123,32 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await authAPI.register(data);
-      
+
       const { user, profile, tokens } = response.data.data;
-      
+
       // Save tokens
       localStorage.setItem('accessToken', tokens.accessToken);
       localStorage.setItem('refreshToken', tokens.refreshToken);
-      
+
       // Update state
       setUser(user);
       setProfile(profile);
-      
+
       return { success: true };
-      
+
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
+      let message = error.response?.data?.message || 'Registration failed';
       const errors = error.response?.data?.errors;
+
+      // Handle specific HTTP status codes
+      if (error.response?.status === 503) {
+        message = 'Service temporarily unavailable. The database may be offline. Please try again in a moment.';
+      } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        message = 'Cannot connect to server. Please check your internet connection or try again later.';
+      } else if (!error.response) {
+        message = 'Unable to reach the server. Please check if the backend is running.';
+      }
+
       const errorMessage = errors ? errors.join(', ') : message;
       setError(errorMessage);
       return { success: false, error: errorMessage };

@@ -184,6 +184,18 @@ export const register = async (req, res) => {
       });
     }
 
+    // Handle database connection errors
+    if (error.name === 'MongooseError' || error.name === 'MongoError' ||
+        error.message.includes('buffering timed out') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('Server selection timed out')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Service temporarily unavailable. Please try again in a moment.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: 'Registration failed. Please try again.',
@@ -252,7 +264,7 @@ export const login = async (req, res) => {
     
   } catch (error) {
     console.error('Login error:', error);
-    
+
     // Handle specific errors
     if (error.message === 'Invalid credentials') {
       return res.status(401).json({
@@ -260,18 +272,30 @@ export const login = async (req, res) => {
         message: 'Invalid email or password'
       });
     }
-    
+
     if (error.message.includes('locked')) {
       return res.status(423).json({
         success: false,
         message: 'Account temporarily locked due to multiple failed login attempts'
       });
     }
-    
+
+    // Handle database connection errors
+    if (error.name === 'MongooseError' || error.name === 'MongoError' ||
+        error.message.includes('buffering timed out') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('Server selection timed out')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Service temporarily unavailable. Please try again in a moment.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Login failed',
-      error: error.message
+      message: 'Login failed. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
