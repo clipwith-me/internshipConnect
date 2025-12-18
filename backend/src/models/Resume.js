@@ -61,8 +61,8 @@ const resumeSchema = new mongoose.Schema({
       targetIndustry: String,       // "Technology"
       template: {
         type: String,
-        enum: ['modern', 'classic', 'minimal', 'creative', 'technical'],
-        default: 'modern'
+        enum: ['professional', 'creative', 'modern', 'minimal'],
+        default: 'professional'
       },
       emphasis: [String],           // ['technical-skills', 'leadership', 'projects']
       aiModel: String,              // 'gpt-4', 'gpt-3.5-turbo', 'claude-3-opus'

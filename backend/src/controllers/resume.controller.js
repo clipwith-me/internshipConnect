@@ -24,7 +24,8 @@ export const generateAIResume = async (req, res) => {
     }
 
     const { customization } = req.body;
-    const studentProfile = await StudentProfile.findOne({ user: req.user._id });
+    const studentProfile = await StudentProfile.findOne({ user: req.user._id })
+      .populate('user', 'email');
 
     if (!studentProfile) {
       return res.status(404).json({
@@ -69,7 +70,7 @@ export const generateAIResume = async (req, res) => {
       pdfFilePath = await generateResumePDF(studentProfile, {
         ...aiResult.content,
         targetRole: customization?.targetRole || 'Internship Position'
-      }, fileName);
+      }, fileName, customization?.template || 'professional');
 
       // Create accessible URL for download (served via /uploads/resumes/)
       fileUrl = `/uploads/resumes/${fileName}`;

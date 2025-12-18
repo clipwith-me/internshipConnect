@@ -1,14 +1,19 @@
 // frontend/src/pages/ResumesPage.jsx
 import { useState, useEffect } from 'react';
 import { resumeAPI, studentAPI } from '../services/api';
-import { FileText, Download, Trash2, Plus, Calendar, Eye } from 'lucide-react';
+import { FileText, Download, Trash2, Plus, Calendar, Eye, AlertCircle } from 'lucide-react';
+import PricingModal from '../components/PricingModal';
+import { useAuth } from '../context/AuthContext';
 
 const ResumesPage = () => {
+  const { user } = useAuth();
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [usageData, setUsageData] = useState({ current: 0, limit: 3 });
 
   useEffect(() => {
     fetchResumes();
@@ -20,6 +25,26 @@ const ResumesPage = () => {
       const response = await resumeAPI.getAll();
       if (response.data.success) {
         setResumes(response.data.data);
+
+        // Calculate usage for current month
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const resumesThisMonth = response.data.data.filter(r =>
+          new Date(r.createdAt) >= startOfMonth
+        ).length;
+
+        // Get subscription plan limits
+        const plan = user?.subscription?.plan || 'free';
+        const limits = {
+          free: 3,
+          premium: 10,
+          pro: -1 // unlimited
+        };
+
+        setUsageData({
+          current: resumesThisMonth,
+          limit: limits[plan] === -1 ? 'unlimited' : limits[plan]
+        });
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load resumes');
@@ -67,20 +92,23 @@ const ResumesPage = () => {
         setShowGenerateModal(false);
         fetchResumes();
 
-        // ✅ FIX: Show success message with details
+        // Update usage data from response
         const usage = response.data.usage;
-        const message = usage
-          ? `✅ Resume generated successfully!\n\nUsage: ${usage.current}/${usage.limit === 'unlimited' ? '∞' : usage.limit} resumes this month`
-          : '✅ Resume generated successfully!';
-        alert(message);
+        if (usage) {
+          setUsageData({
+            current: usage.current,
+            limit: usage.limit === 'unlimited' ? 'unlimited' : usage.limit
+          });
+        }
       }
     } catch (err) {
-      // ✅ FIX: Better error messages
+      // Better error handling with PricingModal
       const error = err.response?.data?.error || 'Failed to generate resume';
 
       if (error.includes('plan allows') || err.response?.data?.upgradeRequired) {
-        // Subscription limit reached
-        alert(`⚠️ ${error}\n\n💳 Upgrade your plan to generate more resumes.\n\nGo to Settings → Billing to upgrade.`);
+        // Subscription limit reached - show pricing modal
+        setShowGenerateModal(false);
+        setShowPricingModal(true);
       } else if (error.includes('AI') || error.includes('service')) {
         // AI service issue
         alert('🤖 AI service is temporarily unavailable.\n\nPlease try again in a few minutes. If the problem persists, contact support.');
@@ -114,19 +142,12 @@ const ResumesPage = () => {
 
       // Check if it's a real PDF file (not mock Cloudinary URL)
       if (fileUrl && !fileUrl.includes('cloudinary.com/internshipconnect')) {
-        // Use download endpoint for proper authenticated file download
-        const downloadUrl = `${import.meta.env.VITE_API_URL}/resumes/${resume._id}/download`;
-        const token = localStorage.getItem('accessToken');
+        try {
+          // Use API client for proper authenticated file download with token refresh
+          const response = await resumeAPI.download(resume._id);
 
-        if (token) {
-          const response = await fetch(downloadUrl, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          if (response.ok) {
-            const blob = await response.blob();
+          if (response.data) {
+            const blob = new Blob([response.data], { type: 'application/pdf' });
             const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = blobUrl;
@@ -137,6 +158,9 @@ const ResumesPage = () => {
             URL.revokeObjectURL(blobUrl);
             return;
           }
+        } catch (downloadError) {
+          console.log('PDF download failed, falling back to text summary:', downloadError);
+          // Fall through to text fallback
         }
       }
 
@@ -181,6 +205,19 @@ ${resume.aiGenerated?.analysis?.suggestions?.map(s => `• ${s}`).join('\n') || 
     );
   }
 
+  // Check if user is at or near limit
+  const isAtLimit = usageData.limit !== 'unlimited' && usageData.current >= usageData.limit;
+  const isNearLimit = usageData.limit !== 'unlimited' && usageData.current >= usageData.limit - 1;
+
+  const handleGenerateClick = () => {
+    // Block generation if at limit
+    if (isAtLimit) {
+      setShowPricingModal(true);
+      return;
+    }
+    setShowGenerateModal(true);
+  };
+
   return (
     <div className="py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -191,13 +228,69 @@ ${resume.aiGenerated?.analysis?.suggestions?.map(s => `• ${s}`).join('\n') || 
             <p className="text-neutral-600 mt-2">Generate and manage AI-powered resumes</p>
           </div>
           <button
-            onClick={() => setShowGenerateModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium"
+            onClick={handleGenerateClick}
+            disabled={isAtLimit}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors font-medium ${
+              isAtLimit
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-primary-600 hover:bg-primary-700 text-white'
+            }`}
           >
             <Plus size={20} />
             Generate New Resume
           </button>
         </div>
+
+        {/* Usage Tracking Banner */}
+        {usageData.limit !== 'unlimited' && (
+          <div className={`rounded-lg border-2 p-4 mb-6 ${
+            isAtLimit
+              ? 'bg-red-50 border-red-300'
+              : isNearLimit
+              ? 'bg-amber-50 border-amber-300'
+              : 'bg-blue-50 border-blue-300'
+          }`}>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <AlertCircle className={`w-5 h-5 mt-0.5 ${
+                  isAtLimit ? 'text-red-600' : isNearLimit ? 'text-amber-600' : 'text-blue-600'
+                }`} />
+                <div>
+                  <p className={`font-semibold ${
+                    isAtLimit ? 'text-red-900' : isNearLimit ? 'text-amber-900' : 'text-blue-900'
+                  }`}>
+                    {isAtLimit
+                      ? 'Resume Generation Limit Reached'
+                      : `${usageData.current} of ${usageData.limit} Resumes Used This Month`
+                    }
+                  </p>
+                  <p className={`text-sm mt-1 ${
+                    isAtLimit ? 'text-red-700' : isNearLimit ? 'text-amber-700' : 'text-blue-700'
+                  }`}>
+                    {isAtLimit
+                      ? `You've used all ${usageData.limit} free resumes for this month. Upgrade to Premium (10/month) or Pro (unlimited) to continue.`
+                      : isNearLimit
+                      ? `You're almost at your monthly limit. Consider upgrading for unlimited resumes.`
+                      : `Free plan resets on the 1st of each month. Upgrade for more resumes anytime.`
+                    }
+                  </p>
+                </div>
+              </div>
+              {(isAtLimit || isNearLimit) && (
+                <button
+                  onClick={() => setShowPricingModal(true)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap ${
+                    isAtLimit
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-amber-600 hover:bg-amber-700 text-white'
+                  }`}
+                >
+                  Upgrade Now
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -240,6 +333,14 @@ ${resume.aiGenerated?.analysis?.suggestions?.map(s => `• ${s}`).join('\n') || 
             generating={generating}
           />
         )}
+
+        {/* Pricing Modal */}
+        <PricingModal
+          isOpen={showPricingModal}
+          onClose={() => setShowPricingModal(false)}
+          currentUsage={usageData.current}
+          limit={usageData.limit}
+        />
       </div>
     </div>
   );

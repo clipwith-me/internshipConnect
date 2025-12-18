@@ -282,6 +282,7 @@ export const resumeAPI = {
   generate: (data) => api.post('/resumes/generate', data),
   generateAI: (data) => api.post('/resumes/ai-generate', data),
   delete: (id) => api.delete(`/resumes/${id}`),
+  download: (id) => api.get(`/resumes/${id}/download`, { responseType: 'blob' }),
   // Organization viewing applicant profile
   viewApplicant: (applicationId) => api.get(`/resumes/applicant/${applicationId}`),
 };
