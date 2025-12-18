@@ -5,6 +5,7 @@ import StudentProfile from '../models/StudentProfile.js';
 import OrganizationProfile from '../models/OrganizationProfile.js';
 import Notification from '../models/Notification.js';
 import mongoose from 'mongoose';
+import { notificationService } from '../services/notification.service.js';
 
 /**
  * @desc    Submit application
@@ -134,8 +135,21 @@ export const submitApplication = async (req, res) => {
     // Populate for response
     await application.populate([
       { path: 'internship', select: 'title organization' },
-      { path: 'student', select: 'personalInfo' }
+      { path: 'student', select: 'personalInfo user' }
     ]);
+
+    // Get organization profile with user email for notification
+    const organizationProfile = await OrganizationProfile.findById(internship.organization)
+      .populate('user', 'email');
+
+    // Emit notification event (non-blocking) - APPLICATION_SUBMITTED
+    setImmediate(() => {
+      notificationService.emit('APPLICATION_SUBMITTED', {
+        application,
+        student: studentProfile,
+        organization: organizationProfile
+      });
+    });
 
     res.status(201).json({
       success: true,
@@ -313,8 +327,35 @@ export const updateApplicationStatus = async (req, res) => {
       });
     }
 
+    // Store previous status for notification
+    const previousStatus = application.status;
     application.status = status;
     await application.save();
+
+    // Populate student with user for notification
+    await application.populate({
+      path: 'student',
+      populate: { path: 'user', select: 'email' }
+    });
+
+    // Emit notification events (non-blocking)
+    setImmediate(() => {
+      // APPLICATION_STATUS_CHANGED - notify student
+      notificationService.emit('APPLICATION_STATUS_CHANGED', {
+        application,
+        previousStatus,
+        newStatus: status,
+        student: application.student
+      });
+
+      // Special case: OFFER_EXTENDED
+      if (status === 'offered') {
+        notificationService.emit('OFFER_EXTENDED', {
+          application,
+          student: application.student
+        });
+      }
+    });
 
     res.json({
       success: true,
