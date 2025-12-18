@@ -6,7 +6,8 @@ import {
   markAsRead,
   markAllAsRead,
   deleteNotification,
-  createTestNotification
+  createTestNotification,
+  testApplicationFlow
 } from '../controllers/notification.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 
@@ -32,5 +33,8 @@ router.delete('/:id', deleteNotification);
 
 // Test notification (dev only)
 router.post('/test', createTestNotification);
+
+// Test application notification flow (dev only)
+router.post('/test-application-flow', testApplicationFlow);
 
 export default router;

@@ -107,7 +107,14 @@ export const updateProfile = async (req, res) => {
     }
 
     // Update profile fields
-    if (req.body.personalInfo) profile.personalInfo = { ...profile.personalInfo, ...req.body.personalInfo };
+    if (req.body.personalInfo) {
+      // Extract bio from personalInfo if it exists there (frontend sends it there)
+      const { bio, ...restPersonalInfo } = req.body.personalInfo;
+      profile.personalInfo = { ...profile.personalInfo, ...restPersonalInfo };
+      if (bio !== undefined) profile.bio = bio;
+    }
+    if (req.body.bio !== undefined) profile.bio = req.body.bio;
+    if (req.body.socialLinks) profile.socialLinks = { ...profile.socialLinks, ...req.body.socialLinks };
     if (req.body.education) profile.education = req.body.education;
     if (req.body.skills) profile.skills = req.body.skills;
     if (req.body.experience) profile.experience = req.body.experience;

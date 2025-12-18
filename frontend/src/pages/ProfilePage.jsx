@@ -137,14 +137,24 @@ const StudentProfile = memo(() => {
       logger.performance('fetchProfile', duration);
 
       if (response.data.success) {
-        const profileData = response.data.data || {
-          personalInfo: { firstName: '', lastName: '', phone: '', dateOfBirth: '', bio: '', location: { city: '', state: '', country: '' } },
+        let profileData = response.data.data || {
+          personalInfo: { firstName: '', lastName: '', phone: '', dateOfBirth: '', location: { city: '', state: '', country: '' } },
+          bio: '',
           socialLinks: { linkedin: '', github: '', portfolio: '', website: '' },
           education: [],
           skills: [],
           experience: [],
           preferences: { internshipTypes: [], industries: [], roles: [], locations: [], compensation: { minStipend: 0, currency: 'USD' } }
         };
+
+        // Normalize: Move bio from root to personalInfo for frontend compatibility
+        if (profileData.bio && !profileData.personalInfo.bio) {
+          profileData = {
+            ...profileData,
+            personalInfo: { ...profileData.personalInfo, bio: profileData.bio }
+          };
+        }
+
         apiCache.set(cacheKey, response.data, 5 * 60 * 1000);
         setProfile(profileData);
         setFormData(profileData);
@@ -189,9 +199,19 @@ const StudentProfile = memo(() => {
       });
 
       if (response.data.success) {
-        setProfile(response.data.data);
-        setFormData(response.data.data);
-        setCompleteness(calculateCompleteness(response.data.data));
+        let profileData = response.data.data;
+
+        // Normalize: Move bio from root to personalInfo for frontend compatibility
+        if (profileData.bio && !profileData.personalInfo.bio) {
+          profileData = {
+            ...profileData,
+            personalInfo: { ...profileData.personalInfo, bio: profileData.bio }
+          };
+        }
+
+        setProfile(profileData);
+        setFormData(profileData);
+        setCompleteness(calculateCompleteness(profileData));
         apiCache.set(`student-profile-${user?._id}`, response.data, 5 * 60 * 1000);
       }
 
@@ -226,9 +246,19 @@ const StudentProfile = memo(() => {
       });
 
       if (response.data.success) {
-        setProfile(response.data.data);
-        setFormData(response.data.data);
-        setCompleteness(calculateCompleteness(response.data.data));
+        let profileData = response.data.data;
+
+        // Normalize: Move bio from root to personalInfo for frontend compatibility
+        if (profileData.bio && !profileData.personalInfo.bio) {
+          profileData = {
+            ...profileData,
+            personalInfo: { ...profileData.personalInfo, bio: profileData.bio }
+          };
+        }
+
+        setProfile(profileData);
+        setFormData(profileData);
+        setCompleteness(calculateCompleteness(profileData));
         apiCache.set(`student-profile-${user?._id}`, response.data, 5 * 60 * 1000);
       }
 
@@ -464,6 +494,7 @@ const StudentProfile = memo(() => {
 
         {/* Social Links */}
         <SocialLinksSection
+          profile={profile}
           formData={formData}
           setFormData={setFormData}
           editing={editing}
@@ -704,7 +735,7 @@ PersonalInfoSection.displayName = 'PersonalInfoSection';
 /**
  * SOCIAL LINKS SECTION
  */
-const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, saving }) => (
+const SocialLinksSection = memo(({ profile, formData, setFormData, editing, onSave, saving }) => (
   <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -749,7 +780,7 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
           />
         ) : (
           <p className="text-neutral-900 truncate break-all sm:break-normal">
-            {formData.socialLinks?.linkedin || 'Not set'}
+            {profile.socialLinks?.linkedin || 'Not set'}
           </p>
         )}
       </div>
@@ -771,7 +802,7 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
           />
         ) : (
           <p className="text-neutral-900 truncate break-all sm:break-normal">
-            {formData.socialLinks?.github || 'Not set'}
+            {profile.socialLinks?.github || 'Not set'}
           </p>
         )}
       </div>
@@ -793,7 +824,7 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
           />
         ) : (
           <p className="text-neutral-900 truncate break-all sm:break-normal">
-            {formData.socialLinks?.portfolio || 'Not set'}
+            {profile.socialLinks?.portfolio || 'Not set'}
           </p>
         )}
       </div>
@@ -815,7 +846,7 @@ const SocialLinksSection = memo(({ formData, setFormData, editing, onSave, savin
           />
         ) : (
           <p className="text-neutral-900 truncate break-all sm:break-normal">
-            {formData.socialLinks?.website || 'Not set'}
+            {profile.socialLinks?.website || 'Not set'}
           </p>
         )}
       </div>

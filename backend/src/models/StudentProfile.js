@@ -339,6 +339,7 @@ const studentProfileSchema = new mongoose.Schema({
       match: [/^https?:\/\/(www\.)?github\.com\/.+/, 'Invalid GitHub URL']
     },
     portfolio: String,
+    website: String,
     twitter: String,
     medium: String,
     stackoverflow: String

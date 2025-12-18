@@ -1,5 +1,6 @@
 // backend/src/controllers/notification.controller.js
 import Notification from '../models/Notification.js';
+import { notificationService } from '../services/notification.service.js';
 
 /**
  * @desc    Get user notifications
@@ -171,6 +172,126 @@ export const createTestNotification = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to create notification'
+    });
+  }
+};
+
+/**
+ * @desc    Test application notification flow (development only)
+ * @route   POST /api/notifications/test-application-flow
+ * @access  Private
+ */
+export const testApplicationFlow = async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      success: false,
+      error: 'Not available in production'
+    });
+  }
+
+  try {
+    console.log('\n🧪 ═══════════════════════════════════════════');
+    console.log('🧪 TESTING APPLICATION NOTIFICATION FLOW');
+    console.log('🧪 ═══════════════════════════════════════════');
+
+    // Create mock data for testing
+    const mockApplication = {
+      _id: '507f1f77bcf86cd799439011',
+      internship: {
+        _id: '507f1f77bcf86cd799439012',
+        title: 'Software Engineering Internship at TechCorp'
+      }
+    };
+
+    const mockStudent = {
+      _id: '507f1f77bcf86cd799439013',
+      personalInfo: {
+        firstName: 'John',
+        lastName: 'Doe'
+      },
+      user: {
+        _id: req.user._id,
+        email: req.user.email
+      }
+    };
+
+    const mockOrganization = {
+      _id: '507f1f77bcf86cd799439014',
+      companyInfo: {
+        name: 'TechCorp Inc.'
+      },
+      user: {
+        _id: req.user._id,
+        email: req.user.email
+      }
+    };
+
+    const results = [];
+
+    // Test 1: APPLICATION_SUBMITTED
+    console.log('\n📬 Test 1: APPLICATION_SUBMITTED event');
+    notificationService.emit('APPLICATION_SUBMITTED', {
+      application: mockApplication,
+      student: mockStudent,
+      organization: mockOrganization
+    });
+    results.push({ event: 'APPLICATION_SUBMITTED', status: 'emitted' });
+
+    // Wait a bit for async processing
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Test 2: APPLICATION_STATUS_CHANGED (shortlisted)
+    console.log('\n⭐ Test 2: APPLICATION_STATUS_CHANGED (shortlisted)');
+    notificationService.emit('APPLICATION_STATUS_CHANGED', {
+      application: mockApplication,
+      newStatus: 'shortlisted',
+      student: mockStudent
+    });
+    results.push({ event: 'APPLICATION_STATUS_CHANGED', status: 'emitted', newStatus: 'shortlisted' });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Test 3: OFFER_EXTENDED
+    console.log('\n🎁 Test 3: OFFER_EXTENDED event');
+    notificationService.emit('OFFER_EXTENDED', {
+      application: mockApplication,
+      student: mockStudent
+    });
+    results.push({ event: 'OFFER_EXTENDED', status: 'emitted' });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Get recent notifications to verify
+    const notifications = await Notification.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    console.log('\n✅ ═══════════════════════════════════════════');
+    console.log(`✅ TEST COMPLETED - Created ${notifications.length} notifications`);
+    console.log('✅ ═══════════════════════════════════════════\n');
+
+    res.status(200).json({
+      success: true,
+      message: 'Application notification flow test completed',
+      data: {
+        testsRun: results,
+        notificationsCreated: notifications.length,
+        recentNotifications: notifications,
+        instructions: {
+          step1: 'Check your notification bell for new notifications',
+          step2: 'Check the backend terminal for notification logs',
+          step3: 'Check your email inbox for notification emails',
+          step4: 'Visit /dashboard/notifications to see all notifications'
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Test application flow error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to test notification flow',
+      details: error.message
     });
   }
 };
