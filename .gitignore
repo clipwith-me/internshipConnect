@@ -73,3 +73,6 @@ backend/uploads/
 nul
 
 .vercel
+
+# Landing Page (not needed for now)
+frontend/src/pages/PricingPage.jsx

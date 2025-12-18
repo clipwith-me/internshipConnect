@@ -215,17 +215,40 @@ export const getMyApplications = async (req, res) => {
         path: 'internship',
         populate: { path: 'organization', select: 'companyInfo' }
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean(); // ✅ Use lean() for better performance
+
+    // ✅ Filter out applications with deleted internships
+    const validApplications = applications.filter(app => app.internship !== null);
 
     res.json({
       success: true,
-      data: applications
+      data: validApplications
     });
   } catch (error) {
     console.error('Get applications error:', error);
+
+    // ✅ Better error logging for debugging
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+
+    // ✅ Handle database connection errors
+    if (error.name === 'MongooseError' || error.name === 'MongoError' ||
+        error.message.includes('buffering timed out') ||
+        error.message.includes('ECONNREFUSED')) {
+      return res.status(503).json({
+        success: false,
+        error: 'Service temporarily unavailable. Please try again in a moment.'
+      });
+    }
+
     res.status(500).json({
       success: false,
-      error: 'Failed to retrieve applications'
+      error: 'Failed to retrieve applications',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 };
