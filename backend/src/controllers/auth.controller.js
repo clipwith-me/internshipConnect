@@ -1,7 +1,8 @@
 // backend/src/controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
-import { User, StudentProfile, OrganizationProfile } from '../models/index.js';
+import { User, StudentProfile, OrganizationProfile, ReferralCode, Referral } from '../models/index.js';
 import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/email.service.js';
+import { sendStudentWelcomeEmail, sendCompanyWelcomeEmail } from '../services/resend-email.service.js';
 /**
  * 🎓 LEARNING: Authentication Controller
  * 
@@ -124,22 +125,41 @@ export const register = async (req, res) => {
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
 
-    // Send welcome email (don't block registration if it fails)
+    // Generate referral code for all users
+    let referralCode;
     try {
-      const userName = role === 'student'
-        ? (profileData.firstName || user.email.split('@')[0])
-        : (profileData.companyName || 'there');
+      const code = 'IC-' + Math.random().toString(36).toUpperCase().slice(2, 8);
+      const rc = await ReferralCode.create({ user: user._id, code });
+      referralCode = rc.code;
 
-      await sendWelcomeEmail({
-        to: email,
-        userName,
-        role
-      });
+      // Track referral if signup came with a ref code
+      if (req.body.referralCode) {
+        const referrerRC = await ReferralCode.findOne({ code: req.body.referralCode.toUpperCase() });
+        if (referrerRC) {
+          await Referral.create({ referrer: referrerRC.user, referred: user._id, code: referrerRC.code });
+        }
+      }
+    } catch (refErr) {
+      console.error('Referral code error:', refErr);
+    }
 
+    // Send welcome email via Resend (don't block registration if it fails)
+    try {
+      if (role === 'student') {
+        await sendStudentWelcomeEmail({
+          to: email,
+          firstName: profileData.firstName || email.split('@')[0],
+          referralCode: referralCode || 'IC-XXXXX',
+        });
+      } else if (role === 'organization') {
+        await sendCompanyWelcomeEmail({
+          to: email,
+          companyName: profileData.companyName || 'Your Company',
+        });
+      }
       console.log(`📧 Welcome email sent to: ${email}`);
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
-      // Don't fail registration if email fails
     }
 
     // Return user data (without password)

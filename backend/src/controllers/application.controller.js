@@ -6,6 +6,7 @@ import OrganizationProfile from '../models/OrganizationProfile.js';
 import Notification from '../models/Notification.js';
 import mongoose from 'mongoose';
 import { notificationService } from '../services/notification.service.js';
+import { sendApplicationStatusEmail, sendNewApplicationEmail } from '../services/resend-email.service.js';
 
 /**
  * @desc    Submit application
@@ -362,7 +363,7 @@ export const updateApplicationStatus = async (req, res) => {
     });
 
     // Emit notification events (non-blocking)
-    setImmediate(() => {
+    setImmediate(async () => {
       // APPLICATION_STATUS_CHANGED - notify student
       notificationService.emit('APPLICATION_STATUS_CHANGED', {
         application,
@@ -377,6 +378,23 @@ export const updateApplicationStatus = async (req, res) => {
           application,
           student: application.student
         });
+      }
+
+      // Send Resend email to student
+      try {
+        const studentUser = application.student?.user;
+        if (studentUser?.email) {
+          await sendApplicationStatusEmail({
+            to: studentUser.email,
+            studentName: `${application.student.personalInfo?.firstName || ''} ${application.student.personalInfo?.lastName || ''}`.trim() || studentUser.email,
+            companyName: application.internship?.organization?.companyInfo?.name || 'The employer',
+            internshipTitle: application.internship?.title || 'the position',
+            newStatus: status,
+            applicationId: application._id,
+          });
+        }
+      } catch (emailErr) {
+        console.error('Status email error:', emailErr);
       }
     });
 

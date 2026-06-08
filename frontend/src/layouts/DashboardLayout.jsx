@@ -18,6 +18,8 @@ import {
   MessageCircle,
   BarChart3,
   Users,
+  Bookmark,
+  MoreHorizontal,
 } from 'lucide-react';
 import { Badge, NotificationBell } from '../components';
 
@@ -176,11 +178,22 @@ const DashboardLayout = () => {
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/dashboard/internships', icon: Briefcase, label: 'Internships' },
     { to: '/dashboard/applications', icon: FileText, label: 'My Applications' },
+    { to: '/dashboard/saved', icon: Bookmark, label: 'Saved' },
     { to: '/dashboard/messages', icon: MessageCircle, label: 'Messages', badge: 'Pro' },
     { to: '/dashboard/resumes', icon: FileText, label: 'Resumes' },
+    { to: '/dashboard/referrals', icon: Users, label: 'Refer a Friend' },
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
     { to: '/dashboard/pricing', icon: CreditCard, label: 'Pricing' },
     { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
+  ];
+
+  // Bottom tabs for mobile (first 4 most important + More)
+  const studentBottomTabs = [
+    { to: '/dashboard', icon: Home, label: 'Home' },
+    { to: '/dashboard/internships', icon: Briefcase, label: 'Search' },
+    { to: '/dashboard/applications', icon: FileText, label: 'Applied' },
+    { to: '/dashboard/saved', icon: Bookmark, label: 'Saved' },
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
   ];
 
   const organizationNavItems = [
@@ -190,10 +203,21 @@ const DashboardLayout = () => {
     { to: '/dashboard/students', icon: Users, label: 'Find Students' },
     { to: '/dashboard/messages', icon: MessageCircle, label: 'Messages' },
     { to: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+    { to: '/dashboard/verification', icon: Settings, label: 'Verification' },
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
     { to: '/dashboard/pricing', icon: CreditCard, label: 'Pricing' },
     { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
+
+  const orgBottomTabs = [
+    { to: '/dashboard', icon: Home, label: 'Home' },
+    { to: '/dashboard/my-internships', icon: Briefcase, label: 'Listings' },
+    { to: '/dashboard/applications', icon: FileText, label: 'Applicants' },
+    { to: '/dashboard/students', icon: Users, label: 'Students' },
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
+  ];
+
+  const bottomTabs = displayUser.role === 'student' ? studentBottomTabs : orgBottomTabs;
   
   const navItems = displayUser.role === 'student' ? studentNavItems : organizationNavItems;
 
@@ -401,12 +425,44 @@ const DashboardLayout = () => {
         )}
         
         {/* Main Content Area */}
-        <main className="flex-1 min-h-[calc(100vh-4rem)] overflow-auto">
-          <div className="max-w-7xl mx-auto p-6 lg:p-8">
+        <main className="flex-1 min-h-[calc(100vh-4rem)] overflow-auto pb-20 lg:pb-0">
+          <div className="max-w-7xl mx-auto px-4 py-4 md:px-6 md:py-6 lg:p-8">
             <Outlet />
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-neutral-200 shadow-lg">
+        <div className="flex items-stretch h-16">
+          {bottomTabs.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/dashboard'}
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center gap-0.5 text-xs transition-colors ${
+                    isActive
+                      ? 'text-amber-600'
+                      : 'text-neutral-500 hover:text-neutral-800'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className={`p-1 rounded-lg ${isActive ? 'bg-amber-50' : ''}`}>
+                      <Icon size={20} />
+                    </div>
+                    <span className="text-[10px] leading-none">{item.label}</span>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };

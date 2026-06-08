@@ -34,6 +34,9 @@ const StudentSearchPage = lazy(() => import('./pages/StudentSearchPage'));
 const ContactSalesPage = lazy(() => import('./pages/ContactSalesPage'));
 const DemoPage = lazy(() => import('./pages/DemoPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const SavedInternshipsPage = lazy(() => import('./pages/SavedInternshipsPage'));
+const ReferralPage = lazy(() => import('./pages/ReferralPage'));
+const VerificationPage = lazy(() => import('./pages/VerificationPage'));
 
 // ✅ PERFORMANCE: Loading fallback component
 const PageLoader = () => (
@@ -133,6 +136,9 @@ function App() {
             } />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="pricing" element={<PricingPage />} />
+            <Route path="saved" element={<SavedInternshipsPage />} />
+            <Route path="referrals" element={<ReferralPage />} />
+            <Route path="verification" element={<VerificationPage />} />
           </Route>
 
               {/* 404 Not Found */}

@@ -24,6 +24,9 @@ import notificationRoutes from './routes/notification.routes.js';
 import premiumRoutes from './routes/premium.routes.js';
 import messagingRoutes from './routes/messaging.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import savedInternshipsRoutes from './routes/saved-internships.routes.js';
+import referralRoutes from './routes/referral.routes.js';
+import verificationRoutes from './routes/verification.routes.js';
 import {
   apiLimiter,
   authLimiter,
@@ -244,6 +247,9 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/premium', premiumRoutes);
 app.use('/api/messages', messagingRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/saved-internships', savedInternshipsRoutes);
+app.use('/api/referrals', referralRoutes);
+app.use('/api/verification', verificationRoutes);
 // Note: /api/payments already registered on line 100 (before JSON parser)
 
 // ✅ ROOT ROUTE - Fixes "Route GET / not found" error on Render

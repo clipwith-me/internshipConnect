@@ -390,6 +390,33 @@ export const adminAPI = {
   getRecentActivity: (limit = 10) => api.get(`/admin/activity?limit=${limit}`),
 };
 
+/**
+ * Saved Internships endpoints
+ */
+export const savedInternshipsAPI = {
+  getAll: () => api.get('/saved-internships'),
+  save: (internshipId) => api.post('/saved-internships', { internshipId }),
+  unsave: (internshipId) => api.delete(`/saved-internships/${internshipId}`),
+};
+
+/**
+ * Referral endpoints
+ */
+export const referralAPI = {
+  getMyCode: () => api.get('/referrals/my-code'),
+  getList: () => api.get('/referrals/list'),
+};
+
+/**
+ * Verification endpoints
+ */
+export const verificationAPI = {
+  submit: (data) => api.post('/verification/submit', data),
+  getStatus: () => api.get('/verification/status'),
+  getPending: () => api.get('/verification/pending'),
+  review: (id, data) => api.patch(`/verification/${id}/review`, data),
+};
+
 export default api;
 
 /**

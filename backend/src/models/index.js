@@ -6,6 +6,10 @@ import Application from './Application.js';
 import Resume from './Resume.js';
 import Payment from './Payment.js';
 import Notification from './Notification.js';
+import SavedInternship from './SavedInternship.js';
+import ReferralCode from './ReferralCode.js';
+import Referral from './Referral.js';
+import CompanyVerification from './CompanyVerification.js';
 
 export {
   User,
@@ -15,7 +19,11 @@ export {
   Application,
   Resume,
   Payment,
-  Notification
+  Notification,
+  SavedInternship,
+  ReferralCode,
+  Referral,
+  CompanyVerification
 };
 
 export default {
@@ -26,5 +34,9 @@ export default {
   Application,
   Resume,
   Payment,
-  Notification
+  Notification,
+  SavedInternship,
+  ReferralCode,
+  Referral,
+  CompanyVerification
 };
