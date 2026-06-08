@@ -419,12 +419,8 @@ const startServer = async () => {
       console.error('⚠️  Server running but database unavailable');
     });
 
-    // ✅ Verify SMTP connection in background (non-blocking, non-critical)
-    const { verifyEmailConnection } = await import('./services/email.service.js');
-    verifyEmailConnection().catch((err) => {
-      console.warn('⚠️  SMTP verification failed (non-critical):', err.message);
-      console.warn('⚠️  Server will continue running - emails will be logged to console');
-    });
+    // Email handled by Resend — no SMTP connection needed
+    console.log(`📧 Email: ${process.env.RESEND_API_KEY ? 'Resend configured ✓' : 'RESEND_API_KEY not set — emails will be skipped'}`);
 
   } catch (error) {
     console.error('Failed to start server:', error);

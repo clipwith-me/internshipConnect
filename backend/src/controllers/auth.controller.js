@@ -1,8 +1,7 @@
 // backend/src/controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
 import { User, StudentProfile, OrganizationProfile, ReferralCode, Referral } from '../models/index.js';
-import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/email.service.js';
-import { sendStudentWelcomeEmail, sendCompanyWelcomeEmail } from '../services/resend-email.service.js';
+import { sendStudentWelcomeEmail, sendCompanyWelcomeEmail, sendPasswordResetEmail } from '../services/resend-email.service.js';
 /**
  * 🎓 LEARNING: Authentication Controller
  * 

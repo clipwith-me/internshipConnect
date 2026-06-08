@@ -255,3 +255,21 @@ export async function sendDeadlineReminderEmail({ to, studentName, internshipTit
 
   return sendEmail({ to, subject: `Closing soon: ${internshipTitle} at ${companyName} closes in 2 days`, html });
 }
+
+// ─── Password Reset ───────────────────────────────────────────────────────────
+
+export async function sendPasswordResetEmail({ to, resetToken, userName }) {
+  const resetUrl = `${APP_URL}/auth/reset-password/${resetToken}`;
+  const html = baseTemplate(`
+    <h2 style="margin:0 0 16px;font-size:20px;color:#0D1426;">Reset Your Password</h2>
+    <p>Hi ${userName || 'there'},</p>
+    <p>You requested a password reset for your InternshipConnect account. Click the button below to set a new password.</p>
+    <div style="text-align:center;margin:28px 0;">
+      ${ctaButton('Reset Password', resetUrl)}
+    </div>
+    <p style="font-size:13px;color:#868e96;">This link expires in <strong>1 hour</strong>. If you didn't request a password reset, you can safely ignore this email — your account is secure.</p>
+    <p style="font-size:13px;color:#868e96;margin-top:12px;">Or copy this URL into your browser:<br/><span style="font-family:monospace;word-break:break-all;">${resetUrl}</span></p>
+  `);
+
+  return sendEmail({ to, subject: 'Reset your InternshipConnect password', html });
+}

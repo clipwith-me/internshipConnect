@@ -1,6 +1,6 @@
 // backend/src/services/notification.service.js
 import Notification from '../models/Notification.js';
-import { sendEmail } from './email.service.js';
+import { sendEmail } from './resend-email.service.js';
 import { EventEmitter } from 'events';
 
 /**
