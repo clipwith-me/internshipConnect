@@ -217,7 +217,7 @@ const statusConfig = {
   },
   shortlisted: {
     subject: (company, role) => `Great news! You've been shortlisted by ${company} 🎉`,
-    heading: 'You've Been Shortlisted!',
+    heading: "You've Been Shortlisted!",
     emoji: '🎉',
     color: '#2EC4B6',
     message: (company, role) => `Congratulations! <strong>${company}</strong> has shortlisted your application for <strong>${role}</strong>. You're one step closer — keep an eye on your email for next steps.`,
