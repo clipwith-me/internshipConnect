@@ -1,27 +1,56 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.FROM_EMAIL || 'hello@internshipconnect.africa';
+const FROM_EMAIL = process.env.SMTP_USER || 'internshipconnects@gmail.com';
+const FROM_NAME = 'InternshipConnect';
 const APP_URL = process.env.APP_URL || 'https://internship-connect-beta.vercel.app';
 
+// Lazy transporter — created once on first use
+let _transporter = null;
+
+function getTransporter() {
+  if (_transporter) return _transporter;
+
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    return null;
+  }
+
+  _transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 8000,
+  });
+
+  return _transporter;
+}
+
 export async function sendEmail({ to, subject, html }) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('⚠️  RESEND_API_KEY not set — skipping email send');
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    console.warn('⚠️  SMTP not configured — skipping email send');
     console.log(`📧 Would send to ${to}: ${subject}`);
     return { data: null, error: null };
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: `InternshipConnect <${FROM_EMAIL}>`,
+    const info = await transporter.sendMail({
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to,
       subject,
       html,
     });
-    if (error) console.error('Resend error:', error);
-    return { data, error };
+    console.log(`📧 Email sent to ${to} — MessageId: ${info.messageId}`);
+    return { data: info, error: null };
   } catch (err) {
-    console.error('Email send failed:', err);
+    console.error('❌ Email send failed:', err.message);
     return { data: null, error: err };
   }
 }
