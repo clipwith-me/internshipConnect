@@ -157,45 +157,32 @@ const NotificationsPage = () => {
       </div>
 
       {/* Actions Bar */}
-      <Card className="mb-6 p-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          {/* Left: Filters */}
-          <div className="flex flex-wrap gap-3">
-            {/* Read/Unread Filter */}
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant={filter === 'all' ? 'primary' : 'outline'}
-                onClick={() => setFilter('all')}
-              >
-                All
-              </Button>
-              <Button
-                size="sm"
-                variant={filter === 'unread' ? 'primary' : 'outline'}
-                onClick={() => setFilter('unread')}
-              >
-                Unread
-                {unreadCount > 0 && (
-                  <Badge variant="danger" size="sm" className="ml-2">
-                    {unreadCount}
-                  </Badge>
-                )}
-              </Button>
-              <Button
-                size="sm"
-                variant={filter === 'read' ? 'primary' : 'outline'}
-                onClick={() => setFilter('read')}
-              >
-                Read
-              </Button>
+      <Card className="mb-6 p-3 sm:p-4">
+        <div className="flex flex-col gap-3">
+          {/* Row 1: Read/Unread filter + type select */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-1">
+              {['all', 'unread', 'read'].map(f => (
+                <Button
+                  key={f}
+                  size="sm"
+                  variant={filter === f ? 'primary' : 'outline'}
+                  onClick={() => setFilter(f)}
+                >
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                  {f === 'unread' && unreadCount > 0 && (
+                    <Badge variant="danger" size="sm" className="ml-1.5">
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+              ))}
             </div>
 
-            {/* Type Filter */}
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-neutral-300 rounded-md bg-white text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-300 rounded-md bg-white text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {notificationTypes.map(type => (
                 <option key={type.value} value={type.value}>
@@ -205,37 +192,23 @@ const NotificationsPage = () => {
             </select>
           </div>
 
-          {/* Right: Actions */}
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={fetchNotifications}
-              disabled={loading}
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          {/* Row 2: Action buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={fetchNotifications} disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
 
             {unreadCount > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleMarkAllAsRead}
-              >
-                <CheckCheck className="w-4 h-4 mr-2" />
+              <Button size="sm" variant="outline" onClick={handleMarkAllAsRead}>
+                <CheckCheck className="w-4 h-4 mr-1.5" />
                 Mark All Read
               </Button>
             )}
 
-            {/* Test Notification (Development Only) */}
             {import.meta.env.DEV && (
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={handleCreateTest}
-              >
-                <Bell className="w-4 h-4 mr-2" />
+              <Button size="sm" variant="secondary" onClick={handleCreateTest}>
+                <Bell className="w-4 h-4 mr-1.5" />
                 Test
               </Button>
             )}
@@ -295,7 +268,7 @@ const NotificationsPage = () => {
               <div className="flex items-start justify-between">
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
                     <Badge
                       variant={getTypeBadgeVariant(notification.type)}
                       size="sm"
@@ -305,7 +278,7 @@ const NotificationsPage = () => {
 
                     {!notification.isRead && (
                       <span className="flex items-center text-xs text-primary-600 font-medium">
-                        <span className="w-2 h-2 bg-primary-500 rounded-full mr-1.5"></span>
+                        <span className="w-2 h-2 bg-primary-500 rounded-full mr-1"></span>
                         Unread
                       </span>
                     )}
