@@ -41,6 +41,11 @@ export const getProfile = async (req, res) => {
       });
     }
 
+    // Admin has no org profile — return empty gracefully
+    if (req.user.role === 'admin') {
+      return res.status(200).json({ success: true, data: null });
+    }
+
     // ✅ PERFORMANCE: Use lean() for faster queries (returns plain JS objects)
     let profile = await OrganizationProfile.findOne({ user: req.user._id }).lean();
 

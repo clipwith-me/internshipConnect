@@ -111,14 +111,17 @@ export const authorize = (...roles) => {
         message: 'Not authenticated'
       });
     }
-    
+
+    // Admin is a superuser — bypasses all role restrictions
+    if (req.user.role === 'admin') return next();
+
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: `Access denied. Required roles: ${roles.join(', ')}`
       });
     }
-    
+
     next();
   };
 };

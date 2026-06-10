@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import {
   Users, Building2, UserCheck, TrendingUp,
   Calendar, Activity, Lock
@@ -27,31 +28,15 @@ const AdminDashboardPage = () => {
   const loadStats = async () => {
     try {
       setLoading(true);
-
-      // Get token from localStorage
-      const token = localStorage.getItem('accessToken');
-
-      const response = await fetch('http://localhost:5000/api/admin/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.status === 403) {
-        setError('Access denied. Admin role required.');
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to load statistics');
-      }
-
-      const data = await response.json();
-      setStats(data.data);
+      const response = await api.get('/admin/stats');
+      setStats(response.data.data);
       setError(null);
     } catch (err) {
-      console.error('Error loading stats:', err);
-      setError(err.message);
+      if (err.response?.status === 403) {
+        setError('Access denied. Admin role required.');
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to load statistics');
+      }
     } finally {
       setLoading(false);
     }
