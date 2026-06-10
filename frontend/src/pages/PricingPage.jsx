@@ -28,7 +28,7 @@ const PricingPage = () => {
         'Standard support',
       ],
       limitations: [
-        'No AI resume generation',
+        'Standard resume tools',
         'No AI matching recommendations',
         'Basic search filters only',
       ],
@@ -43,7 +43,7 @@ const PricingPage = () => {
       color: 'primary',
       features: [
         'Everything in Free',
-        '10 AI-generated resumes per month',
+        'Advanced resume tools',
         'AI-powered internship matching',
         'Advanced search filters',
         'Priority application review badge',
@@ -63,7 +63,7 @@ const PricingPage = () => {
       color: 'amber',
       features: [
         'Everything in Premium',
-        'Unlimited AI resume generation',
+        'Advanced resume tools',
         'Personalized career coaching',
         'Direct messaging with recruiters',
         'Exclusive job opportunities',
@@ -374,12 +374,12 @@ const PricingPage = () => {
               answer="We offer a 14-day money-back guarantee for all premium plans. If you're not satisfied, contact support for a full refund."
             />
             <FAQItem
-              question="How does AI resume generation work?"
-              answer="Our AI analyzes your profile, skills, and experience to create tailored resumes optimized for specific internships. Each resume is ATS-friendly and professionally formatted."
+              question="What resume tools are included in Premium?"
+              answer="Premium includes advanced resume tools to help you build and optimize your resume for internship applications, including formatting guidance and tailored tips."
             />
             <FAQItem
               question="Is my data secure?"
-              answer="Absolutely. We use bank-level encryption and never share your data with third parties. Your privacy is our top priority."
+              answer="We use industry-standard encryption and never share your data with third parties. Your privacy is our top priority."
             />
           </div>
         </div>

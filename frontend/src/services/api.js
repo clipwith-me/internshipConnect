@@ -210,7 +210,9 @@ export const studentAPI = {
   getApplications: () => api.get('/applications'),
   createApplication: (data) => api.post('/applications', data),
   // ✅ Profile picture upload
-  uploadProfilePicture: (formData) => api.post('/students/profile/picture', formData),
+  uploadProfilePicture: (formData) => api.post('/students/profile/picture', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   // Search students (for organizations)
   search: (params) => api.get('/students/search', { params }),
   // Toggle featured profile (Pro feature)

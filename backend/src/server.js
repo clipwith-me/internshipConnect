@@ -421,8 +421,9 @@ const startServer = async () => {
       console.error('⚠️  Server running but database unavailable');
     });
 
-    // Email handled by Resend — no SMTP connection needed
-    console.log(`📧 Email: ${process.env.RESEND_API_KEY ? 'Resend configured ✓' : 'RESEND_API_KEY not set — emails will be skipped'}`);
+    // Email status — check SMTP credentials
+    const smtpReady = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+    console.log(`📧 Email: ${smtpReady ? `SMTP configured ✓ (${process.env.SMTP_USER})` : '⚠️  SMTP not configured — emails will be skipped'}`);
 
   } catch (error) {
     console.error('Failed to start server:', error);

@@ -185,8 +185,8 @@ const NotificationBell = () => {
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 mt-2 w-screen max-w-sm sm:w-96 bg-white rounded-lg shadow-lg border border-neutral-200 z-50"
-          style={{ maxWidth: 'calc(100vw - 16px)' }}
+          className="fixed sm:absolute right-2 sm:right-0 mt-0 sm:mt-2 w-[calc(100vw-16px)] sm:w-96 bg-white rounded-lg shadow-lg border border-neutral-200 z-50"
+          style={{ top: '64px' }}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-neutral-200">
@@ -234,7 +234,7 @@ const NotificationBell = () => {
                 {notifications.map((notification) => (
                   <div
                     key={notification._id}
-                    className={`p-4 hover:bg-neutral-50 cursor-pointer transition-colors ${
+                    className={`p-3 sm:p-4 hover:bg-neutral-50 cursor-pointer transition-colors ${
                       !notification.isRead ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => {
@@ -276,7 +276,7 @@ const NotificationBell = () => {
                             e.stopPropagation();
                             handleMarkAsRead(notification._id);
                           }}
-                          className="ml-2 p-1 text-neutral-400 hover:text-neutral-600"
+                          className="ml-2 p-1 shrink-0 text-neutral-400 hover:text-neutral-600"
                           aria-label="Mark as read"
                         >
                           <X className="w-4 h-4" />

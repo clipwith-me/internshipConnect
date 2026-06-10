@@ -424,7 +424,7 @@ const DashboardLayout = () => {
                 Upgrade to Premium
               </h4>
               <p className="text-xs text-primary-700 mb-2 leading-snug">
-                Unlimited AI resume builds &amp; priority applications
+                Upgrade to Premium — unlock advanced features and priority support
               </p>
               <button
                 onClick={() => { setSidebarOpen(false); navigate('/dashboard/pricing'); }}

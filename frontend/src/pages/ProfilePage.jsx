@@ -73,6 +73,8 @@ const StudentProfile = memo(() => {
   const [errors, setErrors] = useState({});
   const [savingSection, setSavingSection] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
   const abortController = useApi();
   const { user } = useAuth();
 
@@ -316,6 +318,37 @@ const StudentProfile = memo(() => {
     }));
   }, []);
 
+  // Avatar Upload
+  const handleAvatarUpload = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('Image must be under 5MB');
+      return;
+    }
+    setUploadingAvatar(true);
+    setAvatarError('');
+    try {
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      const response = await studentAPI.uploadProfilePicture(formData);
+      if (response.data.success) {
+        setProfile(prev => ({
+          ...prev,
+          personalInfo: {
+            ...prev.personalInfo,
+            profilePicture: { url: response.data.data.url }
+          }
+        }));
+      }
+    } catch (err) {
+      setAvatarError(err.response?.data?.error || 'Upload failed');
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = '';
+    }
+  }, []);
+
   // Add Skill
   const addSkill = useCallback(() => {
     setFormData(prev => ({
@@ -481,6 +514,42 @@ const StudentProfile = memo(() => {
             {successMessage}
           </div>
         )}
+
+        {/* Profile Picture Upload Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-4 sm:p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="relative shrink-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-neutral-100 overflow-hidden border-2 border-neutral-200">
+                {profile?.personalInfo?.profilePicture?.url ? (
+                  <img src={profile.personalInfo.profilePicture.url} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-neutral-400">
+                    <User size={36} />
+                  </div>
+                )}
+              </div>
+              <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-700 transition-colors shadow-md">
+                <Upload size={14} className="text-white" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                />
+              </label>
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-neutral-900">
+                {profile?.personalInfo?.firstName} {profile?.personalInfo?.lastName}
+              </p>
+              <p className="text-sm text-neutral-500 truncate">{user?.email}</p>
+              <p className="text-xs text-neutral-400 mt-1">Click the + button to update your photo</p>
+              {uploadingAvatar && <p className="text-sm text-primary-600 mt-1">Uploading...</p>}
+              {avatarError && <p className="text-sm text-red-600 mt-1">{avatarError}</p>}
+            </div>
+          </div>
+        </div>
 
         {/* Personal Information */}
         <PersonalInfoSection
@@ -1012,18 +1081,18 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
       editing ? (
         <div className="space-y-3">
           {formData.skills.map((skill, idx) => (
-            <div key={idx} className="flex items-center gap-2">
+            <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2 items-center border border-neutral-100 rounded-lg p-2 sm:p-0 sm:border-0">
               <input
                 type="text"
                 value={skill.name || ''}
                 onChange={(e) => updateSkill(idx, 'name', e.target.value)}
-                className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 placeholder="Skill name"
               />
               <select
                 value={skill.category || 'technical'}
                 onChange={(e) => updateSkill(idx, 'category', e.target.value)}
-                className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full sm:w-auto px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
                 <option value="technical">Technical</option>
                 <option value="framework">Framework</option>
@@ -1033,7 +1102,7 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
               <select
                 value={skill.level || 'intermediate'}
                 onChange={(e) => updateSkill(idx, 'level', e.target.value)}
-                className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full sm:w-auto px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -1042,7 +1111,7 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
               </select>
               <button
                 onClick={() => removeSkill(idx)}
-                className="text-red-600 hover:text-red-700"
+                className="justify-self-end text-red-600 hover:text-red-700 p-1"
               >
                 <Trash2 size={16} />
               </button>
@@ -1111,17 +1180,18 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
     {formData.experience?.length > 0 ? (
       <div className="space-y-4">
         {formData.experience.map((exp, idx) => (
-          <div key={idx} className="border-l-4 border-primary-500 pl-4 relative">
-            {editing && (
-              <button
-                onClick={() => removeExperience(idx)}
-                className="absolute top-0 right-0 text-red-600 hover:text-red-700"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
+          <div key={idx} className="border border-neutral-200 rounded-lg p-3 sm:p-4 sm:border-l-4 sm:border-neutral-200 sm:border-l-primary-500 sm:rounded-none sm:pl-4 sm:pr-0">
             {editing ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
+              <div>
+                <div className="flex justify-end mb-2">
+                  <button
+                    onClick={() => removeExperience(idx)}
+                    className="text-red-600 hover:text-red-700 p-1"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   value={exp.title || ''}
@@ -1175,10 +1245,11 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
                 <textarea
                   value={exp.description || ''}
                   onChange={(e) => updateExperience(idx, 'description', e.target.value)}
-                  className="col-span-2 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="sm:col-span-2 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="Description"
                   rows={3}
                 />
+              </div>
               </div>
             ) : (
               <>

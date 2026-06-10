@@ -288,7 +288,8 @@ export async function sendDeadlineReminderEmail({ to, studentName, internshipTit
 // ─── Password Reset ───────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail({ to, resetToken, userName }) {
-  const resetUrl = `${APP_URL}/auth/reset-password/${resetToken}`;
+  const baseUrl = process.env.APP_URL || process.env.FRONTEND_URL || 'https://internship-connect-beta.vercel.app';
+  const resetUrl = `${baseUrl}/auth/reset-password/${resetToken}`;
   const html = baseTemplate(`
     <h2 style="margin:0 0 16px;font-size:20px;color:#0D1426;">Reset Your Password</h2>
     <p>Hi ${userName || 'there'},</p>
