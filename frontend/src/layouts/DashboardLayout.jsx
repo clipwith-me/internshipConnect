@@ -217,9 +217,23 @@ const DashboardLayout = () => {
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
   ];
 
+  const adminNavItems = [
+    { to: '/dashboard', icon: Home, label: 'Dashboard' },
+    { to: '/dashboard/admin', icon: Settings, label: 'Admin Panel' },
+    { to: '/dashboard/founder', icon: BarChart3, label: 'Founder Dashboard' },
+    { to: '/dashboard/investor', icon: CreditCard, label: 'Investor View' },
+    { to: '/dashboard/internships', icon: Briefcase, label: 'Internships' },
+    { to: '/dashboard/applications', icon: FileText, label: 'Applications' },
+    { to: '/dashboard/students', icon: Users, label: 'Students' },
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
+    { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
+  ];
+
   const bottomTabs = displayUser.role === 'student' ? studentBottomTabs : orgBottomTabs;
-  
-  const navItems = displayUser.role === 'student' ? studentNavItems : organizationNavItems;
+
+  const navItems = displayUser.role === 'admin' ? adminNavItems
+    : displayUser.role === 'student' ? studentNavItems
+    : organizationNavItems;
 
   const handleLogout = useCallback(async () => {
     await logout();

@@ -37,6 +37,8 @@ const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const SavedInternshipsPage = lazy(() => import('./pages/SavedInternshipsPage'));
 const ReferralPage = lazy(() => import('./pages/ReferralPage'));
 const VerificationPage = lazy(() => import('./pages/VerificationPage'));
+const FounderDashboardPage = lazy(() => import('./pages/FounderDashboardPage'));
+const InvestorDashboardPage = lazy(() => import('./pages/InvestorDashboardPage'));
 
 // ✅ PERFORMANCE: Loading fallback component
 const PageLoader = () => (
@@ -139,6 +141,16 @@ function App() {
             <Route path="saved" element={<SavedInternshipsPage />} />
             <Route path="referrals" element={<ReferralPage />} />
             <Route path="verification" element={<VerificationPage />} />
+            <Route path="founder" element={
+              <ProtectedRoute requiredRole="admin">
+                <FounderDashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="investor" element={
+              <ProtectedRoute requiredRole="admin">
+                <InvestorDashboardPage />
+              </ProtectedRoute>
+            } />
           </Route>
 
               {/* 404 Not Found */}

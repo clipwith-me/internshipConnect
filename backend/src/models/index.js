@@ -10,6 +10,7 @@ import SavedInternship from './SavedInternship.js';
 import ReferralCode from './ReferralCode.js';
 import Referral from './Referral.js';
 import CompanyVerification from './CompanyVerification.js';
+import AnalyticsEvent from './AnalyticsEvent.js';
 
 export {
   User,
@@ -23,7 +24,8 @@ export {
   SavedInternship,
   ReferralCode,
   Referral,
-  CompanyVerification
+  CompanyVerification,
+  AnalyticsEvent
 };
 
 export default {
@@ -38,5 +40,6 @@ export default {
   SavedInternship,
   ReferralCode,
   Referral,
-  CompanyVerification
+  CompanyVerification,
+  AnalyticsEvent
 };
