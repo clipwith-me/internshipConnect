@@ -50,7 +50,6 @@ const analyticsEventSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now,
-    index: true,
   },
 }, {
   timestamps: false,

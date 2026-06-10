@@ -386,44 +386,50 @@ const DashboardLayout = () => {
         <aside
           className={`
             fixed lg:sticky top-16 left-0 h-[calc(100vh-4rem)]
-            w-64 bg-white border-r border-neutral-200
+            w-72 sm:w-64 bg-white border-r border-neutral-200
             transition-transform duration-200 ease-in-out z-40
+            flex flex-col
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}
         >
-          <nav className="p-4 space-y-2">
+          {/* Scrollable nav area */}
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  end={item.to === '/dashboard'}
                   onClick={() => setSidebarOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
+                    `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm ${
                       isActive
-                        ? 'bg-primary-50 text-primary-600 font-medium'
+                        ? 'bg-primary-50 text-primary-600 font-semibold'
                         : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
                     }`
                   }
                 >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
+                  <Icon size={18} className="shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </NavLink>
               );
             })}
           </nav>
-          
-          {/* Sidebar Footer */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
-            <div className="bg-primary-50 rounded-lg p-4">
-              <h4 className="font-semibold text-primary-900 mb-1">
+
+          {/* Sidebar Footer — hidden on very small heights */}
+          <div className="shrink-0 p-3 border-t border-neutral-200 hidden sm:block">
+            <div className="bg-primary-50 rounded-lg p-3">
+              <h4 className="font-semibold text-primary-900 text-sm mb-1">
                 Upgrade to Premium
               </h4>
-              <p className="text-xs text-primary-700 mb-3">
-                Get unlimited AI resume generations and priority applications
+              <p className="text-xs text-primary-700 mb-2 leading-snug">
+                Unlimited AI resume builds &amp; priority applications
               </p>
-              <button className="w-full px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-md hover:bg-primary-600 transition-colors">
+              <button
+                onClick={() => { setSidebarOpen(false); navigate('/dashboard/pricing'); }}
+                className="w-full px-3 py-1.5 bg-primary-500 text-white text-xs font-medium rounded-md hover:bg-primary-600 transition-colors"
+              >
                 Upgrade Now
               </button>
             </div>
