@@ -407,7 +407,7 @@ function LiveInternships({ internships, navigate }) {
           {items.map((job, i) => {
             const type = job.type || 'remote';
             const badge = typeBadge[type] || typeBadge.remote;
-            const orgName = job.organization?.name || job.organization || 'Company';
+            const orgName = job.organization?.companyInfo?.companyName || job.organization?.name || 'Company';
             return (
               <div
                 key={i}
