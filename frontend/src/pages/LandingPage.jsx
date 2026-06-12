@@ -75,10 +75,10 @@ function NavBar({ navigate }) {
 
         {/* CTA */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="hidden-mobile">
-          <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 14, cursor: 'pointer', fontWeight: 500 }}>
+          <button onClick={() => navigate('/auth/login')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 14, cursor: 'pointer', fontWeight: 500 }}>
             Sign in
           </button>
-          <button onClick={() => navigate('/register')} style={{ background: C.amber, color: C.navy, fontSize: 14, fontWeight: 700, padding: '10px 22px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/auth/register')} style={{ background: C.amber, color: C.navy, fontSize: 14, fontWeight: 700, padding: '10px 22px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
             Get Started Free
           </button>
         </div>
@@ -100,8 +100,8 @@ function NavBar({ navigate }) {
             <a key={link} href={`#${link.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', fontSize: 15 }}>{link}</a>
           ))}
           <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
-          <button onClick={() => navigate('/login')} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: C.white, padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>Sign in</button>
-          <button onClick={() => navigate('/register')} style={{ background: C.amber, color: C.navy, padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Get Started Free</button>
+          <button onClick={() => navigate('/auth/login')} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: C.white, padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>Sign in</button>
+          <button onClick={() => navigate('/auth/register')} style={{ background: C.amber, color: C.navy, padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Get Started Free</button>
         </div>
       )}
 
@@ -152,13 +152,13 @@ function HeroSection({ navigate, stats }) {
           {/* CTA buttons */}
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 56 }}>
             <button
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/auth/register')}
               style={{ background: C.amber, color: C.navy, fontSize: 16, fontWeight: 700, padding: '14px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
             >
               Find Internships <ArrowRight size={18} />
             </button>
             <button
-              onClick={() => navigate('/register?role=organization')}
+              onClick={() => navigate('/auth/register?role=organization')}
               style={{ background: 'rgba(255,255,255,0.08)', color: C.white, fontSize: 16, fontWeight: 600, padding: '14px 32px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}
             >
               Post Internships
@@ -230,7 +230,7 @@ function SearchSection({ navigate }) {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/register?search=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`);
+    navigate(`/auth/register?search=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`);
   };
 
   return (
@@ -267,7 +267,7 @@ function SearchSection({ navigate }) {
           </button>
         </form>
         <p style={{ color: C.gray400, fontSize: 13, marginTop: 16 }}>
-          Popular: <span style={{ color: C.amber, cursor: 'pointer' }} onClick={() => navigate('/register')}>Software Engineering</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Marketing</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Finance</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Design</span>
+          Popular: <span style={{ color: C.amber, cursor: 'pointer' }} onClick={() => navigate('/auth/register')}>Software Engineering</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Marketing</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Finance</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Design</span>
         </p>
       </div>
     </section>
@@ -312,7 +312,7 @@ function HowItWorks({ navigate }) {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 56 }}>
-          <button onClick={() => navigate('/register')} style={{ background: C.navy, color: C.white, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => navigate('/auth/register')} style={{ background: C.navy, color: C.white, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             Start for free <ArrowRight size={18} />
           </button>
         </div>
@@ -398,7 +398,7 @@ function LiveInternships({ internships, navigate }) {
             <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 800, color: C.navy, marginBottom: 8 }}>Latest Opportunities</h2>
             <p style={{ color: C.gray600, fontSize: 16 }}>Fresh internships posted by verified employers</p>
           </div>
-          <button onClick={() => navigate('/register')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${C.amber}`, color: C.amber, fontWeight: 600, fontSize: 14, padding: '10px 20px', borderRadius: 8, cursor: 'pointer' }}>
+          <button onClick={() => navigate('/auth/register')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${C.amber}`, color: C.amber, fontWeight: 600, fontSize: 14, padding: '10px 20px', borderRadius: 8, cursor: 'pointer' }}>
             View all <ChevronRight size={16} />
           </button>
         </div>
@@ -411,7 +411,7 @@ function LiveInternships({ internships, navigate }) {
             return (
               <div
                 key={i}
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/auth/register')}
                 style={{ background: C.white, border: `1px solid ${C.gray200}`, borderRadius: 16, padding: 24, cursor: 'pointer', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = C.gray200; e.currentTarget.style.transform = 'none'; }}
@@ -534,7 +534,7 @@ function PricingPreview({ navigate }) {
                 </li>
               ))}
             </ul>
-            <button onClick={() => navigate('/register')} style={{ width: '100%', background: plan.primary ? C.amber : C.navy, color: plan.primary ? C.navy : C.white, fontWeight: 700, fontSize: 15, padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>
+            <button onClick={() => navigate('/auth/register')} style={{ width: '100%', background: plan.primary ? C.amber : C.navy, color: plan.primary ? C.navy : C.white, fontWeight: 700, fontSize: 15, padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>
               {plan.cta}
             </button>
           </div>
@@ -559,10 +559,10 @@ function FinalCTA({ navigate }) {
           Join tens of thousands of African students who have used InternshipConnect to launch their careers at top companies.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/register')} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 16, padding: '16px 40px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => navigate('/auth/register')} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 16, padding: '16px 40px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
             Create free account <ArrowRight size={18} />
           </button>
-          <button onClick={() => navigate('/register?role=organization')} style={{ background: 'rgba(255,255,255,0.08)', color: C.white, fontWeight: 700, fontSize: 16, padding: '16px 40px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/auth/register?role=organization')} style={{ background: 'rgba(255,255,255,0.08)', color: C.white, fontWeight: 700, fontSize: 16, padding: '16px 40px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}>
             Post internships
           </button>
         </div>
@@ -593,7 +593,7 @@ function Footer({ navigate }) {
               <h4 style={{ color: C.white, fontWeight: 700, fontSize: 14, marginBottom: 16 }}>{col.title}</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {col.links.map(link => (
-                  <li key={link}><a href="#" onClick={e => { e.preventDefault(); navigate('/register'); }} style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, textDecoration: 'none' }}>{link}</a></li>
+                  <li key={link}><a href="#" onClick={e => { e.preventDefault(); navigate('/auth/register'); }} style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, textDecoration: 'none' }}>{link}</a></li>
                 ))}
               </ul>
             </div>
