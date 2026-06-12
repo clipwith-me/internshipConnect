@@ -195,35 +195,6 @@ router.put('/change-password',
   authController.changePassword
 );
 
-// ─── One-time admin bootstrap (guarded by ADMIN_RESET_SECRET env var) ────────
-// DELETE this route once you have successfully logged in as admin.
-router.post('/bootstrap-admin', async (req, res) => {
-  try {
-    const { secret, email, newPassword } = req.body;
-
-    const expectedSecret = process.env.ADMIN_RESET_SECRET;
-    if (!expectedSecret || secret !== expectedSecret) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
-    const User = (await import('../models/User.js')).default;
-    const bcrypt = (await import('bcryptjs')).default;
-
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const hash = await bcrypt.hash(newPassword, 10);
-    await User.updateOne(
-      { _id: user._id },
-      { $set: { password: hash, loginAttempts: 0, role: 'admin' }, $unset: { lockUntil: '' } }
-    );
-
-    res.json({ success: true, message: 'Admin password reset. Delete this endpoint now.' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 export default router;
 
 /**

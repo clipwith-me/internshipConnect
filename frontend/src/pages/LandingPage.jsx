@@ -1,487 +1,642 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, CheckCircle, Building2, Users, GraduationCap,
-  Briefcase, Shield, Smartphone, Globe, Zap, Star, ChevronRight,
-  MapPin, Clock, DollarSign
+  ArrowRight, Search, MapPin, Briefcase, Users, Building2,
+  GraduationCap, Star, CheckCircle, ChevronRight, Menu, X,
+  TrendingUp, Shield, Zap, Globe
 } from 'lucide-react';
 import { internshipAPI } from '../services/api';
 
-// ─── Shared sub-components ────────────────────────────────────────────────────
+// ─── Brand colours ────────────────────────────────────────────────────────────
+const C = {
+  navy:     '#0D1426',
+  navyMid:  '#1a2744',
+  amber:    '#E8A230',
+  amberDk:  '#c8871a',
+  teal:     '#0D9488',
+  white:    '#ffffff',
+  gray50:   '#F9FAFB',
+  gray100:  '#F3F4F6',
+  gray200:  '#E5E7EB',
+  gray400:  '#9CA3AF',
+  gray600:  '#4B5563',
+  gray900:  '#111827',
+};
 
-const Badge = ({ children, className = '' }) => (
-  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${className}`}>
-    {children}
-  </span>
-);
+// ─── Unsplash free images (no attribution required) ──────────────────────────
+const IMGS = {
+  hero:       'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80&auto=format&fit=crop',
+  students:   'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80&auto=format&fit=crop',
+  office:     'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80&auto=format&fit=crop',
+  mentoring:  'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80&auto=format&fit=crop',
+  team:       'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80&auto=format&fit=crop',
+  africaCity: 'https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=1200&q=80&auto=format&fit=crop',
+  graduate:   'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80&auto=format&fit=crop',
+  laptop:     'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80&auto=format&fit=crop',
+};
 
-const NavBar = ({ navigate }) => (
-  <nav className="fixed top-0 inset-x-0 z-50 bg-[#0D1426]/95 backdrop-blur border-b border-white/10">
-    <div className="max-w-6xl mx-auto px-4 md:px-6 flex items-center justify-between h-16">
-      <span className="text-xl font-bold text-[#E8A230]">InternshipConnect</span>
-      <div className="hidden md:flex items-center gap-6 text-sm text-gray-300">
-        <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
-        <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-        <a href="#for-employers" className="hover:text-white transition-colors">Employers</a>
-      </div>
-      <div className="flex items-center gap-3">
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function NavBar({ navigate }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <nav style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+      background: scrolled ? 'rgba(13,20,38,0.97)' : 'transparent',
+      backdropFilter: scrolled ? 'blur(12px)' : 'none',
+      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+      transition: 'all 0.3s',
+    }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
+        {/* Logo */}
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <img
+            src="/intern-logo.png"
+            alt="InternshipConnect"
+            style={{ height: 52, width: 'auto', objectFit: 'contain' }}
+            onError={e => { e.target.src = '/intern-logo.jpeg'; }}
+          />
+        </a>
+
+        {/* Desktop links */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32, fontSize: 14 }} className="hidden-mobile">
+          <a href="#how-it-works" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>How it works</a>
+          <a href="#for-employers" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>For Employers</a>
+          <a href="#testimonials" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>Success Stories</a>
+          <a href="#pricing-preview" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>Pricing</a>
+        </div>
+
+        {/* CTA */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="hidden-mobile">
+          <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 14, cursor: 'pointer', fontWeight: 500 }}>
+            Sign in
+          </button>
+          <button onClick={() => navigate('/register')} style={{ background: C.amber, color: C.navy, fontSize: 14, fontWeight: 700, padding: '10px 22px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+            Get Started Free
+          </button>
+        </div>
+
+        {/* Mobile hamburger */}
         <button
-          onClick={() => navigate('/auth/login')}
-          className="text-sm text-gray-300 hover:text-white transition-colors hidden md:block"
+          onClick={() => setMenuOpen(m => !m)}
+          style={{ background: 'none', border: 'none', color: C.white, cursor: 'pointer', padding: 6, display: 'none' }}
+          className="show-mobile"
         >
-          Sign in
-        </button>
-        <button
-          onClick={() => navigate('/auth/register')}
-          className="bg-[#E8A230] hover:bg-[#d4921f] text-[#0D1426] text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-        >
-          Get Started Free
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
-    </div>
-  </nav>
-);
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div style={{ background: C.navy, borderTop: '1px solid rgba(255,255,255,0.1)', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {['How it works', 'For Employers', 'Pricing'].map(link => (
+            <a key={link} href={`#${link.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', fontSize: 15 }}>{link}</a>
+          ))}
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+          <button onClick={() => navigate('/login')} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: C.white, padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>Sign in</button>
+          <button onClick={() => navigate('/register')} style={{ background: C.amber, color: C.navy, padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Get Started Free</button>
+        </div>
+      )}
 
+      <style>{`
+        @media (max-width: 768px) {
+          .hidden-mobile { display: none !important; }
+          .show-mobile { display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .show-mobile { display: none !important; }
+        }
+      `}</style>
+    </nav>
+  );
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function HeroSection({ navigate, stats }) {
+  return (
+    <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden', background: C.navy }}>
+      {/* Background image with overlay */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${IMGS.hero})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
+      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${C.navy} 0%, ${C.navyMid} 60%, rgba(13,148,136,0.15) 100%)` }} />
+
+      {/* Amber glow */}
+      <div style={{ position: 'absolute', top: '20%', right: '15%', width: 500, height: 500, background: `radial-gradient(circle, rgba(232,162,48,0.12) 0%, transparent 70%)`, borderRadius: '50%' }} />
+
+      <div style={{ position: 'relative', width: '100%', maxWidth: 1200, margin: '0 auto', padding: '120px 24px 80px' }}>
+        <div style={{ maxWidth: 700 }}>
+          {/* Pill badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(232,162,48,0.12)', border: '1px solid rgba(232,162,48,0.3)', borderRadius: 100, padding: '6px 16px', marginBottom: 28 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.amber, display: 'inline-block', animation: 'pulse 2s infinite' }} />
+            <span style={{ color: C.amber, fontSize: 13, fontWeight: 600 }}>Africa's #1 Early-Career Platform</span>
+          </div>
+
+          <h1 style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 800, color: C.white, lineHeight: 1.1, marginBottom: 24, letterSpacing: '-0.02em' }}>
+            Where Students Launch{' '}
+            <span style={{ color: C.amber }}>Careers</span>{' '}
+            &amp; Companies Find{' '}
+            <span style={{ color: C.teal, textDecoration: 'underline', textDecorationColor: 'rgba(13,148,136,0.4)', textUnderlineOffset: 6 }}>Talent</span>
+          </h1>
+
+          <p style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, marginBottom: 40, maxWidth: 560 }}>
+            InternshipConnect matches African students with quality internships at top companies.
+            Build your profile, apply in minutes, get hired.
+          </p>
+
+          {/* CTA buttons */}
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 56 }}>
+            <button
+              onClick={() => navigate('/register')}
+              style={{ background: C.amber, color: C.navy, fontSize: 16, fontWeight: 700, padding: '14px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+            >
+              Find Internships <ArrowRight size={18} />
+            </button>
+            <button
+              onClick={() => navigate('/register?role=organization')}
+              style={{ background: 'rgba(255,255,255,0.08)', color: C.white, fontSize: 16, fontWeight: 600, padding: '14px 32px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}
+            >
+              Post Internships
+            </button>
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
+            {[
+              { value: `${stats.students}+`, label: 'Students' },
+              { value: `${stats.companies}+`, label: 'Companies' },
+              { value: `${stats.internships}+`, label: 'Opportunities' },
+            ].map(s => (
+              <div key={s.label}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: C.amber }}>{s.value}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Hero image card — desktop only */}
+        <div style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-45%)', width: 420, borderRadius: 20, overflow: 'hidden', boxShadow: '0 40px 80px rgba(0,0,0,0.5)', display: 'none' }} className="hero-image-card">
+          <img src={IMGS.students} alt="Students collaborating" style={{ width: '100%', height: 300, objectFit: 'cover' }} />
+          {/* Floating card */}
+          <div style={{ background: C.white, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.amber + '22', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircle size={22} color={C.amber} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.navy }}>New match found!</div>
+              <div style={{ fontSize: 12, color: C.gray600 }}>Software Engineer Intern — Lagos</div>
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          @media (min-width: 1024px) { .hero-image-card { display: block !important; } }
+          @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        `}</style>
+      </div>
+    </section>
+  );
+}
+
+// ─── Trusted by logos ─────────────────────────────────────────────────────────
+function TrustedBy() {
+  const companies = ['Google', 'Microsoft', 'Andela', 'Flutterwave', 'Paystack', 'MTN', 'Dangote', 'Access Bank'];
+  return (
+    <section style={{ background: C.white, padding: '40px 24px', borderBottom: `1px solid ${C.gray200}` }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <p style={{ textAlign: 'center', color: C.gray400, fontSize: 13, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 28 }}>
+          Trusted by students at companies like
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '32px 48px', flexWrap: 'wrap' }}>
+          {companies.map(name => (
+            <span key={name} style={{ fontSize: 15, fontWeight: 700, color: C.gray400, letterSpacing: '-0.01em' }}>{name}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Search bar section ───────────────────────────────────────────────────────
+function SearchSection({ navigate }) {
+  const [query, setQuery]  = useState('');
+  const [location, setLoc] = useState('');
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    navigate(`/register?search=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`);
+  };
+
+  return (
+    <section style={{ background: C.gray50, padding: '64px 24px' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 800, color: C.navy, marginBottom: 12 }}>
+          Find your perfect internship
+        </h2>
+        <p style={{ color: C.gray600, fontSize: 16, marginBottom: 32 }}>
+          Search thousands of opportunities across Africa and beyond
+        </p>
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: C.white, borderRadius: 14, padding: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: `1px solid ${C.gray200}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 2, minWidth: 180, padding: '0 12px' }}>
+            <Search size={18} color={C.gray400} />
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Job title, skill, or company"
+              style={{ border: 'none', outline: 'none', fontSize: 15, flex: 1, color: C.navy, background: 'transparent' }}
+            />
+          </div>
+          <div style={{ width: 1, background: C.gray200, alignSelf: 'stretch' }} className="search-divider" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 140, padding: '0 12px' }}>
+            <MapPin size={18} color={C.gray400} />
+            <input
+              value={location}
+              onChange={e => setLoc(e.target.value)}
+              placeholder="City or country"
+              style={{ border: 'none', outline: 'none', fontSize: 15, flex: 1, color: C.navy, background: 'transparent' }}
+            />
+          </div>
+          <button type="submit" style={{ background: C.amber, color: C.navy, fontWeight: 700, fontSize: 15, padding: '12px 28px', borderRadius: 10, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Search Jobs
+          </button>
+        </form>
+        <p style={{ color: C.gray400, fontSize: 13, marginTop: 16 }}>
+          Popular: <span style={{ color: C.amber, cursor: 'pointer' }} onClick={() => navigate('/register')}>Software Engineering</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Marketing</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Finance</span> · <span style={{ color: C.amber, cursor: 'pointer' }}>Design</span>
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ─── How it works ─────────────────────────────────────────────────────────────
+function HowItWorks({ navigate }) {
+  const steps = [
+    { n: '01', icon: GraduationCap, title: 'Create your profile', desc: 'Build a compelling profile with your education, skills, and experience. Upload your resume and let employers find you.' },
+    { n: '02', icon: Search, title: 'Discover opportunities', desc: 'Browse thousands of internships filtered by role, location, industry, and compensation that match your goals.' },
+    { n: '03', icon: Briefcase, title: 'Apply in one click', desc: 'Apply directly to internships with your profile. Track every application status in real-time on your dashboard.' },
+    { n: '04', icon: TrendingUp, title: 'Launch your career', desc: 'Get shortlisted, interview, receive offers, and kickstart the career you have always dreamed of.' },
+  ];
+  return (
+    <section id="how-it-works" style={{ background: C.white, padding: '96px 24px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <span style={{ background: C.amber + '18', color: C.amberDk, fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 100, letterSpacing: '0.05em' }}>HOW IT WORKS</span>
+          <h2 style={{ fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 800, color: C.navy, marginTop: 16, marginBottom: 12 }}>
+            From search to hired in 4 steps
+          </h2>
+          <p style={{ color: C.gray600, fontSize: 17, maxWidth: 500, margin: '0 auto' }}>Simple, fast, and designed for African students.</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32 }}>
+          {steps.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <div key={i} style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: i === 0 ? C.amber : C.navy, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={24} color={i === 0 ? C.navy : C.amber} />
+                  </div>
+                  <span style={{ fontSize: 42, fontWeight: 900, color: C.gray100, lineHeight: 1 }}>{step.n}</span>
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginBottom: 8 }}>{step.title}</h3>
+                <p style={{ color: C.gray600, fontSize: 15, lineHeight: 1.7 }}>{step.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 56 }}>
+          <button onClick={() => navigate('/register')} style={{ background: C.navy, color: C.white, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            Start for free <ArrowRight size={18} />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Feature split sections ────────────────────────────────────────────────────
+function FeatureSection() {
+  const features = [
+    {
+      tag: 'FOR STUDENTS',
+      title: 'Everything you need to land your first role',
+      body: 'Create a standout profile, discover opportunities from top companies, track your applications, and get notified the moment employers respond.',
+      bullets: ['AI-powered internship matching', 'Real-time application tracking', 'Resume builder & tips', 'Direct messaging with recruiters'],
+      img: IMGS.laptop,
+      imgAlt: 'Student using laptop to search internships',
+      flip: false,
+    },
+    {
+      tag: 'FOR EMPLOYERS',
+      title: 'Find Africa\'s brightest emerging talent',
+      body: 'Post internships in minutes, browse verified student profiles, manage applications on a single dashboard, and build your talent pipeline.',
+      bullets: ['Verified student profiles', 'One-click shortlisting', 'Automated status notifications', 'Analytics & applicant insights'],
+      img: IMGS.team,
+      imgAlt: 'Team reviewing candidates',
+      flip: true,
+    },
+  ];
+
+  return (
+    <>
+      {features.map((f, i) => (
+        <section key={i} id={i === 1 ? 'for-employers' : 'for-students'} style={{ background: i % 2 === 0 ? C.gray50 : C.white, padding: '96px 24px' }}>
+          <div style={{
+            maxWidth: 1100, margin: '0 auto',
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: 64, alignItems: 'center',
+          }}>
+            {/* Text side */}
+            <div style={{ order: f.flip ? 2 : 1 }}>
+              <span style={{ background: C.amber + '18', color: C.amberDk, fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 100, letterSpacing: '0.07em' }}>{f.tag}</span>
+              <h2 style={{ fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 800, color: C.navy, marginTop: 16, marginBottom: 16, lineHeight: 1.2 }}>{f.title}</h2>
+              <p style={{ color: C.gray600, fontSize: 16, lineHeight: 1.8, marginBottom: 28 }}>{f.body}</p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {f.bullets.map(b => (
+                  <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.gray600, fontSize: 15 }}>
+                    <CheckCircle size={18} color={C.teal} style={{ flexShrink: 0 }} />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Image side */}
+            <div style={{ order: f.flip ? 1 : 2, borderRadius: 20, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.12)' }}>
+              <img src={f.img} alt={f.imgAlt} style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} />
+            </div>
+          </div>
+        </section>
+      ))}
+    </>
+  );
+}
+
+// ─── Live internships ─────────────────────────────────────────────────────────
+function LiveInternships({ internships, navigate }) {
+  const fallback = [
+    { title: 'Frontend Developer Intern', organization: { name: 'TechLagos' }, location: 'Lagos, Nigeria', type: 'remote', stipend: 150 },
+    { title: 'Marketing Intern', organization: { name: 'GrowthCo Africa' }, location: 'Nairobi, Kenya', type: 'hybrid', stipend: 100 },
+    { title: 'Data Analyst Intern', organization: { name: 'FinTrack Ltd' }, location: 'Accra, Ghana', type: 'onsite', stipend: 200 },
+    { title: 'Product Design Intern', organization: { name: 'CreativeHub' }, location: 'Abuja, Nigeria', type: 'remote', stipend: 120 },
+  ];
+
+  const items = internships.length > 0 ? internships.slice(0, 4) : fallback;
+  const typeBadge = { remote: { bg: '#ECFDF5', color: '#065F46' }, hybrid: { bg: '#EFF6FF', color: '#1D4ED8' }, onsite: { bg: '#FFF7ED', color: '#C2410C' } };
+
+  return (
+    <section style={{ background: C.white, padding: '96px 24px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40, flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 800, color: C.navy, marginBottom: 8 }}>Latest Opportunities</h2>
+            <p style={{ color: C.gray600, fontSize: 16 }}>Fresh internships posted by verified employers</p>
+          </div>
+          <button onClick={() => navigate('/register')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1px solid ${C.amber}`, color: C.amber, fontWeight: 600, fontSize: 14, padding: '10px 20px', borderRadius: 8, cursor: 'pointer' }}>
+            View all <ChevronRight size={16} />
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+          {items.map((job, i) => {
+            const type = job.type || 'remote';
+            const badge = typeBadge[type] || typeBadge.remote;
+            const orgName = job.organization?.name || job.organization || 'Company';
+            return (
+              <div
+                key={i}
+                onClick={() => navigate('/register')}
+                style={{ background: C.white, border: `1px solid ${C.gray200}`, borderRadius: 16, padding: 24, cursor: 'pointer', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = C.gray200; e.currentTarget.style.transform = 'none'; }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 10, background: C.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Building2 size={20} color={C.amber} />
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 100, background: badge.bg, color: badge.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type}</span>
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 4 }}>{job.title}</h3>
+                <p style={{ fontSize: 14, color: C.gray600, marginBottom: 16 }}>{orgName}</p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: C.gray400 }}>
+                    <MapPin size={13} />{job.location || 'Africa'}
+                  </span>
+                  {(job.stipend || job.compensation?.stipend) && (
+                    <span style={{ fontSize: 13, color: C.teal, fontWeight: 600 }}>
+                      ${job.stipend || job.compensation?.stipend}/mo
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Testimonials ─────────────────────────────────────────────────────────────
+function Testimonials() {
+  const reviews = [
+    { name: 'Amara Okonkwo', role: 'Software Engineering Intern at Flutterwave', avatar: 'AO', text: 'InternshipConnect made it so easy. I built my profile on Monday, applied to 3 places, and had an interview by Friday. Landed my dream internship within 2 weeks.', stars: 5 },
+    { name: 'Kwame Asante', role: 'Marketing Intern at Andela', avatar: 'KA', text: 'The platform is incredibly intuitive. The application tracking dashboard kept me organised and I never missed a deadline. Highly recommend to every African student.', stars: 5 },
+    { name: 'Fatima Al-Hassan', role: 'Data Analyst Intern at MTN', avatar: 'FA', text: 'As someone who had never done a corporate internship, InternshipConnect guided me through the entire process. The profile tips alone helped me stand out.', stars: 5 },
+  ];
+
+  return (
+    <section id="testimonials" style={{ background: C.navy, padding: '96px 24px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <span style={{ background: 'rgba(232,162,48,0.15)', color: C.amber, fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 100, letterSpacing: '0.05em' }}>SUCCESS STORIES</span>
+          <h2 style={{ fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 800, color: C.white, marginTop: 16, marginBottom: 0 }}>Students love InternshipConnect</h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+          {reviews.map((r, i) => (
+            <div key={i} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
+                {Array.from({ length: r.stars }).map((_, j) => <Star key={j} size={16} fill={C.amber} color={C.amber} />)}
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, lineHeight: 1.8, marginBottom: 24, fontStyle: 'italic' }}>"{r.text}"</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.amber, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: C.navy, flexShrink: 0 }}>{r.avatar}</div>
+                <div>
+                  <div style={{ color: C.white, fontWeight: 700, fontSize: 14 }}>{r.name}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 }}>{r.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Stats/impact section ─────────────────────────────────────────────────────
+function ImpactSection() {
+  const items = [
+    { value: '50K+', label: 'Students registered', icon: GraduationCap },
+    { value: '2,000+', label: 'Partner companies', icon: Building2 },
+    { value: '85%', label: 'Placement rate', icon: TrendingUp },
+    { value: '12', label: 'African countries', icon: Globe },
+  ];
+  return (
+    <section style={{ background: C.amber, padding: '72px 24px' }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 40 }}>
+        {items.map(item => {
+          const Icon = item.icon;
+          return (
+            <div key={item.label} style={{ textAlign: 'center' }}>
+              <Icon size={32} color={C.navy} style={{ marginBottom: 12 }} />
+              <div style={{ fontSize: 40, fontWeight: 900, color: C.navy, lineHeight: 1 }}>{item.value}</div>
+              <div style={{ fontSize: 14, color: 'rgba(13,20,38,0.7)', marginTop: 6, fontWeight: 500 }}>{item.label}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ─── Pricing preview ──────────────────────────────────────────────────────────
+function PricingPreview({ navigate }) {
+  return (
+    <section id="pricing-preview" style={{ background: C.gray50, padding: '96px 24px' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center', marginBottom: 56 }}>
+        <h2 style={{ fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 800, color: C.navy, marginBottom: 12 }}>Simple, transparent pricing</h2>
+        <p style={{ color: C.gray600, fontSize: 17 }}>Start for free. Upgrade when you're ready.</p>
+      </div>
+      <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+        {[
+          { name: 'Free', price: '$0', period: 'forever', color: C.gray200, textColor: C.navy, features: ['Browse all internships', 'Apply to opportunities', 'Profile & resume upload', 'Application tracking'], cta: 'Get started free', primary: false },
+          { name: 'Premium', price: '$5.99', period: '/month', color: C.navy, textColor: C.white, features: ['Everything in Free', 'Priority matching', 'Advanced search filters', 'Resume optimisation tips', 'Priority support'], cta: 'Start Premium', primary: true },
+        ].map(plan => (
+          <div key={plan.name} style={{ background: plan.primary ? C.navy : C.white, borderRadius: 20, padding: '36px 32px', border: plan.primary ? `2px solid ${C.amber}` : `1px solid ${C.gray200}`, position: 'relative', boxShadow: plan.primary ? '0 20px 60px rgba(13,20,38,0.15)' : 'none' }}>
+            {plan.primary && <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: C.amber, color: C.navy, fontSize: 12, fontWeight: 800, padding: '4px 16px', borderRadius: 100, whiteSpace: 'nowrap' }}>MOST POPULAR</div>}
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: plan.textColor, marginBottom: 8 }}>{plan.name}</h3>
+            <div style={{ marginBottom: 28 }}>
+              <span style={{ fontSize: 40, fontWeight: 900, color: plan.primary ? C.amber : C.navy }}>{plan.price}</span>
+              <span style={{ fontSize: 14, color: plan.primary ? 'rgba(255,255,255,0.5)' : C.gray400 }}>{plan.period}</span>
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {plan.features.map(f => (
+                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: plan.primary ? 'rgba(255,255,255,0.8)' : C.gray600 }}>
+                  <CheckCircle size={16} color={C.amber} style={{ flexShrink: 0 }} />{f}
+                </li>
+              ))}
+            </ul>
+            <button onClick={() => navigate('/register')} style={{ width: '100%', background: plan.primary ? C.amber : C.navy, color: plan.primary ? C.navy : C.white, fontWeight: 700, fontSize: 15, padding: '14px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>
+              {plan.cta}
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── Final CTA ────────────────────────────────────────────────────────────────
+function FinalCTA({ navigate }) {
+  return (
+    <section style={{ background: C.navy, padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${IMGS.africaCity})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.1 }} />
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 600, background: `radial-gradient(circle, rgba(232,162,48,0.15), transparent 70%)`, borderRadius: '50%' }} />
+      <div style={{ position: 'relative', textAlign: 'center', maxWidth: 680, margin: '0 auto' }}>
+        <h2 style={{ fontSize: 'clamp(30px, 5vw, 52px)', fontWeight: 900, color: C.white, lineHeight: 1.15, marginBottom: 20 }}>
+          Your career starts{' '}
+          <span style={{ color: C.amber }}>today</span>
+        </h2>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18, lineHeight: 1.7, marginBottom: 44 }}>
+          Join tens of thousands of African students who have used InternshipConnect to launch their careers at top companies.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <button onClick={() => navigate('/register')} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 16, padding: '16px 40px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            Create free account <ArrowRight size={18} />
+          </button>
+          <button onClick={() => navigate('/register?role=organization')} style={{ background: 'rgba(255,255,255,0.08)', color: C.white, fontWeight: 700, fontSize: 16, padding: '16px 40px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}>
+            Post internships
+          </button>
+        </div>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 24 }}>Free forever · No credit card needed</p>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function Footer({ navigate }) {
+  return (
+    <footer style={{ background: '#080E1C', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '60px 24px 32px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 40, marginBottom: 48 }}>
+          {/* Brand */}
+          <div>
+            <img src="/intern-logo.png" alt="InternshipConnect" style={{ height: 44, objectFit: 'contain', marginBottom: 16 }} onError={e => { e.target.src = '/intern-logo.jpeg'; }} />
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.7, maxWidth: 220 }}>Africa's leading platform for student internships and early-career opportunities.</p>
+          </div>
+          {/* Links */}
+          {[
+            { title: 'Students', links: ['Find Internships', 'Build Profile', 'Career Tips', 'Pricing'] },
+            { title: 'Employers', links: ['Post Internships', 'Find Talent', 'Recruiter Tools', 'Pricing'] },
+            { title: 'Company', links: ['About Us', 'Contact', 'Privacy Policy', 'Terms of Service'] },
+          ].map(col => (
+            <div key={col.title}>
+              <h4 style={{ color: C.white, fontWeight: 700, fontSize: 14, marginBottom: 16 }}>{col.title}</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {col.links.map(link => (
+                  <li key={link}><a href="#" onClick={e => { e.preventDefault(); navigate('/register'); }} style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, textDecoration: 'none' }}>{link}</a></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>© {new Date().getFullYear()} InternshipConnect. All rights reserved.</p>
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Built for Africa 🌍</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [featuredInternships, setFeaturedInternships] = useState([]);
+  const [internships, setInternships] = useState([]);
+  const [stats, setStats] = useState({ students: '50K', companies: '2K', internships: '10K' });
 
   useEffect(() => {
     internshipAPI.getAll({ limit: 4, sort: '-createdAt', status: 'active' })
-      .then(res => setFeaturedInternships(res.data.data?.internships || res.data.data || []))
+      .then(res => {
+        const list = res.data.data?.internships || res.data.data || [];
+        setInternships(list);
+      })
       .catch(() => {});
   }, []);
 
   return (
-    <div className="bg-[#0D1426] text-white min-h-screen">
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", WebkitFontSmoothing: 'antialiased' }}>
       <NavBar navigate={navigate} />
-
-      {/* ── Section 1: Hero ── */}
-      <section className="relative pt-32 pb-20 px-4 md:px-6 overflow-hidden">
-        {/* Decorative background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#E8A230]/5 rounded-full blur-3xl" />
-          <div className="absolute top-40 right-10 w-64 h-64 bg-[#2EC4B6]/5 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-[#2EC4B6] mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2EC4B6] animate-pulse" />
-            Africa's Career Infrastructure Platform
-          </div>
-
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            Find Internships.{' '}
-            <span className="text-[#E8A230]">Build Your Career.</span>{' '}
-            Across Africa.
-          </h1>
-
-          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            InternshipConnect connects students to verified opportunities, helps employers find early talent, and gives universities the tools to manage internship programs properly.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
-            <button
-              onClick={() => navigate('/internships')}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#E8A230] hover:bg-[#d4921f] text-[#0D1426] font-bold px-8 py-4 rounded-xl text-base transition-colors"
-            >
-              Find Internships <ArrowRight className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => navigate('/auth/register?role=organization')}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-semibold px-8 py-4 rounded-xl text-base transition-colors"
-            >
-              Post an Internship
-            </button>
-          </div>
-
-          <p className="text-sm text-gray-500">
-            Join students from universities across Nigeria building their careers — always free for students
-          </p>
-        </div>
-      </section>
-
-      {/* ── Section 2: Stats Bar ── */}
-      <section className="px-4 md:px-6 pb-16">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { value: '200+', label: 'Universities' },
-              { value: '500+', label: 'Verified Opportunities' },
-              { value: '12+', label: 'Industries' },
-              { value: 'Pan-African', label: 'Nigeria & Beyond' },
-            ].map(({ value, label }) => (
-              <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-5 text-center">
-                <div className="text-2xl md:text-3xl font-bold text-[#E8A230]">{value}</div>
-                <div className="text-xs text-gray-400 mt-1">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Section 3: Who It's For ── */}
-      <section className="px-4 md:px-6 py-16 bg-white/2">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-3">Built for everyone in the ecosystem</h2>
-          <p className="text-gray-400 text-center mb-12 text-sm md:text-base">One platform connecting students, employers, and institutions</p>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Users,
-                title: 'For Students',
-                color: 'text-[#E8A230]',
-                border: 'border-[#E8A230]/20',
-                bg: 'bg-[#E8A230]/5',
-                desc: 'Discover verified internships, track applications, and build the profile that gets you hired.',
-                cta: 'Get Started Free',
-                href: '/auth/register',
-              },
-              {
-                icon: Building2,
-                title: 'For Employers',
-                color: 'text-[#2EC4B6]',
-                border: 'border-[#2EC4B6]/20',
-                bg: 'bg-[#2EC4B6]/5',
-                desc: 'Post internships, find qualified candidates, and build your early talent pipeline.',
-                cta: 'Post an Internship',
-                href: '/auth/register?role=organization',
-              },
-              {
-                icon: GraduationCap,
-                title: 'For Universities',
-                color: 'text-purple-400',
-                border: 'border-purple-400/20',
-                bg: 'bg-purple-400/5',
-                desc: 'Manage SIWES placements, track students, and digitise your industrial training program.',
-                cta: 'Partner With Us',
-                href: '/contact-sales',
-              },
-            ].map(({ icon: Icon, title, color, border, bg, desc, cta, href }) => (
-              <div key={title} className={`rounded-2xl border ${border} ${bg} p-6 flex flex-col`}>
-                <div className={`w-12 h-12 rounded-xl ${bg} border ${border} flex items-center justify-center mb-4`}>
-                  <Icon className={`w-6 h-6 ${color}`} />
-                </div>
-                <h3 className={`font-bold text-lg mb-2 ${color}`}>{title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed flex-1 mb-5">{desc}</p>
-                <button
-                  onClick={() => navigate(href)}
-                  className={`flex items-center gap-1.5 text-sm font-semibold ${color} hover:opacity-80 transition-opacity`}
-                >
-                  {cta} <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Section 4: How It Works ── */}
-      <section id="how-it-works" className="px-4 md:px-6 py-16">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-3">How it works</h2>
-          <p className="text-gray-400 text-center mb-12 text-sm">From signup to hired in three steps</p>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { num: '01', title: 'Create Your Profile', desc: 'Add your skills, upload your resume, tell employers what you\'re about.' },
-              { num: '02', title: 'Discover Opportunities', desc: 'Browse hundreds of verified internships filtered to your interests.' },
-              { num: '03', title: 'Apply & Get Hired', desc: 'Apply in minutes, track your status, get notified every step of the way.' },
-            ].map(({ num, title, desc }) => (
-              <div key={num} className="relative">
-                <div className="text-5xl font-black text-white/5 mb-2">{num}</div>
-                <h3 className="font-bold text-lg mb-2 -mt-6 text-white">{title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Section 5: Why InternshipConnect ── */}
-      <section className="px-4 md:px-6 py-16 bg-white/2">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-2">Built for Africa. Designed for Students.</h2>
-          <p className="text-gray-400 text-center mb-12 text-sm">Purpose-built for Nigeria's career ecosystem — and expanding across the continent</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { icon: Shield, title: 'Verified Employers', desc: 'Every company is reviewed before posting internships.' },
-              { icon: Zap, title: 'AI-Powered Matching', desc: 'Internships matched to your skills and goals.', soon: true },
-              { icon: GraduationCap, title: 'SIWES Ready', desc: 'Built for Nigeria\'s industrial training requirements.' },
-              { icon: Star, title: 'Free for Students', desc: 'Always free. No subscription, no hidden fees, ever.' },
-              { icon: Smartphone, title: 'Mobile First', desc: 'Designed for Nigerian students on Android and iOS.' },
-              { icon: Globe, title: 'Pan-African Vision', desc: 'Nigeria first — then the whole continent.' },
-            ].map(({ icon: Icon, title, desc, soon }) => (
-              <div key={title} className="bg-white/5 border border-white/10 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#E8A230]/10 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-[#E8A230]" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{title}</span>
-                    {soon && <span className="text-[10px] bg-[#2EC4B6]/20 text-[#2EC4B6] px-1.5 py-0.5 rounded-full">Coming soon</span>}
-                  </div>
-                </div>
-                <p className="text-gray-400 text-xs leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Section 6: Featured Internships ── */}
-      {featuredInternships.length > 0 && (
-        <section className="px-4 md:px-6 py-16">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold">Live Opportunities</h2>
-              <button
-                onClick={() => navigate('/internships')}
-                className="text-sm text-[#E8A230] hover:text-[#d4921f] flex items-center gap-1 transition-colors"
-              >
-                View all <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {featuredInternships.slice(0, 4).map(internship => {
-                const orgName = internship.organization?.companyInfo?.name || 'Company';
-                return (
-                  <div
-                    key={internship._id}
-                    onClick={() => navigate(`/internships/${internship._id}`)}
-                    className="bg-white/5 border border-white/10 hover:border-[#E8A230]/30 rounded-xl p-5 cursor-pointer transition-all"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-sm font-bold text-gray-300">
-                        {orgName.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm text-white">{internship.title}</div>
-                        <div className="text-xs text-gray-400">{orgName}</div>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 text-xs text-gray-400">
-                      {internship.location?.city && (
-                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{internship.location.city}</span>
-                      )}
-                      {internship.type && (
-                        <span className="flex items-center gap-1 capitalize"><Briefcase className="w-3 h-3" />{internship.type}</span>
-                      )}
-                      {internship.compensation?.amount ? (
-                        <span className="text-green-400 flex items-center gap-1"><DollarSign className="w-3 h-3" />Paid</span>
-                      ) : (
-                        <span className="text-gray-500">Unpaid</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="text-center mt-8">
-              <button
-                onClick={() => navigate('/internships')}
-                className="inline-flex items-center gap-2 border border-[#E8A230]/40 hover:border-[#E8A230] text-[#E8A230] font-semibold px-8 py-3 rounded-xl transition-colors"
-              >
-                View All Internships <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Section 7: For Employers CTA ── */}
-      <section id="for-employers" className="px-4 md:px-6 py-16 bg-white/2">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-[#1a2540] to-[#0D1426] border border-white/10 rounded-2xl p-8 md:p-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#E8A230] mb-3">Hire Africa's Best Young Talent</h2>
-            <p className="text-gray-400 max-w-xl mx-auto mb-8 text-sm leading-relaxed">
-              Post internships, reach motivated students from Nigeria's top universities, and build your early talent pipeline. Verified companies get significantly more applications.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => navigate('/auth/register?role=organization')}
-                className="w-full sm:w-auto bg-[#E8A230] hover:bg-[#d4921f] text-[#0D1426] font-bold px-8 py-3.5 rounded-xl transition-colors"
-              >
-                Post Free
-              </button>
-              <button
-                onClick={() => navigate('/contact-sales')}
-                className="w-full sm:w-auto border border-white/20 hover:border-white/40 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors"
-              >
-                See Pricing
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Section 8: Pricing ── */}
-      <section id="pricing" className="px-4 md:px-6 py-16">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-2">Simple, transparent pricing</h2>
-          <p className="text-gray-400 text-center mb-12 text-sm">Students are always free. Employers choose a plan that fits.</p>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Free */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col">
-              <div className="mb-4">
-                <div className="text-sm font-semibold text-gray-400 mb-1">FREE PLAN</div>
-                <div className="text-3xl font-bold">₦0</div>
-                <div className="text-xs text-gray-500 mt-1">For Employers · Free forever</div>
-              </div>
-              <ul className="space-y-2.5 text-sm text-gray-300 flex-1 mb-6">
-                {['1 active internship posting', 'Up to 10 applicants per posting', 'Basic applicant profiles', 'Email support'].map(f => (
-                  <li key={f} className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />{f}</li>
-                ))}
-              </ul>
-              <button
-                onClick={() => navigate('/auth/register?role=organization')}
-                className="w-full border border-white/20 hover:border-white/40 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
-              >
-                Get Started Free
-              </button>
-            </div>
-
-            {/* Pro */}
-            <div className="bg-[#E8A230]/10 border-2 border-[#E8A230] rounded-2xl p-6 flex flex-col relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#E8A230] text-[#0D1426] text-xs font-bold px-3 py-1 rounded-full">
-                Most Popular
-              </div>
-              <div className="mb-4">
-                <div className="text-sm font-semibold text-[#E8A230] mb-1">PRO PLAN</div>
-                <div className="text-3xl font-bold">₦15,000<span className="text-sm font-normal text-gray-400">/mo</span></div>
-                <div className="text-xs text-gray-500 mt-1">For growing employers</div>
-              </div>
-              <ul className="space-y-2.5 text-sm text-gray-300 flex-1 mb-6">
-                {['Unlimited internship postings', 'Unlimited applicants', 'AI candidate ranking (soon)', 'Applicant messaging', 'Priority listing placement', 'Featured employer badge', 'Analytics dashboard', 'Priority email support'].map(f => (
-                  <li key={f} className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-[#E8A230] flex-shrink-0 mt-0.5" />{f}</li>
-                ))}
-              </ul>
-              <button
-                onClick={() => navigate('/auth/register?role=organization')}
-                className="w-full bg-[#E8A230] hover:bg-[#d4921f] text-[#0D1426] font-bold py-3 rounded-xl transition-colors text-sm"
-              >
-                Start Pro Plan
-              </button>
-            </div>
-
-            {/* Institution */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col">
-              <div className="mb-4">
-                <div className="text-sm font-semibold text-gray-400 mb-1">INSTITUTION PLAN</div>
-                <div className="text-3xl font-bold">Custom</div>
-                <div className="text-xs text-gray-500 mt-1">Universities & Training Orgs</div>
-              </div>
-              <ul className="space-y-2.5 text-sm text-gray-300 flex-1 mb-6">
-                {['SIWES management dashboard', 'Placement tracking & reporting', 'Supervisor management tools', 'Student analytics', 'Bulk student onboarding', 'Compliance reporting', 'Dedicated account manager', 'API access'].map(f => (
-                  <li key={f} className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-[#2EC4B6] flex-shrink-0 mt-0.5" />{f}</li>
-                ))}
-              </ul>
-              <button
-                onClick={() => navigate('/contact-sales')}
-                className="w-full border border-[#2EC4B6]/40 hover:border-[#2EC4B6] text-[#2EC4B6] font-semibold py-3 rounded-xl transition-colors text-sm"
-              >
-                Contact Us
-              </button>
-            </div>
-          </div>
-
-          <p className="text-center text-sm text-gray-500 mt-8">
-            🎓 <strong className="text-gray-300">Students always access InternshipConnect for free.</strong> No subscription, no hidden fees, ever.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Section 9: Social Proof ── */}
-      <section className="px-4 md:px-6 py-16 bg-white/2">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-3">Be among the first</h2>
-          <p className="text-gray-400 mb-8 text-sm max-w-md mx-auto">
-            InternshipConnect is growing fast. Early users get priority placement, premium features, and a chance to shape the platform.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {['University of Lagos', 'Covenant University', 'UI Ibadan', 'LASU', 'Babcock University'].map(uni => (
-              <div key={uni} className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-xs text-gray-400">
-                {uni}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Section 10: Final CTA ── */}
-      <section className="px-4 md:px-6 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">Ready to start your career journey?</h2>
-          <p className="text-gray-400 mb-10 text-base max-w-xl mx-auto">
-            Join students, employers, and universities building Africa's workforce infrastructure.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-            <button
-              onClick={() => navigate('/auth/register')}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#E8A230] hover:bg-[#d4921f] text-[#0D1426] font-bold px-8 py-4 rounded-xl transition-colors"
-            >
-              Sign Up as Student <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => navigate('/auth/register?role=organization')}
-              className="w-full sm:w-auto border border-white/20 hover:border-white/40 text-white font-semibold px-8 py-4 rounded-xl transition-colors"
-            >
-              Post an Internship
-            </button>
-          </div>
-          <button
-            onClick={() => navigate('/contact-sales')}
-            className="text-sm text-gray-500 hover:text-[#2EC4B6] transition-colors"
-          >
-            Are you a university? Partner with us →
-          </button>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/10 px-4 md:px-6 py-12">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-8">
-            <div>
-              <span className="text-xl font-bold text-[#E8A230]">InternshipConnect</span>
-              <p className="text-xs text-gray-500 mt-1 max-w-xs">Africa's career infrastructure platform — connecting students, employers, and universities.</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm">
-              <div className="space-y-2">
-                <div className="text-gray-400 font-semibold text-xs uppercase tracking-wider">Platform</div>
-                {[['Internships', '/internships'], ['For Employers', '/auth/register?role=organization'], ['For Universities', '/contact-sales']].map(([label, href]) => (
-                  <button key={label} onClick={() => navigate(href)} className="block text-gray-500 hover:text-white transition-colors">{label}</button>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <div className="text-gray-400 font-semibold text-xs uppercase tracking-wider">Company</div>
-                {[['Contact', '/contact-sales'], ['Demo', '/demo']].map(([label, href]) => (
-                  <button key={label} onClick={() => navigate(href)} className="block text-gray-500 hover:text-white transition-colors">{label}</button>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <div className="text-gray-400 font-semibold text-xs uppercase tracking-wider">Legal</div>
-                {[['Privacy Policy', '#'], ['Terms of Service', '#']].map(([label, href]) => (
-                  <a key={label} href={href} className="block text-gray-500 hover:text-white transition-colors">{label}</a>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600">
-            <span>© {new Date().getFullYear()} InternshipConnect. All rights reserved.</span>
-            <div className="flex items-center gap-4">
-              <a href="#" className="hover:text-gray-400 transition-colors">LinkedIn</a>
-              <a href="#" className="hover:text-gray-400 transition-colors">Twitter/X</a>
-              <a href="#" className="hover:text-gray-400 transition-colors">Instagram</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <HeroSection navigate={navigate} stats={stats} />
+      <TrustedBy />
+      <SearchSection navigate={navigate} />
+      <HowItWorks navigate={navigate} />
+      <FeatureSection />
+      <LiveInternships internships={internships} navigate={navigate} />
+      <ImpactSection />
+      <Testimonials />
+      <PricingPreview navigate={navigate} />
+      <FinalCTA navigate={navigate} />
+      <Footer navigate={navigate} />
     </div>
   );
 }
