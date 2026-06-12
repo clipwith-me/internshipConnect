@@ -91,8 +91,8 @@ class ErrorBoundary extends React.Component {
                 {isDevelopment && ' Check the console for more details.'}
               </p>
 
-              {/* Error Details (Development Only) */}
-              {isDevelopment && this.state.error && (
+              {/* Error Details (always shown so we can diagnose production issues) */}
+              {this.state.error && (
                 <div className="mb-6 bg-neutral-50 border border-neutral-200 rounded-lg p-4">
                   <h3 className="font-semibold text-neutral-900 mb-2">Error Details:</h3>
                   <p className="text-sm text-error-600 font-mono mb-2">
