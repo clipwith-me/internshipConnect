@@ -265,12 +265,10 @@ const DashboardLayout = () => {
               {/* Logo - Microsoft Style: Left-aligned, moderate size, clickable */}
               <a href="/dashboard" className="flex items-center py-2 group">
                 <img
-                  src="/intern-logo.png"
+                  src="/logo-primary.png"
                   alt="InternshipConnect"
-                  className="h-20 w-auto object-contain transition-opacity group-hover:opacity-80"
-                  onError={(e) => {
-                    e.target.src = '/intern-logo.jpeg';
-                  }}
+                  className="h-9 w-auto object-contain transition-opacity group-hover:opacity-80"
+                  onError={(e) => { e.target.src = '/logo-icon.png'; }}
                 />
               </a>
             </div>

@@ -1,18 +1,24 @@
 {
   "name": "InternshipConnect",
-  "short_name": "InternConnect",
-  "description": "AI-powered internship matching platform",
+  "short_name": "InternshipConnect",
+  "description": "Africa's leading platform for student internships and early-career opportunities",
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "any",
+      "src": "/logo-icon.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#0078D4",
-  "background_color": "#ffffff",
+  "theme_color": "#0D1426",
+  "background_color": "#0D1426",
   "orientation": "portrait-primary"
 }

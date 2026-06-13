@@ -58,10 +58,10 @@ function NavBar({ navigate }) {
         {/* Logo */}
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <img
-            src="/intern-logo.png"
+            src="/logo-primary.png"
             alt="InternshipConnect"
-            style={{ height: 52, width: 'auto', objectFit: 'contain' }}
-            onError={e => { e.target.src = '/intern-logo.jpeg'; }}
+            style={{ height: 40, width: 'auto', objectFit: 'contain' }}
+            onError={e => { e.target.src = '/logo-icon.png'; }}
           />
         </a>
 
@@ -580,7 +580,7 @@ function Footer({ navigate }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 40, marginBottom: 48 }}>
           {/* Brand */}
           <div>
-            <img src="/intern-logo.png" alt="InternshipConnect" style={{ height: 44, objectFit: 'contain', marginBottom: 16 }} onError={e => { e.target.src = '/intern-logo.jpeg'; }} />
+            <img src="/logo-stacked.png" alt="InternshipConnect" style={{ height: 52, objectFit: 'contain', marginBottom: 16 }} onError={e => { e.target.src = '/logo-primary.png'; }} />
             <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.7, maxWidth: 220 }}>Africa's leading platform for student internships and early-career opportunities.</p>
           </div>
           {/* Links */}

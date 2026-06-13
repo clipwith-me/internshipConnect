@@ -23,12 +23,10 @@ const AuthLayout = () => {
           <div className="mb-12 text-center">
             <Link to="/" className="inline-block group">
               <img
-                src="/intern-logo.png"
+                src="/logo-primary.png"
                 alt="InternshipConnect"
-                className="h-32 w-auto object-contain mx-auto group-hover:opacity-80 transition-opacity duration-200"
-                onError={(e) => {
-                  e.target.src = '/intern-logo.jpeg';
-                }}
+                className="h-14 w-auto object-contain mx-auto group-hover:opacity-90 transition-opacity duration-200"
+                onError={(e) => { e.target.src = '/logo-icon.png'; }}
               />
               <p className="text-sm text-neutral-600 mt-3 font-medium tracking-wide">AI-Powered Career Matching</p>
             </Link>
