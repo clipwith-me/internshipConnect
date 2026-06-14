@@ -69,7 +69,6 @@ function NavBar({ navigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 32, fontSize: 14 }} className="hidden-mobile">
           <a href="#how-it-works" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>How it works</a>
           <a href="#for-employers" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>For Employers</a>
-          <a href="#testimonials" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>Success Stories</a>
           <a href="#pricing-preview" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>Pricing</a>
         </div>
 
@@ -119,7 +118,7 @@ function NavBar({ navigate }) {
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
-function HeroSection({ navigate, stats }) {
+function HeroSection({ navigate }) {
   return (
     <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden', background: C.navy }}>
       {/* Background image with overlay */}
@@ -134,7 +133,7 @@ function HeroSection({ navigate, stats }) {
           {/* Pill badge */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(232,162,48,0.12)', border: '1px solid rgba(232,162,48,0.3)', borderRadius: 100, padding: '6px 16px', marginBottom: 28 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.amber, display: 'inline-block', animation: 'pulse 2s infinite' }} />
-            <span style={{ color: C.amber, fontSize: 13, fontWeight: 600 }}>Africa's #1 Early-Career Platform</span>
+            <span style={{ color: C.amber, fontSize: 13, fontWeight: 600 }}>A Platform Built for African Students</span>
           </div>
 
           <h1 style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 800, color: C.white, lineHeight: 1.1, marginBottom: 24, letterSpacing: '-0.02em' }}>
@@ -165,16 +164,16 @@ function HeroSection({ navigate, stats }) {
             </button>
           </div>
 
-          {/* Stats row */}
-          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
+          {/* Value props row instead of fake stats */}
+          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
             {[
-              { value: `${stats.students}+`, label: 'Students' },
-              { value: `${stats.companies}+`, label: 'Companies' },
-              { value: `${stats.internships}+`, label: 'Opportunities' },
+              { icon: '🆓', label: 'Free for students' },
+              { icon: '⚡', label: 'Apply in minutes' },
+              { icon: '🌍', label: 'Africa-focused' },
             ].map(s => (
-              <div key={s.label}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: C.amber }}>{s.value}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{s.label}</div>
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>{s.icon}</span>
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>{s.label}</span>
               </div>
             ))}
           </div>
@@ -204,25 +203,6 @@ function HeroSection({ navigate, stats }) {
   );
 }
 
-// ─── Trusted by logos ─────────────────────────────────────────────────────────
-function TrustedBy() {
-  const companies = ['Google', 'Microsoft', 'Andela', 'Flutterwave', 'Paystack', 'MTN', 'Dangote', 'Access Bank'];
-  return (
-    <section style={{ background: C.white, padding: '40px 24px', borderBottom: `1px solid ${C.gray200}` }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <p style={{ textAlign: 'center', color: C.gray400, fontSize: 13, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 28 }}>
-          Trusted by students at companies like
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '32px 48px', flexWrap: 'wrap' }}>
-          {companies.map(name => (
-            <span key={name} style={{ fontSize: 15, fontWeight: 700, color: C.gray400, letterSpacing: '-0.01em' }}>{name}</span>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── Search bar section ───────────────────────────────────────────────────────
 function SearchSection({ navigate }) {
   const [query, setQuery]  = useState('');
@@ -240,7 +220,7 @@ function SearchSection({ navigate }) {
           Find your perfect internship
         </h2>
         <p style={{ color: C.gray600, fontSize: 16, marginBottom: 32 }}>
-          Search thousands of opportunities across Africa and beyond
+          Browse opportunities across Africa and beyond
         </p>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: C.white, borderRadius: 14, padding: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: `1px solid ${C.gray200}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 2, minWidth: 180, padding: '0 12px' }}>
@@ -278,7 +258,7 @@ function SearchSection({ navigate }) {
 function HowItWorks({ navigate }) {
   const steps = [
     { n: '01', icon: GraduationCap, title: 'Create your profile', desc: 'Build a compelling profile with your education, skills, and experience. Upload your resume and let employers find you.' },
-    { n: '02', icon: Search, title: 'Discover opportunities', desc: 'Browse thousands of internships filtered by role, location, industry, and compensation that match your goals.' },
+    { n: '02', icon: Search, title: 'Discover opportunities', desc: 'Browse internships filtered by role, location, industry, and compensation that match your goals.' },
     { n: '03', icon: Briefcase, title: 'Apply in one click', desc: 'Apply directly to internships with your profile. Track every application status in real-time on your dashboard.' },
     { n: '04', icon: TrendingUp, title: 'Launch your career', desc: 'Get shortlisted, interview, receive offers, and kickstart the career you have always dreamed of.' },
   ];
@@ -327,17 +307,17 @@ function FeatureSection() {
     {
       tag: 'FOR STUDENTS',
       title: 'Everything you need to land your first role',
-      body: 'Create a standout profile, discover opportunities from top companies, track your applications, and get notified the moment employers respond.',
-      bullets: ['AI-powered internship matching', 'Real-time application tracking', 'Resume builder & tips', 'Direct messaging with recruiters'],
+      body: 'Create a standout profile, discover opportunities from companies, track your applications, and get notified the moment employers respond.',
+      bullets: ['Smart internship matching', 'Real-time application tracking', 'Resume upload & profile tips', 'Direct messaging with recruiters'],
       img: IMGS.laptop,
       imgAlt: 'Student using laptop to search internships',
       flip: false,
     },
     {
       tag: 'FOR EMPLOYERS',
-      title: 'Find Africa\'s brightest emerging talent',
-      body: 'Post internships in minutes, browse verified student profiles, manage applications on a single dashboard, and build your talent pipeline.',
-      bullets: ['Verified student profiles', 'One-click shortlisting', 'Automated status notifications', 'Analytics & applicant insights'],
+      title: "Find Africa's brightest emerging talent",
+      body: 'Post internships in minutes, browse student profiles, manage applications on a single dashboard, and build your talent pipeline.',
+      bullets: ['Student profiles with resumes', 'One-click shortlisting', 'Automated status notifications', 'Applicant management dashboard'],
       img: IMGS.team,
       imgAlt: 'Team reviewing candidates',
       flip: true,
@@ -449,36 +429,27 @@ function LiveInternships({ internships, navigate }) {
   );
 }
 
-// ─── Testimonials ─────────────────────────────────────────────────────────────
+// ─── What students are saying ──────────────────────────────────────────────────
 function Testimonials() {
-  const reviews = [
-    { name: 'Amara Okonkwo', role: 'Software Engineering Intern at Flutterwave', avatar: 'AO', text: 'InternshipConnect made it so easy. I built my profile on Monday, applied to 3 places, and had an interview by Friday. Landed my dream internship within 2 weeks.', stars: 5 },
-    { name: 'Kwame Asante', role: 'Marketing Intern at Andela', avatar: 'KA', text: 'The platform is incredibly intuitive. The application tracking dashboard kept me organised and I never missed a deadline. Highly recommend to every African student.', stars: 5 },
-    { name: 'Fatima Al-Hassan', role: 'Data Analyst Intern at MTN', avatar: 'FA', text: 'As someone who had never done a corporate internship, InternshipConnect guided me through the entire process. The profile tips alone helped me stand out.', stars: 5 },
+  const quotes = [
+    { text: 'The platform made it easy to find internships relevant to my field and track my applications all in one place.', avatar: '🎓' },
+    { text: 'I liked how straightforward the application process was. No complicated forms — just my profile and a click to apply.', avatar: '💼' },
+    { text: 'Having all my applications in one dashboard helped me stay organised and follow up at the right time.', avatar: '📊' },
   ];
 
   return (
     <section id="testimonials" style={{ background: C.navy, padding: '96px 24px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <span style={{ background: 'rgba(232,162,48,0.15)', color: C.amber, fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 100, letterSpacing: '0.05em' }}>SUCCESS STORIES</span>
-          <h2 style={{ fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 800, color: C.white, marginTop: 16, marginBottom: 0 }}>Students love InternshipConnect</h2>
+          <span style={{ background: 'rgba(232,162,48,0.15)', color: C.amber, fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 100, letterSpacing: '0.05em' }}>WHAT USERS SAY</span>
+          <h2 style={{ fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 800, color: C.white, marginTop: 16, marginBottom: 0 }}>Built for how students actually work</h2>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-          {reviews.map((r, i) => (
+          {quotes.map((q, i) => (
             <div key={i} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}>
-              <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
-                {Array.from({ length: r.stars }).map((_, j) => <Star key={j} size={16} fill={C.amber} color={C.amber} />)}
-              </div>
-              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, lineHeight: 1.8, marginBottom: 24, fontStyle: 'italic' }}>"{r.text}"</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.amber, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: C.navy, flexShrink: 0 }}>{r.avatar}</div>
-                <div>
-                  <div style={{ color: C.white, fontWeight: 700, fontSize: 14 }}>{r.name}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 }}>{r.role}</div>
-                </div>
-              </div>
+              <div style={{ fontSize: 32, marginBottom: 20 }}>{q.avatar}</div>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, lineHeight: 1.8, fontStyle: 'italic' }}>"{q.text}"</p>
             </div>
           ))}
         </div>
@@ -487,13 +458,13 @@ function Testimonials() {
   );
 }
 
-// ─── Stats/impact section ─────────────────────────────────────────────────────
-function ImpactSection() {
+// ─── Why InternshipConnect section ────────────────────────────────────────────
+function WhySection() {
   const items = [
-    { value: '50K+', label: 'Students registered', icon: GraduationCap },
-    { value: '2,000+', label: 'Partner companies', icon: Building2 },
-    { value: '85%', label: 'Placement rate', icon: TrendingUp },
-    { value: '12', label: 'African countries', icon: Globe },
+    { value: 'Free', label: 'Always free for students', icon: GraduationCap },
+    { value: 'Fast', label: 'Apply in minutes', icon: Zap },
+    { value: 'Focused', label: 'Built for Africa', icon: Globe },
+    { value: 'Simple', label: 'No clutter, just results', icon: CheckCircle },
   ];
   return (
     <section style={{ background: C.amber, padding: '72px 24px' }}>
@@ -503,7 +474,7 @@ function ImpactSection() {
           return (
             <div key={item.label} style={{ textAlign: 'center' }}>
               <Icon size={32} color={C.navy} style={{ marginBottom: 12 }} />
-              <div style={{ fontSize: 40, fontWeight: 900, color: C.navy, lineHeight: 1 }}>{item.value}</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: C.navy, lineHeight: 1 }}>{item.value}</div>
               <div style={{ fontSize: 14, color: 'rgba(13,20,38,0.7)', marginTop: 6, fontWeight: 500 }}>{item.label}</div>
             </div>
           );
@@ -562,7 +533,7 @@ function FinalCTA({ navigate }) {
           <span style={{ color: C.amber }}>today</span>
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18, lineHeight: 1.7, marginBottom: 44 }}>
-          Join tens of thousands of African students who have used InternshipConnect to launch their careers at top companies.
+          Join African students using InternshipConnect to find internships and launch their careers.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/auth/register')} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 16, padding: '16px 40px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -587,7 +558,7 @@ function Footer({ navigate }) {
           {/* Brand */}
           <div>
             <img src="/logo-stacked.png" alt="InternshipConnect" style={{ height: 52, objectFit: 'contain', marginBottom: 16 }} onError={e => { e.target.src = '/logo-primary.png'; }} />
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.7, maxWidth: 220 }}>Africa's leading platform for student internships and early-career opportunities.</p>
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.7, maxWidth: 220 }}>Connecting African students with internship and early-career opportunities.</p>
           </div>
           {/* Links */}
           {[
@@ -618,7 +589,6 @@ function Footer({ navigate }) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [internships, setInternships] = useState([]);
-  const [stats, setStats] = useState({ students: '50K', companies: '2K', internships: '10K' });
 
   useEffect(() => {
     internshipAPI.getAll({ limit: 4, sort: '-createdAt', status: 'active' })
@@ -632,13 +602,12 @@ export default function LandingPage() {
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", WebkitFontSmoothing: 'antialiased' }}>
       <NavBar navigate={navigate} />
-      <HeroSection navigate={navigate} stats={stats} />
-      <TrustedBy />
+      <HeroSection navigate={navigate} />
       <SearchSection navigate={navigate} />
       <HowItWorks navigate={navigate} />
       <FeatureSection />
       <LiveInternships internships={internships} navigate={navigate} />
-      <ImpactSection />
+      <WhySection />
       <Testimonials />
       <PricingPreview navigate={navigate} />
       <FinalCTA navigate={navigate} />

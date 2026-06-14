@@ -28,7 +28,7 @@ const AuthLayout = () => {
                 className="h-14 w-auto object-contain mx-auto group-hover:opacity-90 transition-opacity duration-200"
                 onError={(e) => { e.target.src = '/logo-icon.png'; }}
               />
-              <p className="text-sm text-neutral-600 mt-3 font-medium tracking-wide">AI-Powered Career Matching</p>
+              <p className="text-sm text-neutral-600 mt-3 font-medium tracking-wide">Find internships across Africa</p>
             </Link>
           </div>
 
@@ -111,9 +111,9 @@ const AuthLayout = () => {
 
           {/* Stats */}
           <div className="mt-16 grid grid-cols-3 gap-8">
-            <Stat number="10K+" label="Students" />
-            <Stat number="500+" label="Companies" />
-            <Stat number="2K+" label="Internships" />
+            <Stat number="Free" label="For students" />
+            <Stat number="Fast" label="Apply in minutes" />
+            <Stat number="🌍" label="Africa-focused" />
           </div>
         </div>
       </div>
