@@ -2,4 +2,113 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles can go here */
+/* ─── Dark mode CSS variable overrides ──────────────────────────────────────
+   When html.dark is set, we remap the visual meaning of Tailwind's utility
+   classes using targeted overrides. This covers the entire app without
+   needing dark: variants on every element.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+html.dark {
+  color-scheme: dark;
+  background-color: #0d1117;
+  color: #e2e8f0;
+}
+
+/* ── Page backgrounds ── */
+html.dark .bg-white          { background-color: #161b27 !important; }
+html.dark .bg-neutral-50     { background-color: #0d1117 !important; }
+html.dark .bg-neutral-100    { background-color: #1a2035 !important; }
+html.dark .bg-neutral-200    { background-color: #1e2a40 !important; }
+html.dark .min-h-screen      { background-color: #0d1117; }
+
+/* ── Text colours ── */
+html.dark .text-neutral-900  { color: #f1f5f9 !important; }
+html.dark .text-neutral-800  { color: #e2e8f0 !important; }
+html.dark .text-neutral-700  { color: #cbd5e1 !important; }
+html.dark .text-neutral-600  { color: #94a3b8 !important; }
+html.dark .text-neutral-500  { color: #64748b !important; }
+html.dark .text-neutral-400  { color: #475569 !important; }
+
+/* ── Borders ── */
+html.dark .border-neutral-100 { border-color: #1e2a40 !important; }
+html.dark .border-neutral-200 { border-color: #1e2a40 !important; }
+html.dark .border-neutral-300 { border-color: #263045 !important; }
+html.dark .divide-neutral-100 > * + * { border-color: #1e2a40 !important; }
+html.dark .divide-neutral-200 > * + * { border-color: #1e2a40 !important; }
+html.dark .border-neutral-200\/50 { border-color: rgba(30,42,64,0.5) !important; }
+
+/* ── Inputs & selects ── */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #1a2035 !important;
+  color: #e2e8f0 !important;
+  border-color: #263045 !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #475569 !important; }
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.3) !important;
+}
+html.dark input:disabled,
+html.dark select:disabled {
+  background-color: #111827 !important;
+  color: #374151 !important;
+}
+
+/* ── Cards / panels ── */
+html.dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.4) !important; }
+html.dark .shadow     { box-shadow: 0 1px 3px 0 rgba(0,0,0,0.5) !important; }
+html.dark .shadow-md  { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+html.dark .shadow-lg  { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.6) !important; }
+
+/* ── Primary colour variants ── */
+html.dark .bg-primary-50  { background-color: #0f1e35 !important; }
+html.dark .bg-primary-100 { background-color: #132240 !important; }
+html.dark .border-primary-200 { border-color: #1a3560 !important; }
+html.dark .text-primary-600 { color: #60a5fa !important; }
+html.dark .text-primary-700 { color: #93c5fd !important; }
+html.dark .hover\:bg-primary-50:hover { background-color: #0f1e35 !important; }
+html.dark .hover\:bg-neutral-50:hover { background-color: #1a2035 !important; }
+
+/* ── Status colours (keep readable on dark) ── */
+html.dark .bg-green-50   { background-color: #052e16 !important; }
+html.dark .text-green-800 { color: #86efac !important; }
+html.dark .text-green-700 { color: #4ade80 !important; }
+html.dark .border-green-200 { border-color: #14532d !important; }
+
+html.dark .bg-red-50   { background-color: #2d0a0a !important; }
+html.dark .text-red-800 { color: #fca5a5 !important; }
+html.dark .text-red-600 { color: #f87171 !important; }
+html.dark .border-red-200 { border-color: #7f1d1d !important; }
+html.dark .border-red-300 { border-color: #991b1b !important; }
+html.dark .bg-red-50.border { background-color: #2d0a0a !important; }
+
+html.dark .bg-blue-50   { background-color: #0c1a2e !important; }
+html.dark .text-blue-800 { color: #93c5fd !important; }
+html.dark .border-blue-200 { border-color: #1e3a5f !important; }
+
+html.dark .bg-amber-100  { background-color: #292207 !important; }
+html.dark .text-amber-700 { color: #fcd34d !important; }
+
+html.dark .bg-purple-50 { background-color: #1a0a2e !important; }
+html.dark .border-purple-200 { border-color: #3b1a6b !important; }
+
+/* ── Skeleton loaders ── */
+html.dark .animate-pulse { background-color: #1e2a40; }
+
+/* ── Table / list rows ── */
+html.dark tr:nth-child(even) { background-color: #131925; }
+html.dark thead { background-color: #1a2035; }
+
+/* ── Scrollbar ── */
+html.dark ::-webkit-scrollbar { width: 8px; height: 8px; }
+html.dark ::-webkit-scrollbar-track { background: #0d1117; }
+html.dark ::-webkit-scrollbar-thumb { background: #263045; border-radius: 4px; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+/* ── Misc utilities ── */
+html.dark .backdrop-blur-sm { background-color: rgba(13,17,23,0.8) !important; }

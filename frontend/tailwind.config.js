@@ -16,12 +16,14 @@ import { tokens } from './src/styles/tokens.js';
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  // Tell Tailwind which files to scan for classes
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  
+
+  // Enable class-based dark mode (.dark on <html>)
+  darkMode: 'class',
+
   theme: {
     extend: {
       // ═══════════════════════════════════════════════════════
