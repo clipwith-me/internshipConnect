@@ -1,8 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import PublicNav from '../components/PublicNav';
 
 const C = {
   navy: '#0D1426', amber: '#E8A230', white: '#ffffff',
-  gray50: '#F9FAFB', gray200: '#E5E7EB', gray600: '#4B5563', gray900: '#111827',
+  gray50: '#F9FAFB', gray200: '#E5E7EB', gray600: '#4B5563',
 };
 
 const Section = ({ title, children }) => (
@@ -13,32 +13,20 @@ const Section = ({ title, children }) => (
 );
 
 export default function PrivacyPolicyPage() {
-  const navigate = useNavigate();
-
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: C.gray50, minHeight: '100vh' }}>
-      {/* Nav */}
-      <nav style={{ background: C.navy, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/logo-primary.png" alt="InternshipConnect" style={{ height: 36, objectFit: 'contain' }} onError={e => { e.target.src = '/logo-icon.png'; }} />
-        </a>
-        <button onClick={() => navigate('/auth/login')} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: C.white, fontWeight: 600, fontSize: 14, padding: '8px 18px', borderRadius: 8, cursor: 'pointer' }}>
-          Sign in
-        </button>
-      </nav>
+      <PublicNav />
 
-      {/* Header */}
       <section style={{ background: C.navy, padding: '56px 24px 48px', textAlign: 'center' }}>
         <h1 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: C.white, marginBottom: 12 }}>Privacy Policy</h1>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15 }}>Last updated: June 2025</p>
       </section>
 
-      {/* Content */}
       <main style={{ maxWidth: 780, margin: '0 auto', padding: '64px 24px 80px' }}>
         <div style={{ background: C.white, borderRadius: 20, padding: '48px 52px', boxShadow: '0 2px 20px rgba(0,0,0,0.06)' }}>
 
           <Section title="1. Introduction">
-            <p>InternshipConnect ("we", "us", or "our") is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights regarding that data when you use our platform at internship-connect-beta.vercel.app.</p>
+            <p>InternshipConnect ("we", "us", or "our") is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights regarding that data when you use our platform.</p>
             <p style={{ marginTop: 12 }}>By creating an account or using InternshipConnect, you agree to the practices described in this policy.</p>
           </Section>
 
@@ -95,7 +83,7 @@ export default function PrivacyPolicyPage() {
           </Section>
 
           <Section title="9. Contact">
-            <p>If you have questions about this Privacy Policy or how we handle your data, please contact us at <a href="mailto:privacy@internshipconnect.app" style={{ color: C.amber }}>privacy@internshipconnect.app</a>.</p>
+            <p>If you have questions about this Privacy Policy, contact us at <a href="mailto:privacy@internshipconnect.app" style={{ color: C.amber }}>privacy@internshipconnect.app</a>.</p>
           </Section>
 
         </div>

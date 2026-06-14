@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, MessageSquare, ArrowRight } from 'lucide-react';
+import PublicNav from '../components/PublicNav';
 
 const C = {
-  navy: '#0D1426', amber: '#E8A230', amberDk: '#c8871a',
-  teal: '#0D9488', white: '#ffffff',
-  gray50: '#F9FAFB', gray200: '#E5E7EB', gray400: '#9CA3AF', gray600: '#4B5563',
+  navy: '#0D1426', amber: '#E8A230',
+  white: '#ffffff', gray50: '#F9FAFB',
+  gray200: '#E5E7EB', gray400: '#9CA3AF', gray600: '#4B5563',
 };
 
 export default function ContactPage() {
@@ -15,7 +16,6 @@ export default function ContactPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Opens the user's email client with pre-filled content
     const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`);
     window.location.href = `mailto:hello@internshipconnect.app?subject=${encodeURIComponent(form.subject || 'Enquiry from website')}&body=${body}`;
     setSent(true);
@@ -23,23 +23,13 @@ export default function ContactPage() {
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: C.gray50, minHeight: '100vh' }}>
-      {/* Nav */}
-      <nav style={{ background: C.navy, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/logo-primary.png" alt="InternshipConnect" style={{ height: 36, objectFit: 'contain' }} onError={e => { e.target.src = '/logo-icon.png'; }} />
-        </a>
-        <button onClick={() => navigate('/auth/register')} style={{ background: C.amber, color: C.navy, fontWeight: 700, fontSize: 14, padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
-          Get Started Free
-        </button>
-      </nav>
+      <PublicNav />
 
-      {/* Hero */}
       <section style={{ background: C.navy, padding: '64px 24px 56px', textAlign: 'center' }}>
         <h1 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: C.white, marginBottom: 12 }}>Contact us</h1>
         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 17, maxWidth: 500, margin: '0 auto' }}>Have a question, feedback, or a partnership idea? We'd love to hear from you.</p>
       </section>
 
-      {/* Content */}
       <main style={{ maxWidth: 860, margin: '0 auto', padding: '64px 24px 80px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 40, alignItems: 'start' }}>
 
         {/* Info */}

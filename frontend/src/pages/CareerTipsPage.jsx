@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle, BookOpen, Briefcase, Users, Star, FileText, MessageSquare } from 'lucide-react';
+import PublicNav from '../components/PublicNav';
+import { useAuth } from '../context/AuthContext';
 
 const C = {
   navy: '#0D1426', amber: '#E8A230', amberDk: '#c8871a',
   teal: '#0D9488', white: '#ffffff',
-  gray50: '#F9FAFB', gray100: '#F3F4F6', gray200: '#E5E7EB',
-  gray400: '#9CA3AF', gray600: '#4B5563',
+  gray50: '#F9FAFB', gray200: '#E5E7EB', gray400: '#9CA3AF', gray600: '#4B5563',
 };
 
 const tips = [
@@ -79,18 +80,13 @@ const tips = [
 
 export default function CareerTipsPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const ctaPath = isAuthenticated ? '/dashboard' : '/auth/register';
+  const ctaLabel = isAuthenticated ? 'Browse internships' : 'Find internships';
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: C.gray50, minHeight: '100vh' }}>
-      {/* Nav */}
-      <nav style={{ background: C.navy, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/logo-primary.png" alt="InternshipConnect" style={{ height: 36, objectFit: 'contain' }} onError={e => { e.target.src = '/logo-icon.png'; }} />
-        </a>
-        <button onClick={() => navigate('/auth/register')} style={{ background: C.amber, color: C.navy, fontWeight: 700, fontSize: 14, padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
-          Get Started Free
-        </button>
-      </nav>
+      <PublicNav />
 
       {/* Hero */}
       <section style={{ background: C.navy, padding: '72px 24px 64px', textAlign: 'center' }}>
@@ -138,8 +134,8 @@ export default function CareerTipsPage() {
       <section style={{ background: C.navy, padding: '72px 24px', textAlign: 'center' }}>
         <h2 style={{ fontSize: 32, fontWeight: 800, color: C.white, marginBottom: 16 }}>Ready to apply?</h2>
         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 17, marginBottom: 36 }}>Browse internships on InternshipConnect — free for students.</p>
-        <button onClick={() => navigate('/auth/register')} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 15, padding: '14px 40px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          Find internships <ArrowRight size={17} />
+        <button onClick={() => navigate(ctaPath)} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 15, padding: '14px 40px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          {ctaLabel} <ArrowRight size={17} />
         </button>
       </section>
 
