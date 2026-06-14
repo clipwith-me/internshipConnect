@@ -405,9 +405,15 @@ function LiveInternships({ internships, navigate }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
           {items.map((job, i) => {
-            const type = job.type || 'remote';
+            // location is an object {type, city, country} — extract safely
+            const locObj = typeof job.location === 'object' ? job.location : null;
+            const type = locObj?.type || job.type || 'remote';
             const badge = typeBadge[type] || typeBadge.remote;
             const orgName = job.organization?.companyInfo?.companyName || job.organization?.name || 'Company';
+            const locationStr = locObj
+              ? ([locObj.city, locObj.country].filter(Boolean).join(', ') || type)
+              : (typeof job.location === 'string' ? job.location : 'Africa');
+            const stipend = job.compensation?.amount || job.stipend;
             return (
               <div
                 key={i}
@@ -426,11 +432,11 @@ function LiveInternships({ internships, navigate }) {
                 <p style={{ fontSize: 14, color: C.gray600, marginBottom: 16 }}>{orgName}</p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: C.gray400 }}>
-                    <MapPin size={13} />{job.location || 'Africa'}
+                    <MapPin size={13} />{locationStr}
                   </span>
-                  {(job.stipend || job.compensation?.stipend) && (
+                  {stipend > 0 && (
                     <span style={{ fontSize: 13, color: C.teal, fontWeight: 600 }}>
-                      ${job.stipend || job.compensation?.stipend}/mo
+                      ${stipend}/mo
                     </span>
                   )}
                 </div>
