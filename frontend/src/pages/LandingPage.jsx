@@ -562,15 +562,47 @@ function Footer({ navigate }) {
           </div>
           {/* Links */}
           {[
-            { title: 'Students', links: ['Find Internships', 'Build Profile', 'Career Tips', 'Pricing'] },
-            { title: 'Employers', links: ['Post Internships', 'Find Talent', 'Recruiter Tools', 'Pricing'] },
-            { title: 'Company', links: ['About Us', 'Contact', 'Privacy Policy', 'Terms of Service'] },
+            {
+              title: 'Students',
+              links: [
+                { label: 'Find Internships', path: '/auth/register' },
+                { label: 'Build Profile', path: '/auth/register' },
+                { label: 'Career Tips', path: '/career-tips' },
+                { label: 'Pricing', path: '/pricing' },
+              ],
+            },
+            {
+              title: 'Employers',
+              links: [
+                { label: 'Post Internships', path: '/auth/register?role=organization' },
+                { label: 'Find Talent', path: '/auth/register?role=organization' },
+                { label: 'Recruiter Tools', path: '/auth/register?role=organization' },
+                { label: 'Pricing', path: '/pricing' },
+              ],
+            },
+            {
+              title: 'Company',
+              links: [
+                { label: 'About Us', path: '/about' },
+                { label: 'Contact', path: '/contact' },
+                { label: 'Privacy Policy', path: '/privacy' },
+                { label: 'Terms of Service', path: '/terms' },
+              ],
+            },
           ].map(col => (
             <div key={col.title}>
               <h4 style={{ color: C.white, fontWeight: 700, fontSize: 14, marginBottom: 16 }}>{col.title}</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {col.links.map(link => (
-                  <li key={link}><a href="#" onClick={e => { e.preventDefault(); navigate('/auth/register'); }} style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, textDecoration: 'none' }}>{link}</a></li>
+                {col.links.map(({ label, path }) => (
+                  <li key={label}>
+                    <a
+                      href={path}
+                      onClick={e => { e.preventDefault(); navigate(path); }}
+                      style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, textDecoration: 'none' }}
+                    >
+                      {label}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </div>

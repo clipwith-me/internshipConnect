@@ -41,13 +41,13 @@ const AuthLayout = () => {
           <div className="mt-8 text-center text-xs text-neutral-500">
             <p>
               By continuing, you agree to our{' '}
-              <Link to="/terms" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
+              <a href="/terms" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
                 Terms of Service
-              </Link>{' '}
+              </a>{' '}
               and{' '}
-              <Link to="/privacy" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
+              <a href="/privacy" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
                 Privacy Policy
-              </Link>
+              </a>
             </p>
           </div>
         </div>

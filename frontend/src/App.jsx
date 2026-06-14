@@ -39,6 +39,12 @@ const ReferralPage = lazy(() => import('./pages/ReferralPage'));
 const VerificationPage = lazy(() => import('./pages/VerificationPage'));
 const FounderDashboardPage = lazy(() => import('./pages/FounderDashboardPage'));
 const InvestorDashboardPage = lazy(() => import('./pages/InvestorDashboardPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const CareerTipsPage = lazy(() => import('./pages/CareerTipsPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const PublicPricingPage = lazy(() => import('./pages/PublicPricingPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
 
 // ✅ PERFORMANCE: Loading fallback component
 const PageLoader = () => (
@@ -66,6 +72,12 @@ function App() {
               {/* Public Routes */}
               <Route path="/contact-sales" element={<ContactSalesPage />} />
               <Route path="/demo" element={<DemoPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/career-tips" element={<CareerTipsPage />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/pricing" element={<PublicPricingPage />} />
+              <Route path="/contact" element={<ContactPage />} />
 
           {/* Auth Routes (Guest only - redirect if logged in) */}
           <Route
