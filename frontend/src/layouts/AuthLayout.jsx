@@ -1,119 +1,107 @@
-// frontend/src/layouts/AuthLayout.jsx
+﻿// frontend/src/layouts/AuthLayout.jsx
 import { Outlet, Link } from 'react-router-dom';
-
-/**
- * 🎓 LEARNING: Auth Layout
- * 
- * Layout for authentication pages (login, register, forgot password).
- * 
- * Features:
- * - Split-screen design (form on left, image/info on right)
- * - Microsoft-style clean aesthetics
- * - Responsive (stacks on mobile)
- * - Logo and branding
- */
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24 py-12">
-        <div className="mx-auto w-full max-w-sm lg:w-[440px]">
-          {/* Logo - Microsoft Style: Clean, moderate size, centered on auth pages */}
-          <div className="mb-12 text-center">
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 lg:px-16 xl:px-20 py-10">
+        <div className="mx-auto w-full max-w-sm lg:w-[420px]">
+          {/* Logo */}
+          <div className="mb-8 text-center">
             <Link to="/" className="inline-block group">
               <img
                 src="/logo-primary.png"
                 alt="InternshipConnect"
-                className="h-14 w-auto object-contain mx-auto group-hover:opacity-90 transition-opacity duration-200"
+                className="h-12 w-auto object-contain mx-auto group-hover:opacity-90 transition-opacity duration-200"
                 onError={(e) => { e.target.src = '/logo-icon.png'; }}
               />
-              <p className="text-sm text-neutral-600 mt-3 font-medium tracking-wide">Find internships across Africa</p>
+              <p className="text-xs text-neutral-500 mt-2 font-medium tracking-wide">Find internships across Africa</p>
             </Link>
           </div>
 
-          {/* Form Content Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-neutral-200/50 p-8 sm:p-10 backdrop-blur-sm">
+          {/* Form Card */}
+          <div className="bg-white rounded-2xl shadow-lg border border-neutral-100 p-7 sm:p-8">
             <Outlet />
           </div>
 
-          {/* Footer Links */}
-          <div className="mt-8 text-center text-xs text-neutral-500">
-            <p>
-              By continuing, you agree to our{' '}
-              <a href="/terms" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a href="/privacy" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
-                Privacy Policy
-              </a>
-            </p>
-          </div>
+          {/* Footer */}
+          <p className="mt-6 text-center text-xs text-neutral-400">
+            By continuing, you agree to our{' '}
+            <a href="/terms" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">Terms</a>
+            {' '}and{' '}
+            <a href="/privacy" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">Privacy Policy</a>
+          </p>
         </div>
       </div>
 
-      {/* Right Side - Branding/Image (hidden on mobile) */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+      {/* Right Side - Branding (hidden on mobile) */}
+      <div className="hidden lg:flex lg:flex-1 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)' }}>
+        {/* Subtle grid */}
+        <div className="absolute inset-0 opacity-[0.04]">
           <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern
-                id="grid"
-                width="32"
-                height="32"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 32 0 L 0 0 0 32"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="0.5"
-                />
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
         </div>
 
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-20 right-20 w-72 h-72 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-primary-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        {/* Glowing orbs */}
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full opacity-20 animate-pulse" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}></div>
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full opacity-10 animate-pulse" style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 70%)', animationDelay: '1.5s' }}></div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20 text-white">
-          <h2 className="text-4xl xl:text-5xl font-bold mb-6 leading-tight">
-            Connect with your dream internship
+        <div className="relative z-10 flex flex-col justify-center px-14 xl:px-16 text-white">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full mb-8 w-fit">
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+            Now available across Africa
+          </div>
+
+          <h2 className="text-3xl xl:text-4xl font-bold mb-4 leading-tight text-white">
+            Your next career step<br />starts here
           </h2>
-          <p className="text-lg xl:text-xl text-primary-100 mb-12 leading-relaxed">
-            Join thousands of students and organizations using AI-powered matching to find the perfect fit.
+          <p className="text-base text-white/60 mb-10 leading-relaxed max-w-xs">
+            Connect with organizations across Africa offering real internship opportunities.
           </p>
 
           {/* Features */}
-          <div className="space-y-5">
-            <Feature
-              icon="✨"
-              title="AI-Powered Matching"
-              description="Smart algorithms connect you with relevant opportunities"
-            />
-            <Feature
-              icon="📄"
-              title="AI Resume Builder"
-              description="Generate professional resumes tailored to each position"
-            />
-            <Feature
-              icon="🚀"
-              title="Priority Applications"
-              description="Stand out with featured and priority application options"
-            />
+          <div className="space-y-4 mb-10">
+            {[
+              { icon: '🎯', title: 'Smart matching', desc: 'Opportunities matched to your skills and goals' },
+              { icon: '📄', title: 'AI resume builder', desc: 'Create standout resumes in minutes' },
+              { icon: '🚀', title: 'Direct applications', desc: 'Apply directly to verified organizations' },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-lg flex-shrink-0">
+                  {icon}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white/90">{title}</p>
+                  <p className="text-xs text-white/50 mt-0.5">{desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
+          {/* Divider */}
+          <div className="h-px bg-white/10 mb-8"></div>
+
           {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8">
-            <Stat number="Free" label="For students" />
-            <Stat number="Fast" label="Apply in minutes" />
-            <Stat number="🌍" label="Africa-focused" />
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { value: 'Free', label: 'For students' },
+              { value: 'Fast', label: 'Apply in minutes' },
+              { value: '🌍', label: 'Africa-focused' },
+            ].map(({ value, label }) => (
+              <div key={label} className="text-center">
+                <div className="text-xl font-bold text-white">{value}</div>
+                <div className="text-xs text-white/50 mt-0.5">{label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -121,78 +109,4 @@ const AuthLayout = () => {
   );
 };
 
-// Feature component for the right side
-const Feature = ({ icon, title, description }) => (
-  <div className="flex items-start gap-4">
-    <div className="flex-shrink-0 w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-2xl">
-      {icon}
-    </div>
-    <div>
-      <h3 className="font-semibold text-lg mb-1">{title}</h3>
-      <p className="text-primary-100 text-sm">{description}</p>
-    </div>
-  </div>
-);
-
-// Stat component
-const Stat = ({ number, label }) => (
-  <div>
-    <div className="text-3xl font-bold">{number}</div>
-    <div className="text-primary-100 text-sm">{label}</div>
-  </div>
-);
-
 export default AuthLayout;
-
-/**
- * 🎓 USAGE IN ROUTING:
- * 
- * <Routes>
- *   <Route path="/auth" element={<AuthLayout />}>
- *     <Route path="login" element={<LoginPage />} />
- *     <Route path="register" element={<RegisterPage />} />
- *     <Route path="forgot-password" element={<ForgotPasswordPage />} />
- *   </Route>
- * </Routes>
- * 
- * // LoginPage.jsx example
- * import { Input, Button } from '@/components';
- * 
- * function LoginPage() {
- *   return (
- *     <div>
- *       <h2 className="text-2xl font-bold text-neutral-900 mb-2">
- *         Welcome back
- *       </h2>
- *       <p className="text-neutral-500 mb-6">
- *         Enter your credentials to continue
- *       </p>
- *       
- *       <form className="space-y-4">
- *         <Input
- *           label="Email"
- *           type="email"
- *           placeholder="you@example.com"
- *           required
- *         />
- *         <Input
- *           label="Password"
- *           type="password"
- *           required
- *         />
- *         
- *         <Button fullWidth>
- *           Sign In
- *         </Button>
- *       </form>
- *       
- *       <p className="mt-6 text-center text-sm text-neutral-500">
- *         Don't have an account?{' '}
- *         <Link to="/auth/register" className="text-primary-500 hover:text-primary-600 font-medium">
- *           Sign up
- *         </Link>
- *       </p>
- *     </div>
- *   );
- * }
- */
