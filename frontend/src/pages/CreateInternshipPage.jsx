@@ -8,6 +8,7 @@ const CreateInternshipPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -61,6 +62,7 @@ const CreateInternshipPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setApiError('');
     if (!validate()) return;
 
     try {
@@ -380,4 +382,5 @@ const CreateInternshipPage = () => {
 };
 
 export default CreateInternshipPage;
+
 
