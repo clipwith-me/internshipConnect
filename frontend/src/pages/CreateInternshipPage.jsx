@@ -1,4 +1,4 @@
-// frontend/src/pages/CreateInternshipPage.jsx
+﻿// frontend/src/pages/CreateInternshipPage.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { internshipAPI } from '../services/api';
@@ -21,7 +21,7 @@ const CreateInternshipPage = () => {
     duration: { length: '', hoursPerWeek: { min: 20, max: 40 }, flexible: false },
     timeline: { startDate: '', endDate: '', applicationDeadline: '' },
     positions: { total: 1 },
-    publish: true // ✅ FIX: Default to publishing immediately so students can see it
+    publish: true // âœ… FIX: Default to publishing immediately so students can see it
   });
 
   const handleChange = (path, value) => {
@@ -97,6 +97,12 @@ const CreateInternshipPage = () => {
         </button>
 
         <h1 className="text-3xl font-semibold text-neutral-900 mb-8">Post New Internship</h1>
+
+        {apiError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+            <strong className="font-semibold">Please fix the following:</strong> {apiError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-8">
@@ -374,3 +380,4 @@ const CreateInternshipPage = () => {
 };
 
 export default CreateInternshipPage;
+
