@@ -1,7 +1,7 @@
-// backend/src/routes/internship.routes.js
+﻿// backend/src/routes/internship.routes.js
 
 /**
- * 🎓 LEARNING: RESTful API Route Design
+ * ðŸŽ“ LEARNING: RESTful API Route Design
  *
  * REST Principles we follow:
  * - GET: Retrieve data (idempotent - can be called multiple times)
@@ -36,7 +36,7 @@ import { validate } from '../middleware/validation.middleware.js';
 const router = express.Router();
 
 /**
- * 🎓 VALIDATION RULES
+ * ðŸŽ“ VALIDATION RULES
  *
  * We validate input at the route level before it reaches the controller.
  * This keeps controllers clean and focused on business logic.
@@ -111,7 +111,7 @@ const internshipValidation = [
 ];
 
 /**
- * 🎓 ROUTE DEFINITIONS
+ * ðŸŽ“ ROUTE DEFINITIONS
  *
  * Routes are ordered from most specific to least specific.
  * This prevents route conflicts (e.g., /my-internships before /:id)
@@ -124,7 +124,7 @@ router.get('/', getInternships); // GET /api/internships
 router.use(authenticate); // All routes below require authentication
 
 // IMPORTANT: Specific routes MUST come before dynamic /:id routes
-// ✅ SECURITY FIX: Add role-based authorization for organization-only routes
+// âœ… SECURITY FIX: Add role-based authorization for organization-only routes
 router.get('/my-internships', authorize('organization'), getMyInternships); // GET /api/internships/my-internships
 router.post('/', authorize('organization'), internshipValidation, createInternship); // POST /api/internships
 
@@ -137,7 +137,7 @@ router.delete('/:id', authorize('organization'), deleteInternship); // DELETE /a
 export default router;
 
 /**
- * 🎓 KEY LEARNINGS:
+ * ðŸŽ“ KEY LEARNINGS:
  *
  * 1. ROUTE ORDER MATTERS
  *    - Static routes (like /my-internships) should come before dynamic routes (/:id)
@@ -162,3 +162,4 @@ export default router;
  *    - PATCH /internships/:id/action - Partial update or action
  *    - DELETE /internships/:id - Delete
  */
+
