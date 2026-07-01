@@ -62,38 +62,40 @@ const CreateInternshipPage = () => {
 
   const buildPayload = () => {
     const d = formData;
+    const minVal = d.compensation?.amount?.min;
+    const maxVal = d.compensation?.amount?.max;
     return {
-      title: d.title.trim(),
-      description: d.description.trim(),
-      ...(d.requirements.description?.trim() && {
+      title: (d.title || '').trim(),
+      description: (d.description || '').trim(),
+      ...(d.requirements?.description?.trim() && {
         requirements: { description: d.requirements.description.trim() }
       }),
       location: {
-        type: d.location.type,
-        ...(d.location.city?.trim() && { city: d.location.city.trim() }),
-        ...(d.location.country?.trim() && { country: d.location.country.trim() }),
+        type: d.location?.type || 'remote',
+        ...(d.location?.city?.trim() && { city: d.location.city.trim() }),
+        ...(d.location?.country?.trim() && { country: d.location.country.trim() }),
       },
       compensation: {
-        type: d.compensation.type,
+        type: d.compensation?.type || 'unpaid',
         amount: {
-          ...(d.compensation.amount.min !== '' && { min: Number(d.compensation.amount.min) }),
-          ...(d.compensation.amount.max !== '' && { max: Number(d.compensation.amount.max) }),
-          currency: d.compensation.amount.currency || 'USD',
-          period: d.compensation.amount.period || 'monthly',
+          ...(minVal !== '' && minVal != null && !isNaN(Number(minVal)) && { min: Number(minVal) }),
+          ...(maxVal !== '' && maxVal != null && !isNaN(Number(maxVal)) && { max: Number(maxVal) }),
+          currency: d.compensation?.amount?.currency || 'USD',
+          period: d.compensation?.amount?.period || 'monthly',
         },
       },
       duration: {
-        length: d.duration.length.trim(),
-        hoursPerWeek: d.duration.hoursPerWeek,
-        flexible: d.duration.flexible,
+        length: (d.duration?.length || '').trim(),
+        hoursPerWeek: d.duration?.hoursPerWeek || {},
+        flexible: d.duration?.flexible || false,
       },
       timeline: {
-        startDate: d.timeline.startDate,
-        applicationDeadline: d.timeline.applicationDeadline,
-        ...(d.timeline.endDate && { endDate: d.timeline.endDate }),
+        startDate: d.timeline?.startDate,
+        applicationDeadline: d.timeline?.applicationDeadline,
+        ...(d.timeline?.endDate && { endDate: d.timeline.endDate }),
       },
-      positions: { total: d.positions.total || 1 },
-      publish: d.publish,
+      positions: { total: Number(d.positions?.total) || 1 },
+      publish: d.publish !== false,
     };
   };
 
@@ -102,21 +104,35 @@ const CreateInternshipPage = () => {
     setApiError('');
     if (!validate()) return;
 
+    let payload;
+    try {
+      payload = buildPayload();
+    } catch (buildErr) {
+      setApiError('Could not prepare form data: ' + buildErr.message);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await internshipAPI.create(buildPayload());
+      const response = await internshipAPI.create(payload);
       if (response.data.success) {
         navigate('/dashboard/my-internships');
       }
     } catch (err) {
-      if (err.response?.data?.errors) {
+      if (err.response?.data?.errors && err.response.data.errors.length > 0) {
         const apiErrors = {};
         err.response.data.errors.forEach(e => {
           apiErrors[e.field] = e.message;
         });
         setErrors(apiErrors);
+        setApiError('Please fix the errors highlighted below.');
       } else {
-        alert(err.response?.data?.error || 'Failed to create internship');
+        setApiError(
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to create internship. Please try again.'
+        );
       }
     } finally {
       setLoading(false);
