@@ -60,6 +60,43 @@ const CreateInternshipPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const buildPayload = () => {
+    const d = formData;
+    return {
+      title: d.title.trim(),
+      description: d.description.trim(),
+      ...(d.requirements.description?.trim() && {
+        requirements: { description: d.requirements.description.trim() }
+      }),
+      location: {
+        type: d.location.type,
+        ...(d.location.city?.trim() && { city: d.location.city.trim() }),
+        ...(d.location.country?.trim() && { country: d.location.country.trim() }),
+      },
+      compensation: {
+        type: d.compensation.type,
+        amount: {
+          ...(d.compensation.amount.min !== '' && { min: Number(d.compensation.amount.min) }),
+          ...(d.compensation.amount.max !== '' && { max: Number(d.compensation.amount.max) }),
+          currency: d.compensation.amount.currency || 'USD',
+          period: d.compensation.amount.period || 'monthly',
+        },
+      },
+      duration: {
+        length: d.duration.length.trim(),
+        hoursPerWeek: d.duration.hoursPerWeek,
+        flexible: d.duration.flexible,
+      },
+      timeline: {
+        startDate: d.timeline.startDate,
+        applicationDeadline: d.timeline.applicationDeadline,
+        ...(d.timeline.endDate && { endDate: d.timeline.endDate }),
+      },
+      positions: { total: d.positions.total || 1 },
+      publish: d.publish,
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError('');
@@ -67,7 +104,7 @@ const CreateInternshipPage = () => {
 
     try {
       setLoading(true);
-      const response = await internshipAPI.create(formData);
+      const response = await internshipAPI.create(buildPayload());
       if (response.data.success) {
         navigate('/dashboard/my-internships');
       }

@@ -79,13 +79,15 @@ const internshipValidation = [
     .withMessage('Compensation type must be paid, unpaid, stipend, commission, or negotiable'),
 
   body('compensation.amount.min')
-    .optional({ checkFalsy: true })
-    .isNumeric()
+    .optional()
+    .customSanitizer(v => (v === '' || v === null || v === undefined ? undefined : Number(v)))
+    .custom(v => v === undefined || !isNaN(v))
     .withMessage('Minimum compensation amount must be a number'),
 
   body('compensation.amount.max')
-    .optional({ checkFalsy: true })
-    .isNumeric()
+    .optional()
+    .customSanitizer(v => (v === '' || v === null || v === undefined ? undefined : Number(v)))
+    .custom(v => v === undefined || !isNaN(v))
     .withMessage('Maximum compensation amount must be a number'),
 
   body('duration.length')
