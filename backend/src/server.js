@@ -117,15 +117,12 @@ app.use(compression({
  */
 const isProduction = process.env.NODE_ENV === 'production';
 
-// In production: Only allow FRONTEND_URL
-// In development: Allow localhost, 127.0.0.1, and FRONTEND_URL
-const allowedOrigins = isProduction
-  ? [process.env.FRONTEND_URL].filter(Boolean)
-  : [
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
+// Explicit allowed origins — env var plus known deployment URLs
+const explicitOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -134,21 +131,18 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
+    // Allow exact matches from env/known list
+    if (explicitOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    // Detailed logging for CORS debugging
-    console.warn(`\n⚠️  ════════════════════════════════════════`);
-    console.warn(`⚠️  CORS BLOCKED REQUEST`);
-    console.warn(`⚠️  ════════════════════════════════════════`);
-    console.warn(`❌ Blocked Origin: ${origin}`);
-    console.warn(`✅ Allowed Origins:`, allowedOrigins);
-    console.warn(`📋 NODE_ENV: ${process.env.NODE_ENV}`);
-    console.warn(`📋 FRONTEND_URL env var: ${process.env.FRONTEND_URL || 'NOT SET'}`);
-    console.warn(`⚠️  ════════════════════════════════════════\n`);
+    // Allow all Vercel preview/production deployments for this project
+    if (/^https:\/\/internship-connect[\w-]*\.vercel\.app$/.test(origin) ||
+        /^https:\/\/internshipconnect[\w-]*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
 
+    console.warn(`CORS blocked: ${origin} | FRONTEND_URL=${process.env.FRONTEND_URL || 'NOT SET'}`);
     return callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
