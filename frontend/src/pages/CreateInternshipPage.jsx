@@ -1,11 +1,13 @@
 ﻿// frontend/src/pages/CreateInternshipPage.jsx
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { internshipAPI } from '../services/api';
 import { ArrowLeft, Save } from 'lucide-react';
 
 const CreateInternshipPage = () => {
   const navigate = useNavigate();
+  const submitting = useRef(false);
+  const errorBannerRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
@@ -50,12 +52,31 @@ const CreateInternshipPage = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.title || formData.title.length < 5) newErrors.title = 'Title must be at least 5 characters';
-    if (!formData.description || formData.description.length < 50) newErrors.description = 'Description must be at least 50 characters';
-    if (formData.location.type !== 'remote' && !formData.location.city) newErrors['location.city'] = 'City is required for on-site/hybrid';
-    if (!formData.duration.length) newErrors['duration.length'] = 'Duration is required';
-    if (!formData.timeline.startDate) newErrors['timeline.startDate'] = 'Start date is required';
-    if (!formData.timeline.applicationDeadline) newErrors['timeline.applicationDeadline'] = 'Application deadline is required';
+    const title = (formData.title || '').trim();
+    const description = (formData.description || '').trim();
+    const durationLength = (formData.duration?.length || '').trim();
+    const city = (formData.location?.city || '').trim();
+    const country = (formData.location?.country || '').trim();
+    const reqDesc = (formData.requirements?.description || '').trim();
+
+    if (title.length < 5) newErrors.title = 'Title must be at least 5 characters';
+    if (title.length > 100) newErrors.title = 'Title cannot exceed 100 characters';
+    if (description.length < 50) newErrors.description = 'Description must be at least 50 characters';
+    if (description.length > 5000) newErrors.description = 'Description cannot exceed 5000 characters';
+    if (reqDesc.length > 2000) newErrors['requirements.description'] = 'Requirements cannot exceed 2000 characters';
+
+    const locType = formData.location?.type;
+    if (!['remote', 'onsite', 'hybrid'].includes(locType)) newErrors['location.type'] = 'Invalid location type';
+    if (locType !== 'remote') {
+      if (!city) newErrors['location.city'] = 'City is required for on-site/hybrid';
+      else if (city.length < 2) newErrors['location.city'] = 'City must be at least 2 characters';
+    }
+    if (country && country.length < 2) newErrors['location.country'] = 'Country must be at least 2 characters';
+
+    if (!durationLength) newErrors['duration.length'] = 'Duration is required';
+    if (!formData.timeline?.startDate) newErrors['timeline.startDate'] = 'Start date is required';
+    if (!formData.timeline?.applicationDeadline) newErrors['timeline.applicationDeadline'] = 'Application deadline is required';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -99,16 +120,30 @@ const CreateInternshipPage = () => {
     };
   };
 
+  const showError = (msg) => {
+    setApiError(msg);
+    setTimeout(() => errorBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Ref-based guard prevents double-submit even before React re-renders
+    if (submitting.current) return;
+    submitting.current = true;
+
     setApiError('');
-    if (!validate()) return;
+    if (!validate()) {
+      submitting.current = false;
+      setTimeout(() => document.querySelector('.border-red-500')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      return;
+    }
 
     let payload;
     try {
       payload = buildPayload();
     } catch (buildErr) {
-      setApiError('Could not prepare form data: ' + buildErr.message);
+      showError('Could not prepare form data: ' + buildErr.message);
+      submitting.current = false;
       return;
     }
 
@@ -125,9 +160,9 @@ const CreateInternshipPage = () => {
           apiErrors[e.field] = e.message;
         });
         setErrors(apiErrors);
-        setApiError('Please fix the errors highlighted below.');
+        showError('Please fix the errors highlighted below.');
       } else {
-        setApiError(
+        showError(
           err.response?.data?.error ||
           err.response?.data?.message ||
           err.message ||
@@ -136,6 +171,7 @@ const CreateInternshipPage = () => {
       }
     } finally {
       setLoading(false);
+      submitting.current = false;
     }
   };
 
@@ -154,7 +190,7 @@ const CreateInternshipPage = () => {
         <h1 className="text-3xl font-semibold text-neutral-900 mb-8">Post New Internship</h1>
 
         {apiError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <div ref={errorBannerRef} className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
             <strong className="font-semibold">Please fix the following:</strong> {apiError}
           </div>
         )}

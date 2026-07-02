@@ -44,7 +44,10 @@ const NotificationBell = () => {
         setUnreadCount(response.data.data.count);
       }
     } catch (err) {
-      console.error('Failed to fetch unread count:', err);
+      // 401 = token expired; Axios interceptor handles refresh automatically — not an error
+      if (err.response?.status !== 401) {
+        console.error('Failed to fetch unread count:', err);
+      }
     }
   }, []);
 
