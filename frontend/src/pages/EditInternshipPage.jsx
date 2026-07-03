@@ -1,5 +1,5 @@
 // frontend/src/pages/EditInternshipPage.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { internshipAPI } from '../services/api';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -7,8 +7,11 @@ import { ArrowLeft, Save } from 'lucide-react';
 const EditInternshipPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const submitting = useRef(false);
+  const errorBannerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState('');
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     title: '',
@@ -83,8 +86,8 @@ const EditInternshipPage = () => {
         });
       }
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to load internship');
-      navigate('/dashboard/my-internships');
+      setApiError(err.response?.data?.error || err.response?.data?.message || 'Failed to load internship. Please try again.');
+      setTimeout(() => errorBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
     } finally {
       setLoading(false);
     }
@@ -113,76 +116,112 @@ const EditInternshipPage = () => {
     });
   };
 
+  const showError = (msg) => {
+    setApiError(msg);
+    setTimeout(() => errorBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+  };
+
   const validate = () => {
     const newErrors = {};
-    if (!formData.title || formData.title.length < 5) newErrors.title = 'Title must be at least 5 characters';
-    if (!formData.description || formData.description.length < 50) newErrors.description = 'Description must be at least 50 characters';
-    if (formData.location.type !== 'remote' && !formData.location.city) newErrors['location.city'] = 'City is required for on-site/hybrid';
-    if (!formData.duration.length) newErrors['duration.length'] = 'Duration is required';
-    if (!formData.timeline.startDate) newErrors['timeline.startDate'] = 'Start date is required';
-    if (!formData.timeline.applicationDeadline) newErrors['timeline.applicationDeadline'] = 'Application deadline is required';
+    const title = (formData.title || '').trim();
+    const description = (formData.description || '').trim();
+    const durationLength = (formData.duration?.length || '').trim();
+    const city = (formData.location?.city || '').trim();
+    const country = (formData.location?.country || '').trim();
+    const reqDesc = (formData.requirements?.description || '').trim();
+    if (title.length < 5) newErrors.title = 'Title must be at least 5 characters';
+    if (title.length > 100) newErrors.title = 'Title cannot exceed 100 characters';
+    if (description.length < 50) newErrors.description = 'Description must be at least 50 characters';
+    if (description.length > 5000) newErrors.description = 'Description cannot exceed 5000 characters';
+    if (reqDesc.length > 2000) newErrors['requirements.description'] = 'Requirements cannot exceed 2000 characters';
+    const locType = formData.location?.type;
+    if (!['remote', 'onsite', 'hybrid'].includes(locType)) newErrors['location.type'] = 'Invalid location type';
+    if (locType !== 'remote') {
+      if (!city) newErrors['location.city'] = 'City is required for on-site/hybrid';
+      else if (city.length < 2) newErrors['location.city'] = 'City must be at least 2 characters';
+    }
+    if (country && country.length < 2) newErrors['location.country'] = 'Country must be at least 2 characters';
+    if (!durationLength) newErrors['duration.length'] = 'Duration is required';
+    if (!formData.timeline?.startDate) newErrors['timeline.startDate'] = 'Start date is required';
+    if (!formData.timeline?.applicationDeadline) newErrors['timeline.applicationDeadline'] = 'Application deadline is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const buildPayload = () => {
     const d = formData;
+    const minVal = d.compensation?.amount?.min;
+    const maxVal = d.compensation?.amount?.max;
     return {
-      title: d.title.trim(),
-      description: d.description.trim(),
+      title: (d.title || '').trim(),
+      description: (d.description || '').trim(),
       ...(d.requirements?.description?.trim() && {
         requirements: { description: d.requirements.description.trim() }
       }),
       location: {
-        type: d.location.type,
-        ...(d.location.city?.trim() && { city: d.location.city.trim() }),
-        ...(d.location.country?.trim() && { country: d.location.country.trim() }),
+        type: d.location?.type || 'remote',
+        ...(d.location?.city?.trim() && { city: d.location.city.trim() }),
+        ...(d.location?.country?.trim() && { country: d.location.country.trim() }),
       },
       compensation: {
-        type: d.compensation.type,
+        type: d.compensation?.type || 'unpaid',
         amount: {
-          ...(d.compensation.amount.min !== '' && d.compensation.amount.min != null && { min: Number(d.compensation.amount.min) }),
-          ...(d.compensation.amount.max !== '' && d.compensation.amount.max != null && { max: Number(d.compensation.amount.max) }),
-          currency: d.compensation.amount.currency || 'USD',
-          period: d.compensation.amount.period || 'monthly',
+          ...(minVal !== '' && minVal != null && !isNaN(Number(minVal)) && { min: Number(minVal) }),
+          ...(maxVal !== '' && maxVal != null && !isNaN(Number(maxVal)) && { max: Number(maxVal) }),
+          currency: d.compensation?.amount?.currency || 'USD',
+          period: d.compensation?.amount?.period || 'monthly',
         },
       },
       duration: {
-        length: d.duration.length.trim(),
-        hoursPerWeek: d.duration.hoursPerWeek,
-        flexible: d.duration.flexible,
+        length: (d.duration?.length || '').trim(),
+        hoursPerWeek: d.duration?.hoursPerWeek || {},
+        flexible: d.duration?.flexible || false,
       },
       timeline: {
-        startDate: d.timeline.startDate,
-        applicationDeadline: d.timeline.applicationDeadline,
-        ...(d.timeline.endDate && { endDate: d.timeline.endDate }),
+        startDate: d.timeline?.startDate,
+        applicationDeadline: d.timeline?.applicationDeadline,
+        ...(d.timeline?.endDate && { endDate: d.timeline.endDate }),
       },
-      positions: { total: d.positions?.total || 1 },
+      positions: { total: Number(d.positions?.total) || 1 },
     };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
-
+    if (submitting.current) return;
+    submitting.current = true;
+    setApiError('');
+    if (!validate()) {
+      submitting.current = false;
+      setTimeout(() => document.querySelector('.border-red-500')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      return;
+    }
+    let payload;
+    try {
+      payload = buildPayload();
+    } catch (buildErr) {
+      showError('Could not prepare form data: ' + buildErr.message);
+      submitting.current = false;
+      return;
+    }
     try {
       setSaving(true);
-      const response = await internshipAPI.update(id, buildPayload());
+      const response = await internshipAPI.update(id, payload);
       if (response.data.success) {
         navigate('/dashboard/my-internships');
       }
     } catch (err) {
-      if (err.response?.data?.errors) {
+      if (err.response?.data?.errors && err.response.data.errors.length > 0) {
         const apiErrors = {};
-        err.response.data.errors.forEach(e => {
-          apiErrors[e.field] = e.message;
-        });
+        err.response.data.errors.forEach(e => { apiErrors[e.field] = e.message; });
         setErrors(apiErrors);
+        showError('Please fix the errors highlighted below.');
       } else {
-        alert(err.response?.data?.error || 'Failed to update internship');
+        showError(err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to update internship. Please try again.');
       }
     } finally {
       setSaving(false);
+      submitting.current = false;
     }
   };
 
@@ -207,6 +246,12 @@ const EditInternshipPage = () => {
         </button>
 
         <h1 className="text-3xl font-semibold text-neutral-900 mb-8">Edit Internship</h1>
+
+        {apiError && (
+          <div ref={errorBannerRef} className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+            <strong className="font-semibold">Error:</strong> {apiError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-8">
