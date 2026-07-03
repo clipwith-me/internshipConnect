@@ -35,9 +35,9 @@ export async function sendEmail({ to, subject, html }) {
   const transporter = getTransporter();
 
   if (!transporter) {
-    console.warn('⚠️  SMTP not configured — skipping email send');
-    console.log(`📧 Would send to ${to}: ${subject}`);
-    return { data: null, error: null };
+    const err = new Error('SMTP not configured on server — set SMTP_HOST, SMTP_USER, SMTP_PASS env vars');
+    console.error('❌', err.message);
+    return { data: null, error: err };
   }
 
   try {
