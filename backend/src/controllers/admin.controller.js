@@ -6,6 +6,8 @@ import OrganizationProfile from '../models/OrganizationProfile.js';
 import Internship from '../models/Internship.js';
 import Application from '../models/Application.js';
 import Payment from '../models/Payment.js';
+import ReferralCode from '../models/ReferralCode.js';
+import { sendStudentCampaignEmail, sendOrganisationCampaignEmail } from '../services/resend-email.service.js';
 
 /**
  * @desc    Get dashboard statistics
@@ -465,4 +467,85 @@ export const getRecentActivity = async (req, res) => {
       error: 'Failed to fetch recent activity'
     });
   }
+};
+
+/**
+ * @desc    Send campaign welcome emails to students and/or organisations
+ * @route   POST /api/admin/send-campaign-emails
+ * @access  Private (Admin only)
+ * @body    { role: 'student' | 'organization' | 'all', dryRun: boolean }
+ *
+ * Sends in batches of 10 with a 1-second pause between batches to stay
+ * within Gmail SMTP rate limits. Returns a full sent/failed report.
+ */
+export const sendCampaignEmails = async (req, res) => {
+  const { role = 'all', dryRun = false } = req.body;
+
+  const roleFilter = role === 'all' ? {} : { role };
+  const users = await User.find({ isActive: true, ...roleFilter }).select('email role firstName').lean();
+
+  const report = { total: users.length, sent: 0, failed: 0, skipped: 0, errors: [] };
+
+  // Process in batches to respect SMTP rate limits
+  const BATCH_SIZE = 10;
+  const BATCH_DELAY_MS = 1200;
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+
+    await Promise.all(
+      batch.map(async (user) => {
+        try {
+          if (dryRun) {
+            console.log(`[DRY RUN] Would send ${user.role} campaign to ${user.email}`);
+            report.skipped++;
+            return;
+          }
+
+          if (user.role === 'student') {
+            const refDoc = await ReferralCode.findOne({ user: user._id }).lean();
+            const firstName = user.firstName || user.email.split('@')[0];
+            const { error } = await sendStudentCampaignEmail({
+              to: user.email,
+              firstName,
+              referralCode: refDoc?.code || '',
+            });
+            if (error) throw error;
+            report.sent++;
+
+          } else if (user.role === 'organization') {
+            const orgProfile = await OrganizationProfile.findOne({ user: user._id })
+              .select('companyInfo.name contactPerson.firstName')
+              .lean();
+            const companyName = orgProfile?.companyInfo?.name || 'Your Organisation';
+            const contactName = orgProfile?.contactPerson?.firstName || null;
+            const { error } = await sendOrganisationCampaignEmail({
+              to: user.email,
+              companyName,
+              contactName,
+            });
+            if (error) throw error;
+            report.sent++;
+
+          } else {
+            // admin accounts — skip
+            report.skipped++;
+          }
+        } catch (err) {
+          report.failed++;
+          report.errors.push({ email: user.email, message: err.message });
+          console.error(`Campaign email failed for ${user.email}:`, err.message);
+        }
+      })
+    );
+
+    // Pause between batches (skip after last batch)
+    if (i + BATCH_SIZE < users.length) {
+      await sleep(BATCH_DELAY_MS);
+    }
+  }
+
+  res.json({ success: true, data: report });
 };

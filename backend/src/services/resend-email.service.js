@@ -285,6 +285,168 @@ export async function sendDeadlineReminderEmail({ to, studentName, internshipTit
   return sendEmail({ to, subject: `Closing soon: ${internshipTitle} at ${companyName} closes in 2 days`, html });
 }
 
+// ─── Email 6 — Student Campaign (bulk welcome / re-engagement) ───────────────
+
+export async function sendStudentCampaignEmail({ to, firstName, referralCode }) {
+  const referralUrl = `${APP_URL}/auth/register?ref=${referralCode || ''}`;
+  const shareText = encodeURIComponent(`I just joined InternshipConnect — Africa's platform for finding real internships. Sign up with my link and let's build our careers together: ${referralUrl}`);
+  const whatsappUrl = `https://wa.me/?text=${shareText}`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${shareText}`;
+
+  const html = baseTemplate(`
+    <h2 style="margin:0 0 6px;font-size:24px;color:#0D1426;font-weight:700;">Hey ${firstName}, welcome to InternshipConnect 👋</h2>
+    <p style="margin:0 0 20px;color:#495057;font-size:15px;">We're so glad you're here. Thousands of Nigerian students are already using InternshipConnect to land their first internships, build industry-ready skills, and connect with companies that actually hire.</p>
+
+    <p style="font-size:15px;">Now it's your turn.</p>
+
+    <!-- Value props -->
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:28px 0;">
+      <tr>
+        <td style="background:#f8f9fa;border-radius:10px;padding:20px 22px;vertical-align:top;">
+          <p style="margin:0 0 6px;font-size:20px;">🔍</p>
+          <p style="margin:0 0 6px;font-weight:700;color:#0D1426;font-size:14px;">Discover Verified Internships</p>
+          <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">Browse hundreds of roles across tech, finance, media, engineering, and more — all posted by real companies in Nigeria and beyond.</p>
+        </td>
+      </tr>
+      <tr><td style="height:12px;"></td></tr>
+      <tr>
+        <td style="background:#f8f9fa;border-radius:10px;padding:20px 22px;vertical-align:top;">
+          <p style="margin:0 0 6px;font-size:20px;">⚡</p>
+          <p style="margin:0 0 6px;font-weight:700;color:#0D1426;font-size:14px;">Apply in Minutes, Not Hours</p>
+          <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">Your profile does the heavy lifting. Complete it once, apply to any role instantly — no CV upload, no repetitive forms, no friction.</p>
+        </td>
+      </tr>
+      <tr><td style="height:12px;"></td></tr>
+      <tr>
+        <td style="background:#f8f9fa;border-radius:10px;padding:20px 22px;vertical-align:top;">
+          <p style="margin:0 0 6px;font-size:20px;">🏆</p>
+          <p style="margin:0 0 6px;font-weight:700;color:#0D1426;font-size:14px;">Get Noticed by Employers</p>
+          <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">Students with complete profiles receive up to <strong>3× more employer views</strong>. Add your skills, education, and a strong bio — it takes less than 10 minutes.</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Primary CTA -->
+    <div style="text-align:center;margin:32px 0 12px;">
+      ${ctaButton('Browse Internships Now', `${APP_URL}/internships`)}
+    </div>
+    <div style="text-align:center;margin:0 0 32px;">
+      ${ctaButton('Complete My Profile', `${APP_URL}/dashboard/profile`, false)}
+    </div>
+
+    <!-- Divider -->
+    <hr style="border:none;border-top:1px solid #e9ecef;margin:32px 0;" />
+
+    <!-- Referral section -->
+    <h3 style="margin:0 0 8px;font-size:17px;color:#0D1426;font-weight:700;">Know someone who should be here? 🙌</h3>
+    <p style="margin:0 0 16px;color:#495057;font-size:14px;line-height:1.7;">Share InternshipConnect with your classmates, roommates, or study group. Every student you refer joins a growing community of young Africans taking their careers seriously.</p>
+
+    <div style="background:#fff9e6;border:1px solid #f0c040;border-radius:10px;padding:18px 20px;margin:0 0 16px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.5px;">Your personal invite link</p>
+      <p style="margin:0;font-family:monospace;font-size:13px;color:#0D1426;word-break:break-all;line-height:1.5;">${referralUrl}</p>
+    </div>
+
+    <!-- Share buttons -->
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding-right:8px;">
+          <a href="${whatsappUrl}" style="display:inline-block;padding:11px 20px;background:#25D366;color:#ffffff;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none;">Share on WhatsApp</a>
+        </td>
+        <td style="padding-right:8px;">
+          <a href="${twitterUrl}" style="display:inline-block;padding:11px 20px;background:#1da1f2;color:#ffffff;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none;">Share on X/Twitter</a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:20px 0 0;font-size:13px;color:#868e96;">You're receiving this because you signed up on InternshipConnect. We're rooting for you — go land that internship. 🚀</p>
+    <p style="margin:8px 0 0;font-size:14px;color:#0D1426;font-weight:600;">The InternshipConnect Team</p>
+  `);
+
+  return sendEmail({
+    to,
+    subject: `${firstName}, your internship journey starts now 🚀`,
+    html,
+  });
+}
+
+// ─── Email 7 — Organisation Campaign (bulk welcome / re-engagement) ───────────
+
+export async function sendOrganisationCampaignEmail({ to, companyName, contactName }) {
+  const greeting = contactName ? `Hi ${contactName},` : `Hi there,`;
+
+  const html = baseTemplate(`
+    <h2 style="margin:0 0 6px;font-size:24px;color:#0D1426;font-weight:700;">Thank you for joining InternshipConnect</h2>
+    <p style="margin:0 0 20px;color:#495057;font-size:15px;">${greeting}</p>
+
+    <p style="color:#495057;font-size:15px;line-height:1.7;">On behalf of the entire InternshipConnect team, <strong>thank you</strong> for choosing our platform to connect with Nigeria's next generation of talent. Your presence here means you're committed to giving young professionals the start they deserve — and that matters more than you know.</p>
+
+    <!-- Stat callout -->
+    <div style="background:#0D1426;border-radius:10px;padding:24px 28px;margin:28px 0;text-align:center;">
+      <p style="margin:0 0 6px;font-size:13px;color:#2EC4B6;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">The opportunity in front of you</p>
+      <p style="margin:0 0 16px;font-size:28px;font-weight:700;color:#E8A230;">Thousands of Candidates</p>
+      <p style="margin:0;font-size:13px;color:#adb5bd;line-height:1.6;">Verified students from universities across Nigeria are actively looking for internships right now. They are motivated, educated, and ready to contribute from day one.</p>
+    </div>
+
+    <!-- Why post -->
+    <h3 style="margin:0 0 14px;font-size:17px;color:#0D1426;font-weight:700;">Why posting internships on InternshipConnect works</h3>
+
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:14px 16px;background:#f8f9fa;border-radius:10px;border-left:3px solid #E8A230;margin-bottom:10px;display:block;">
+          <p style="margin:0 0 4px;font-weight:700;color:#0D1426;font-size:14px;">🎯 Reach the right candidates</p>
+          <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">Our platform surfaces your posting to students who match your required skills, location, and field — no noise, no irrelevant applications.</p>
+        </td>
+      </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:14px 16px;background:#f8f9fa;border-radius:10px;border-left:3px solid #2EC4B6;">
+          <p style="margin:0 0 4px;font-weight:700;color:#0D1426;font-size:14px;">💡 Interns bring fresh energy — and real ROI</p>
+          <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">Companies that run structured internship programmes consistently report faster project delivery, fresh ideas, and a pipeline of pre-trained talent they can hire full-time later. It's not charity — it's strategy.</p>
+        </td>
+      </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:14px 16px;background:#f8f9fa;border-radius:10px;border-left:3px solid #7c3aed;">
+          <p style="margin:0 0 4px;font-weight:700;color:#0D1426;font-size:14px;">🏅 Build your employer brand</p>
+          <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">Every internship you post is a public signal that <strong>${companyName}</strong> invests in the next generation. That reputation attracts better candidates — not just interns, but future full-time hires too.</p>
+        </td>
+      </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 32px;">
+      <tr>
+        <td style="padding:14px 16px;background:#f8f9fa;border-radius:10px;border-left:3px solid #16a34a;">
+          <p style="margin:0 0 4px;font-weight:700;color:#0D1426;font-size:14px;">⚡ Zero cost to post</p>
+          <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">Posting your first internship is completely free. You're 3 minutes away from having your opportunity in front of thousands of eager students.</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin:8px 0 32px;">
+      ${ctaButton('Post an Internship Now', `${APP_URL}/dashboard/internships/create`)}
+    </div>
+
+    <!-- Divider -->
+    <hr style="border:none;border-top:1px solid #e9ecef;margin:32px 0;" />
+
+    <!-- Closing -->
+    <p style="color:#495057;font-size:14px;line-height:1.7;">We believe that companies like <strong>${companyName}</strong> are the engine of Africa's economic future — and we built this platform to make sure you always have access to the talent you need to grow.</p>
+    <p style="color:#495057;font-size:14px;line-height:1.7;">If there's anything we can do to make your experience better, simply reply to this email. We read and respond to every message.</p>
+
+    <p style="margin:20px 0 4px;font-size:14px;color:#0D1426;font-weight:700;">Warm regards,</p>
+    <p style="margin:0;font-size:14px;color:#0D1426;font-weight:600;">The InternshipConnect Team</p>
+    <p style="margin:4px 0 0;font-size:13px;color:#868e96;">Africa's Career Infrastructure Platform</p>
+  `);
+
+  return sendEmail({
+    to,
+    subject: `${companyName}, thank you — and here's how to find your next great intern`,
+    html,
+  });
+}
+
 // ─── Password Reset ───────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail({ to, resetToken, userName }) {

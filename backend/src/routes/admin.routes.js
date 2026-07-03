@@ -7,7 +7,8 @@ import {
   updateUserStatus,
   deleteUser,
   getAnalytics,
-  getRecentActivity
+  getRecentActivity,
+  sendCampaignEmails,
 } from '../controllers/admin.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 
@@ -26,5 +27,8 @@ router.get('/activity', getRecentActivity);
 router.get('/users', getUsers);
 router.patch('/users/:id/status', updateUserStatus);
 router.delete('/users/:id', deleteUser);
+
+// Email Campaigns
+router.post('/send-campaign-emails', sendCampaignEmails);
 
 export default router;
