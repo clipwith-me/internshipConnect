@@ -1,56 +1,41 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const FROM_EMAIL = process.env.SMTP_USER || 'internshipconnects@gmail.com';
-const FROM_NAME = 'InternshipConnect';
 const APP_URL = process.env.APP_URL || 'https://internship-connect-beta.vercel.app';
+const FROM_NAME = 'InternshipConnect';
 
-// Lazy transporter — created once on first use
-let _transporter = null;
+// Sender address — must match a verified domain in your Resend account.
+// Use your verified domain email once DNS is set up.
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
-function getTransporter() {
-  if (_transporter) return _transporter;
-
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    return null;
-  }
-
-  _transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 8000,
-  });
-
-  return _transporter;
+let _resend = null;
+function getResend() {
+  if (_resend) return _resend;
+  if (!process.env.RESEND_API_KEY) return null;
+  _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
 }
 
 export async function sendEmail({ to, subject, html }) {
-  const transporter = getTransporter();
+  const resend = getResend();
 
-  if (!transporter) {
-    const err = new Error('SMTP not configured on server — set SMTP_HOST, SMTP_USER, SMTP_PASS env vars');
+  if (!resend) {
+    const err = new Error('Resend not configured — add RESEND_API_KEY env var on Render');
     console.error('❌', err.message);
     return { data: null, error: err };
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to,
       subject,
       html,
     });
-    console.log(`📧 Email sent to ${to} — MessageId: ${info.messageId}`);
-    return { data: info, error: null };
+    if (error) throw error;
+    console.log(`📧 Email sent to ${to} — id: ${data.id}`);
+    return { data, error: null };
   } catch (err) {
-    console.error('❌ Email send failed:', err.message);
+    console.error(`❌ Email send failed to ${to}:`, err.message);
     return { data: null, error: err };
   }
 }
