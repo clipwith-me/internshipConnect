@@ -206,11 +206,13 @@ const EditInternshipPage = () => {
     }
     try {
       setSaving(true);
+      console.log('[EditInternship] PUT payload:', JSON.stringify(payload, null, 2));
       const response = await internshipAPI.update(id, payload);
       if (response.data.success) {
         navigate('/dashboard/my-internships');
       }
     } catch (err) {
+      console.error('[EditInternship] PUT error:', JSON.stringify(err.response?.data, null, 2));
       if (err.response?.data?.errors && err.response.data.errors.length > 0) {
         const apiErrors = {};
         err.response.data.errors.forEach(e => { apiErrors[e.field] = e.message; });
@@ -250,6 +252,13 @@ const EditInternshipPage = () => {
         {apiError && (
           <div ref={errorBannerRef} className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
             <strong className="font-semibold">Error:</strong> {apiError}
+            {Object.keys(errors).length > 0 && (
+              <ul className="mt-2 ml-4 list-disc space-y-1">
+                {Object.entries(errors).map(([field, msg]) => (
+                  <li key={field}><span className="font-mono text-xs">{field}</span>: {msg}</li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

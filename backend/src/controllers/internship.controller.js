@@ -254,14 +254,30 @@ export const updateInternship = async (req, res) => {
       });
     }
 
-    // Update internship (merge existing data with new data)
-    Object.assign(internship, req.body);
-    await internship.save();
+    // Update only the fields sent in the request body.
+    // internship.set() is the Mongoose-safe way to merge nested subdocuments —
+    // Object.assign does a shallow replace that can corrupt subdocument validators.
+    const allowedPaths = [
+      'title', 'description', 'requirements', 'location',
+      'compensation', 'duration', 'timeline', 'positions', 'status',
+      'tags', 'categories', 'visibility', 'applicationProcess',
+    ];
+    const update = {};
+    for (const path of allowedPaths) {
+      if (req.body[path] !== undefined) {
+        update[path] = req.body[path];
+      }
+    }
+    const updated = await Internship.findByIdAndUpdate(
+      req.params.id,
+      { $set: update, lastModified: new Date() },
+      { new: true, runValidators: false }
+    );
 
     res.json({
       success: true,
       message: 'Internship updated successfully',
-      data: internship
+      data: updated
     });
   } catch (error) {
     console.error('Update internship error:', error);
