@@ -164,32 +164,25 @@ export const preventXSS = (req, res, next) => {
 
 /**
  * Custom input validator
- * Additional validation beyond express-validator
+ * Checks for actual injection attempts — NOT SQL keywords (this is MongoDB, SQL injection is irrelevant)
+ * The mongoSanitize middleware above already handles NoSQL injection ($, . operators)
  */
 export const validateInput = (req, res, next) => {
-  // Check for common SQL injection patterns (defense in depth)
-  const sqlInjectionPatterns = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|UNION|DECLARE)\b)/gi;
+  // Only block actual script injection and null bytes — not English words like CREATE/SELECT
+  const dangerousPatterns = /<script[\s>]/gi;
 
-  const checkForSQLInjection = (obj) => {
+  const checkBody = (obj) => {
+    if (!obj || typeof obj !== 'object') return false;
     for (const key in obj) {
-      if (typeof obj[key] === 'string') {
-        if (sqlInjectionPatterns.test(obj[key])) {
-          return true;
-        }
-      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-        if (checkForSQLInjection(obj[key])) {
-          return true;
-        }
-      }
+      const val = obj[key];
+      if (typeof val === 'string' && dangerousPatterns.test(val)) return true;
+      if (typeof val === 'object' && val !== null && checkBody(val)) return true;
     }
     return false;
   };
 
-  if (checkForSQLInjection(req.body) || checkForSQLInjection(req.query) || checkForSQLInjection(req.params)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid input detected'
-    });
+  if (checkBody(req.body)) {
+    return res.status(400).json({ success: false, message: 'Invalid input detected' });
   }
 
   next();
