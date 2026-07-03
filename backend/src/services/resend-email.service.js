@@ -1,41 +1,56 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 const APP_URL = process.env.APP_URL || 'https://internship-connect-beta.vercel.app';
 const FROM_NAME = 'InternshipConnect';
+// Show Gmail address to recipients but route through Brevo's relay
+const FROM_EMAIL = process.env.EMAIL_FROM || 'internshipconnects@gmail.com';
 
-// Sender address — must match a verified domain in your Resend account.
-// Use your verified domain email once DNS is set up.
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+let _transporter = null;
 
-let _resend = null;
-function getResend() {
-  if (_resend) return _resend;
-  if (!process.env.RESEND_API_KEY) return null;
-  _resend = new Resend(process.env.RESEND_API_KEY);
-  return _resend;
+function getTransporter() {
+  if (_transporter) return _transporter;
+
+  // Brevo SMTP credentials (set these on Render)
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !user || !pass) return null;
+
+  _transporter = nodemailer.createTransport({
+    host,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+  });
+
+  return _transporter;
 }
 
 export async function sendEmail({ to, subject, html }) {
-  const resend = getResend();
+  const transporter = getTransporter();
 
-  if (!resend) {
-    const err = new Error('Resend not configured — add RESEND_API_KEY env var on Render');
+  if (!transporter) {
+    const err = new Error('Email not configured — set SMTP_HOST, SMTP_USER, SMTP_PASS on Render (use Brevo credentials)');
     console.error('❌', err.message);
     return { data: null, error: err };
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await transporter.sendMail({
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to,
       subject,
       html,
     });
-    if (error) throw error;
-    console.log(`📧 Email sent to ${to} — id: ${data.id}`);
-    return { data, error: null };
+    console.log(`📧 Sent to ${to} — MessageId: ${info.messageId}`);
+    return { data: info, error: null };
   } catch (err) {
-    console.error(`❌ Email send failed to ${to}:`, err.message);
+    console.error(`❌ Failed to send to ${to}:`, err.message);
     return { data: null, error: err };
   }
 }
