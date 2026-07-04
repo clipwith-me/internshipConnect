@@ -63,9 +63,13 @@ function baseTemplate(content) {
         <!-- Header -->
         <tr>
           <td style="background:#0D1426;padding:28px 40px;text-align:center;">
-            <span style="font-size:22px;font-weight:700;color:#E8A230;letter-spacing:-0.5px;">InternshipConnect</span>
-            <br/>
-            <span style="font-size:12px;color:#2EC4B6;margin-top:4px;display:inline-block;">Africa's Career Infrastructure Platform</span>
+            <img
+              src="https://internship-connect-beta.vercel.app/logo-primary.png"
+              alt="InternshipConnect"
+              width="200"
+              style="display:block;margin:0 auto 10px;max-width:200px;height:auto;"
+            />
+            <span style="font-size:12px;color:#2EC4B6;display:inline-block;">Africa's Career Infrastructure Platform</span>
           </td>
         </tr>
         <!-- Body -->
