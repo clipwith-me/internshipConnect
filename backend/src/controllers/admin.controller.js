@@ -486,11 +486,27 @@ export const sendCampaignEmails = async (req, res) => {
 
   const report = { total: users.length, sent: 0, failed: 0, skipped: 0, errors: [] };
 
-  // Process in batches to respect SMTP rate limits
-  const BATCH_SIZE = 5;
-  const BATCH_DELAY_MS = 4000;
+  if (dryRun) {
+    users.forEach(u => {
+      if (u.role === 'admin') report.skipped++;
+      else report.skipped++;
+    });
+    return res.json({ success: true, data: report });
+  }
 
+  // Respond immediately — processing happens in the background.
+  // Client gets { total, status: 'processing' } right away; results appear in server logs.
+  res.json({
+    success: true,
+    data: { total: users.length, status: 'processing', message: 'Campaign started — check server logs on Render for delivery results' },
+  });
+
+  // ── Background processing ──────────────────────────────────────────────────
+  const BATCH_SIZE = 10;
+  const BATCH_DELAY_MS = 500; // Brevo HTTP API is fast; short delay keeps throughput high
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  console.log(`[Campaign] Starting send to ${users.length} users`);
 
   for (let i = 0; i < users.length; i += BATCH_SIZE) {
     const batch = users.slice(i, i + BATCH_SIZE);
@@ -498,12 +514,6 @@ export const sendCampaignEmails = async (req, res) => {
     await Promise.all(
       batch.map(async (user) => {
         try {
-          if (dryRun) {
-            console.log(`[DRY RUN] Would send ${user.role} campaign to ${user.email}`);
-            report.skipped++;
-            return;
-          }
-
           if (user.role === 'student') {
             const refDoc = await ReferralCode.findOne({ user: user._id }).lean();
             const firstName = user.firstName || user.email.split('@')[0];
@@ -530,22 +540,21 @@ export const sendCampaignEmails = async (req, res) => {
             report.sent++;
 
           } else {
-            // admin accounts — skip
             report.skipped++;
           }
         } catch (err) {
           report.failed++;
           report.errors.push({ email: user.email, message: err.message });
-          console.error(`Campaign email failed for ${user.email}:`, err.message);
+          console.error(`[Campaign] ❌ ${user.email}: ${err.message}`);
         }
       })
     );
 
-    // Pause between batches (skip after last batch)
-    if (i + BATCH_SIZE < users.length) {
-      await sleep(BATCH_DELAY_MS);
-    }
+    if (i + BATCH_SIZE < users.length) await sleep(BATCH_DELAY_MS);
   }
 
-  res.json({ success: true, data: report });
+  console.log(`[Campaign] ✅ Done — sent: ${report.sent}, failed: ${report.failed}, skipped: ${report.skipped}`);
+  if (report.errors.length) {
+    console.log('[Campaign] Failed addresses:', report.errors.map(e => e.email).join(', '));
+  }
 };

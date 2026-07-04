@@ -1,54 +1,45 @@
-import nodemailer from 'nodemailer';
-
 const APP_URL = process.env.APP_URL || 'https://internship-connect-beta.vercel.app';
 const FROM_NAME = 'InternshipConnect';
-// Show Gmail address to recipients but route through Brevo's relay
 const FROM_EMAIL = process.env.EMAIL_FROM || 'internshipconnects@gmail.com';
 
-let _transporter = null;
-
-function getTransporter() {
-  if (_transporter) return _transporter;
-
-  // Brevo SMTP credentials (set these on Render)
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) return null;
-
-  _transporter = nodemailer.createTransport({
-    host,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
-  });
-
-  return _transporter;
-}
+// ─── Brevo HTTP API ─────────────────────────────────────────────────────────
+// Uses Brevo's REST API instead of SMTP — no connection timeouts, no rate
+// throttling, works reliably from any cloud host including Render free tier.
+// Required env var: BREVO_API_KEY  (from Brevo dashboard → API Keys)
 
 export async function sendEmail({ to, subject, html }) {
-  const transporter = getTransporter();
+  const apiKey = process.env.BREVO_API_KEY;
 
-  if (!transporter) {
-    const err = new Error('Email not configured — set SMTP_HOST, SMTP_USER, SMTP_PASS on Render (use Brevo credentials)');
+  if (!apiKey) {
+    const err = new Error('Email not configured — add BREVO_API_KEY to Render env vars');
     console.error('❌', err.message);
     return { data: null, error: err };
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
-      to,
-      subject,
-      html,
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: FROM_NAME, email: FROM_EMAIL },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
     });
-    console.log(`📧 Sent to ${to} — MessageId: ${info.messageId}`);
-    return { data: info, error: null };
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message || `Brevo API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    console.log(`📧 Sent to ${to} — messageId: ${data.messageId}`);
+    return { data, error: null };
   } catch (err) {
     console.error(`❌ Failed to send to ${to}:`, err.message);
     return { data: null, error: err };
