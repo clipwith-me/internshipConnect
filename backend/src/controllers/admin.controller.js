@@ -487,8 +487,8 @@ export const sendCampaignEmails = async (req, res) => {
   const report = { total: users.length, sent: 0, failed: 0, skipped: 0, errors: [] };
 
   // Process in batches to respect SMTP rate limits
-  const BATCH_SIZE = 10;
-  const BATCH_DELAY_MS = 1200;
+  const BATCH_SIZE = 5;
+  const BATCH_DELAY_MS = 4000;
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
