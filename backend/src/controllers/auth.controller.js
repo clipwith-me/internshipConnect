@@ -78,7 +78,7 @@ export const register = async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: 'Please enter a valid email address'
+        message: "Enter a valid email address (e.g. name@example.com)."
       });
     }
 
@@ -109,7 +109,7 @@ export const register = async (req, res) => {
     if (!emailDomain || blockedDomains.includes(emailDomain)) {
       return res.status(400).json({
         success: false,
-        message: 'Please use a real email address. Disposable and test email domains are not allowed.'
+        message: "We couldn't create your account with this email address. Please use a work or personal email to sign up."
       });
     }
 
