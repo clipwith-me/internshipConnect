@@ -73,6 +73,46 @@ export const register = async (req, res) => {
       });
     }
     
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email address'
+      });
+    }
+
+    // Block fake/disposable/test email domains
+    const blockedDomains = [
+      'example.com', 'example.org', 'example.net',
+      'test.com', 'test.org', 'test.net',
+      'fake.com', 'fake.org',
+      'placeholder.com',
+      'mailinator.com', 'guerrillamail.com', 'guerrillamail.net',
+      'guerrillamail.org', 'guerrillamail.biz', 'guerrillamail.de',
+      'sharklasers.com', 'guerrillamailblock.com', 'grr.la',
+      'guerrillamail.info', 'spam4.me', 'trashmail.com',
+      'trashmail.me', 'trashmail.net', 'trashmail.at',
+      'trashmail.io', 'trashmail.xyz',
+      'yopmail.com', 'yopmail.fr', 'cool.fr.nf', 'jetable.fr.nf',
+      'nospam.ze.tc', 'nomail.xl.cx', 'mega.zik.dj', 'speed.1s.fr',
+      'courriel.fr.nf', 'moncourrier.fr.nf', 'monemail.fr.nf',
+      'monmail.fr.nf',
+      'tempmail.com', 'temp-mail.org', 'tempmail.net',
+      'throwam.com', 'throwam.org',
+      'dispostable.com', 'mailnull.com', 'spamgourmet.com',
+      'maildrop.cc', 'sharklasers.com',
+      'discard.email', 'spamevader.com',
+      'mailnesia.com', 'tempr.email', 'discard.email',
+    ];
+    const emailDomain = email.split('@')[1]?.toLowerCase();
+    if (!emailDomain || blockedDomains.includes(emailDomain)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please use a real email address. Disposable and test email domains are not allowed.'
+      });
+    }
+
     // Check if user already exists
     const existingUser = await User.findByEmail(email);
     if (existingUser) {
