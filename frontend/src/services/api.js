@@ -24,7 +24,9 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds
+  // 60s so a cold-started backend (Render free tier wakes in ~30-40s) has
+  // time to respond instead of the request failing before the server is up.
+  timeout: 60000,
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -86,6 +88,23 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+
+    // Cold-start resilience: if the backend was asleep, the first request can
+    // time out or fail with a network error while the server wakes up. Retry
+    // such requests a couple of times with a short backoff before giving up,
+    // so users don't see a "backend not running" error on the first visit.
+    const isColdStartError =
+      error.code === 'ECONNABORTED' ||
+      error.message === 'Network Error' ||
+      !error.response;
+    if (isColdStartError && originalRequest && !originalRequest._coldRetryDone) {
+      originalRequest._coldRetryCount = (originalRequest._coldRetryCount || 0) + 1;
+      if (originalRequest._coldRetryCount <= 2) {
+        await new Promise((r) => setTimeout(r, 3000 * originalRequest._coldRetryCount));
+        return api(originalRequest);
+      }
+      originalRequest._coldRetryDone = true;
+    }
 
     // ✅ FIX: Handle 403 Forbidden - only redirect if account is deactivated
     // Don't redirect for role-based access denials (let the component handle it)
