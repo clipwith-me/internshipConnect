@@ -438,6 +438,22 @@ export const verificationAPI = {
   review: (id, data) => api.patch(`/verification/${id}/review`, data),
 };
 
+/**
+ * University layer endpoints
+ */
+export const universityAPI = {
+  // Public directory (for the student "join your university" selector)
+  list: (search) => api.get('/universities', { params: search ? { search } : {} }),
+  // Student affiliation
+  join: (payload) => api.post('/universities/join', payload), // { joinCode } or { universityId }
+  leave: () => api.post('/universities/leave'),
+  // University coordinator
+  getMe: () => api.get('/universities/me'),
+  updateMe: (data) => api.put('/universities/me', data),
+  getDashboard: () => api.get('/universities/me/dashboard'),
+  getStudents: () => api.get('/universities/me/students'),
+};
+
 export default api;
 
 /**

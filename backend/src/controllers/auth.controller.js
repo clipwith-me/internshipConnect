@@ -1,6 +1,6 @@
 // backend/src/controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
-import { User, StudentProfile, OrganizationProfile, ReferralCode, Referral } from '../models/index.js';
+import { User, StudentProfile, OrganizationProfile, ReferralCode, Referral, University } from '../models/index.js';
 import { sendStudentWelcomeEmail, sendCompanyWelcomeEmail, sendPasswordResetEmail } from '../services/resend-email.service.js';
 /**
  * 🎓 LEARNING: Authentication Controller
@@ -159,8 +159,27 @@ export const register = async (req, res) => {
           primaryEmail: email
         }
       });
+    } else if (role === 'university') {
+      const name = profileData.universityName || profileData.companyName || 'New University';
+      const joinCode = await University.generateJoinCode(name);
+      profile = await University.create({
+        user: user._id,
+        name,
+        shortName: profileData.shortName || '',
+        joinCode,
+        contact: {
+          coordinatorName: profileData.coordinatorName || '',
+          email,
+          phone: profileData.phone || '',
+        },
+        location: {
+          city: profileData.city || '',
+          state: profileData.state || '',
+          country: profileData.country || 'Nigeria',
+        },
+      });
     }
-    
+
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
 

@@ -29,6 +29,7 @@ import referralRoutes from './routes/referral.routes.js';
 import verificationRoutes from './routes/verification.routes.js';
 import founderAnalyticsRoutes from './routes/founder-analytics.routes.js';
 import campaignRoutes from './routes/campaign.routes.js';
+import universityRoutes from './routes/university.routes.js';
 import {
   apiLimiter,
   authLimiter,
@@ -248,6 +249,7 @@ app.use('/api/referrals', referralRoutes);
 app.use('/api/verification', verificationRoutes);
 app.use('/api/founder-analytics', founderAnalyticsRoutes);
 app.use('/api/campaign', campaignRoutes);
+app.use('/api/universities', universityRoutes);
 // Note: /api/payments already registered on line 100 (before JSON parser)
 
 // ✅ ROOT ROUTE - Fixes "Route GET / not found" error on Render

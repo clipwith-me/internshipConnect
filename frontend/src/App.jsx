@@ -34,6 +34,8 @@ const StudentSearchPage = lazy(() => import('./pages/StudentSearchPage'));
 const ContactSalesPage = lazy(() => import('./pages/ContactSalesPage'));
 const DemoPage = lazy(() => import('./pages/DemoPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const UniversityDashboardPage = lazy(() => import('./pages/UniversityDashboardPage'));
+const UniversityStudentsPage = lazy(() => import('./pages/UniversityStudentsPage'));
 const SavedInternshipsPage = lazy(() => import('./pages/SavedInternshipsPage'));
 const ReferralPage = lazy(() => import('./pages/ReferralPage'));
 const VerificationPage = lazy(() => import('./pages/VerificationPage'));
@@ -146,6 +148,17 @@ function App() {
             <Route path="admin" element={
               <ProtectedRoute requiredRole="admin">
                 <AdminDashboardPage />
+              </ProtectedRoute>
+            } />
+            {/* University-only routes */}
+            <Route path="university" element={
+              <ProtectedRoute requiredRole="university">
+                <UniversityDashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="university/students" element={
+              <ProtectedRoute requiredRole="university">
+                <UniversityStudentsPage />
               </ProtectedRoute>
             } />
             <Route path="settings" element={<SettingsPage />} />

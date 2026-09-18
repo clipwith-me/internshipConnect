@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { applicationAPI, internshipAPI } from '../services/api';
 import { useApi } from '../hooks/useApi';
+import JoinUniversityCard from '../components/JoinUniversityCard';
 import {
   Briefcase,
   FileText,
@@ -33,16 +34,19 @@ const DashboardPage = () => {
   const isStudent = user.role === 'student';
   const isOrganization = user.role === 'organization';
   const isAdmin = user.role === 'admin';
+  const isUniversity = user.role === 'university';
 
-  // ✅ ADMIN: Redirect admins to their dedicated dashboard
+  // ✅ ADMIN / UNIVERSITY: Redirect to their dedicated dashboards
   useEffect(() => {
     if (isAdmin) {
       navigate('/dashboard/admin', { replace: true });
+    } else if (isUniversity) {
+      navigate('/dashboard/university', { replace: true });
     }
-  }, [isAdmin, navigate]);
+  }, [isAdmin, isUniversity, navigate]);
 
   // ✅ SECURITY FIX: Handle invalid/unknown roles gracefully
-  if (!isStudent && !isOrganization && !isAdmin) {
+  if (!isStudent && !isOrganization && !isAdmin && !isUniversity) {
     return (
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -57,8 +61,8 @@ const DashboardPage = () => {
     );
   }
 
-  // Show loading during admin redirect
-  if (isAdmin) {
+  // Show loading during admin/university redirect
+  if (isAdmin || isUniversity) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
@@ -166,6 +170,9 @@ const StudentDashboard = () => {
 
   return (
     <>
+      {/* Link-your-university prompt (self-dismisses once linked) */}
+      <JoinUniversityCard />
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard

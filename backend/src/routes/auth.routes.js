@@ -64,8 +64,8 @@ router.post('/register',
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
       .withMessage('Password must contain uppercase, lowercase, and number'),
     body('role')
-      .isIn(['student', 'organization'])
-      .withMessage('Role must be student or organization'),
+      .isIn(['student', 'organization', 'university'])
+      .withMessage('Role must be student, organization, or university'),
     body('firstName')
       .optional()
       .trim()

@@ -11,11 +11,13 @@ import ReferralCode from './ReferralCode.js';
 import Referral from './Referral.js';
 import CompanyVerification from './CompanyVerification.js';
 import AnalyticsEvent from './AnalyticsEvent.js';
+import University from './University.js';
 
 export {
   User,
   StudentProfile,
   OrganizationProfile,
+  University,
   Internship,
   Application,
   Resume,
@@ -32,6 +34,7 @@ export default {
   User,
   StudentProfile,
   OrganizationProfile,
+  University,
   Internship,
   Application,
   Resume,

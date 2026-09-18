@@ -1,7 +1,7 @@
 ﻿// frontend/src/pages/RegisterPage.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight, GraduationCap, Building2, Check } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight, GraduationCap, Building2, School, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const INDUSTRIES = [
@@ -33,6 +33,7 @@ const RegisterPage = () => {
     email: '', password: '', confirmPassword: '',
     firstName: '', lastName: '',
     companyName: '', industry: 'technology',
+    universityName: '', state: '', coordinatorName: '',
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -59,6 +60,8 @@ const RegisterPage = () => {
     if (role === 'student') {
       if (!formData.firstName) newErrors.firstName = 'First name is required';
       if (!formData.lastName) newErrors.lastName = 'Last name is required';
+    } else if (role === 'university') {
+      if (!formData.universityName) newErrors.universityName = 'University name is required';
     } else {
       if (!formData.companyName) newErrors.companyName = 'Company name is required';
     }
@@ -74,6 +77,11 @@ const RegisterPage = () => {
       email: formData.email, password: formData.password, role,
       ...(role === 'student' && { firstName: formData.firstName, lastName: formData.lastName }),
       ...(role === 'organization' && { companyName: formData.companyName, industry: formData.industry.toLowerCase() }),
+      ...(role === 'university' && {
+        universityName: formData.universityName,
+        state: formData.state,
+        coordinatorName: formData.coordinatorName,
+      }),
     };
     const result = await register(registrationData);
     setLoading(false);
@@ -101,10 +109,11 @@ const RegisterPage = () => {
       {/* Role selector */}
       <div className="mb-6">
         <p className="text-sm font-medium text-neutral-700 mb-3">I am joining as a…</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {[
             { id: 'student', icon: GraduationCap, label: 'Student', sub: 'Find internships' },
             { id: 'organization', icon: Building2, label: 'Organization', sub: 'Hire interns' },
+            { id: 'university', icon: School, label: 'University', sub: 'Track students' },
           ].map(({ id, icon: Icon, label, sub }) => (
             <button
               key={id}
@@ -184,6 +193,47 @@ const RegisterPage = () => {
                   <option key={ind} value={ind.toLowerCase()}>{ind}</option>
                 ))}
               </select>
+            </div>
+          </div>
+        )}
+
+        {role === 'university' && (
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="universityName" className="block text-sm font-medium text-neutral-700 mb-1.5">University name</label>
+              <input
+                id="universityName"
+                type="text"
+                placeholder="University of Lagos"
+                value={formData.universityName}
+                onChange={handleChange}
+                className={`w-full px-3.5 py-2.5 text-sm border rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all ${errors.universityName ? 'border-red-400 bg-red-50' : 'border-neutral-200 hover:border-neutral-300'}`}
+              />
+              {errors.universityName && <p className="mt-1 text-xs text-red-600">{errors.universityName}</p>}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="coordinatorName" className="block text-sm font-medium text-neutral-700 mb-1.5">Coordinator name <span className="text-neutral-400 font-normal">(optional)</span></label>
+                <input
+                  id="coordinatorName"
+                  type="text"
+                  placeholder="SIWES / Career Services"
+                  value={formData.coordinatorName}
+                  onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 text-sm border border-neutral-200 rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all hover:border-neutral-300"
+                />
+              </div>
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium text-neutral-700 mb-1.5">State <span className="text-neutral-400 font-normal">(optional)</span></label>
+                <input
+                  id="state"
+                  type="text"
+                  placeholder="Lagos"
+                  value={formData.state}
+                  onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 text-sm border border-neutral-200 rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all hover:border-neutral-300"
+                />
+              </div>
             </div>
           </div>
         )}

@@ -24,7 +24,19 @@ const studentProfileSchema = new mongoose.Schema({
     required: true,
     unique: true  // One profile per user
   },
-  
+
+  // ═══════════════════════════════════════════════════════════
+  // UNIVERSITY AFFILIATION (optional — links a student to a registered
+  // institution so university coordinators can see their students' activity)
+  // ═══════════════════════════════════════════════════════════
+  university: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'University',
+    default: null,
+    index: true
+  },
+  universityJoinedAt: Date,
+
   // ═══════════════════════════════════════════════════════════
   // PERSONAL INFORMATION (Embedded Subdocument)
   // ═══════════════════════════════════════════════════════════
