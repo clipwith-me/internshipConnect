@@ -1,539 +1,70 @@
-// frontend/src/pages/EditInternshipPage.jsx
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { internshipAPI } from '../services/api';
-import { ArrowLeft, Save } from 'lucide-react';
+import { isAbortError } from '../hooks/useApi';
+import { Button, EmptyState } from '../components';
+import PageHeader from '../components/PageHeader';
+import StatusBadge from '../components/StatusBadge';
+import InternshipForm from '../components/InternshipForm';
 
-const EditInternshipPage = () => {
-  const navigate = useNavigate();
+export default function EditInternshipPage() {
   const { id } = useParams();
-  const submitting = useRef(false);
-  const errorBannerRef = useRef(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [apiError, setApiError] = useState('');
-  const [errors, setErrors] = useState({});
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    requirements: { description: '' },
-    location: { type: 'remote', city: '', country: '' },
-    compensation: {
-      type: 'paid',
-      amount: { min: '', max: '', currency: 'USD', period: 'monthly' },
-      benefits: []
-    },
-    duration: { length: '', hoursPerWeek: { min: 20, max: 40 }, flexible: false },
-    timeline: { startDate: '', endDate: '', applicationDeadline: '' },
-    positions: { total: 1 },
-    status: 'draft'
-  });
+  const navigate = useNavigate();
+  const [state, setState] = useState({ status: 'loading', data: null });
 
   useEffect(() => {
-    fetchInternship();
+    document.title = 'Edit internship | InternshipConnect';
+    const controller = new AbortController();
+    internshipAPI
+      .getById(id, { signal: controller.signal })
+      .then((res) => setState({ status: 'ready', data: res.data?.data }))
+      .catch((err) => {
+        if (!isAbortError(err)) setState({ status: 'error', data: null });
+      });
+    return () => controller.abort();
   }, [id]);
 
-  const fetchInternship = async () => {
-    try {
-      setLoading(true);
-      const response = await internshipAPI.getById(id);
-      if (response.data.success) {
-        const internship = response.data.data;
-        // Format dates for input fields
-        const formatDate = (date) => {
-          if (!date) return '';
-          return new Date(date).toISOString().split('T')[0];
-        };
-
-        setFormData({
-          title: internship.title || '',
-          description: internship.description || '',
-          requirements: {
-            description: internship.requirements?.description || ''
-          },
-          location: {
-            type: internship.location?.type || 'remote',
-            city: internship.location?.city || '',
-            country: internship.location?.country || ''
-          },
-          compensation: {
-            type: internship.compensation?.type || 'paid',
-            amount: {
-              min: internship.compensation?.amount?.min || '',
-              max: internship.compensation?.amount?.max || '',
-              currency: internship.compensation?.amount?.currency || 'USD',
-              period: internship.compensation?.amount?.period || 'monthly'
-            },
-            benefits: internship.compensation?.benefits || []
-          },
-          duration: {
-            length: internship.duration?.length || '',
-            hoursPerWeek: {
-              min: internship.duration?.hoursPerWeek?.min || 20,
-              max: internship.duration?.hoursPerWeek?.max || 40
-            },
-            flexible: internship.duration?.flexible || false
-          },
-          timeline: {
-            startDate: formatDate(internship.timeline?.startDate),
-            endDate: formatDate(internship.timeline?.endDate),
-            applicationDeadline: formatDate(internship.timeline?.applicationDeadline)
-          },
-          positions: {
-            total: internship.positions?.total || 1
-          },
-          status: internship.status || 'draft'
-        });
-      }
-    } catch (err) {
-      setApiError(err.response?.data?.error || err.response?.data?.message || 'Failed to load internship. Please try again.');
-      setTimeout(() => errorBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (path, value) => {
-    setFormData(prev => {
-      const keys = path.split('.');
-      if (keys.length === 1) {
-        return { ...prev, [keys[0]]: value };
-      } else if (keys.length === 2) {
-        return { ...prev, [keys[0]]: { ...prev[keys[0]], [keys[1]]: value } };
-      } else if (keys.length === 3) {
-        return {
-          ...prev,
-          [keys[0]]: {
-            ...prev[keys[0]],
-            [keys[1]]: {
-              ...prev[keys[0]][keys[1]],
-              [keys[2]]: value
-            }
-          }
-        };
-      }
-      return prev;
-    });
-  };
-
-  const showError = (msg) => {
-    setApiError(msg);
-    setTimeout(() => errorBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    const title = (formData.title || '').trim();
-    const description = (formData.description || '').trim();
-    const durationLength = (formData.duration?.length || '').trim();
-    const city = (formData.location?.city || '').trim();
-    const country = (formData.location?.country || '').trim();
-    const reqDesc = (formData.requirements?.description || '').trim();
-    if (title.length < 5) newErrors.title = 'Title must be at least 5 characters';
-    if (title.length > 100) newErrors.title = 'Title cannot exceed 100 characters';
-    if (description.length < 50) newErrors.description = 'Description must be at least 50 characters';
-    if (description.length > 5000) newErrors.description = 'Description cannot exceed 5000 characters';
-    if (reqDesc.length > 2000) newErrors['requirements.description'] = 'Requirements cannot exceed 2000 characters';
-    const locType = formData.location?.type;
-    if (!['remote', 'onsite', 'hybrid'].includes(locType)) newErrors['location.type'] = 'Invalid location type';
-    if (locType !== 'remote') {
-      if (!city) newErrors['location.city'] = 'City is required for on-site/hybrid';
-      else if (city.length < 2) newErrors['location.city'] = 'City must be at least 2 characters';
-    }
-    if (country && country.length < 2) newErrors['location.country'] = 'Country must be at least 2 characters';
-    if (!durationLength) newErrors['duration.length'] = 'Duration is required';
-    if (!formData.timeline?.startDate) newErrors['timeline.startDate'] = 'Start date is required';
-    if (!formData.timeline?.applicationDeadline) newErrors['timeline.applicationDeadline'] = 'Application deadline is required';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const buildPayload = () => {
-    const d = formData;
-    const minVal = d.compensation?.amount?.min;
-    const maxVal = d.compensation?.amount?.max;
-    return {
-      title: (d.title || '').trim(),
-      description: (d.description || '').trim(),
-      ...(d.requirements?.description?.trim() && {
-        requirements: { description: d.requirements.description.trim() }
-      }),
-      location: {
-        type: d.location?.type || 'remote',
-        ...(d.location?.city?.trim() && { city: d.location.city.trim() }),
-        ...(d.location?.country?.trim() && { country: d.location.country.trim() }),
-      },
-      compensation: {
-        type: d.compensation?.type || 'unpaid',
-        amount: {
-          ...(minVal !== '' && minVal != null && !isNaN(Number(minVal)) && { min: Number(minVal) }),
-          ...(maxVal !== '' && maxVal != null && !isNaN(Number(maxVal)) && { max: Number(maxVal) }),
-          currency: d.compensation?.amount?.currency || 'USD',
-          period: d.compensation?.amount?.period || 'monthly',
-        },
-      },
-      duration: {
-        length: (d.duration?.length || '').trim(),
-        hoursPerWeek: d.duration?.hoursPerWeek || {},
-        flexible: d.duration?.flexible || false,
-      },
-      timeline: {
-        startDate: d.timeline?.startDate,
-        applicationDeadline: d.timeline?.applicationDeadline,
-        ...(d.timeline?.endDate && { endDate: d.timeline.endDate }),
-      },
-      positions: { total: Number(d.positions?.total) || 1 },
-    };
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (submitting.current) return;
-    submitting.current = true;
-    setApiError('');
-    if (!validate()) {
-      submitting.current = false;
-      setTimeout(() => document.querySelector('.border-red-500')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-      return;
-    }
-    let payload;
-    try {
-      payload = buildPayload();
-    } catch (buildErr) {
-      showError('Could not prepare form data: ' + buildErr.message);
-      submitting.current = false;
-      return;
-    }
-    try {
-      setSaving(true);
-      console.log('[EditInternship] PUT payload:', JSON.stringify(payload, null, 2));
-      const response = await internshipAPI.update(id, payload);
-      if (response.data.success) {
-        navigate('/dashboard/my-internships');
-      }
-    } catch (err) {
-      console.error('[EditInternship] PUT error:', JSON.stringify(err.response?.data, null, 2));
-      if (err.response?.data?.errors && err.response.data.errors.length > 0) {
-        const apiErrors = {};
-        err.response.data.errors.forEach(e => { apiErrors[e.field] = e.message; });
-        setErrors(apiErrors);
-        showError('Please fix the errors highlighted below.');
-      } else {
-        showError(err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to update internship. Please try again.');
-      }
-    } finally {
-      setSaving(false);
-      submitting.current = false;
-    }
-  };
-
-  if (loading) {
+  if (state.status === 'loading') {
+    return <div className="mx-auto max-w-3xl h-96 animate-pulse rounded-xl bg-neutral-200" aria-busy="true" />;
+  }
+  if (state.status === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 flex items-center justify-center">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="mx-auto max-w-3xl">
+        <EmptyState
+          title="We couldn't load this listing"
+          description="It may have been removed, or you may not own it."
+          action={<Button as={Link} to="/dashboard/my-internships" variant="secondary">Back to my internships</Button>}
+        />
       </div>
     );
   }
 
+  const current = state.data;
+  // The "open" switch only makes sense for drafts and open listings; paused,
+  // closed and filled listings keep their status when edited.
+  const toggleable = ['draft', 'active'].includes(current.status);
+
+  const save = async (payload) => {
+    const { publish, ...rest } = payload;
+    await internshipAPI.update(id, toggleable ? { ...rest, status: publish ? 'active' : 'draft' } : rest);
+    navigate('/dashboard/my-internships');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <button
-          onClick={() => navigate('/dashboard/my-internships')}
-          className="flex items-center text-neutral-600 hover:text-neutral-900 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to My Internships
-        </button>
-
-        <h1 className="text-3xl font-semibold text-neutral-900 mb-8">Edit Internship</h1>
-
-        {apiError && (
-          <div ref={errorBannerRef} className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-            <strong className="font-semibold">Error:</strong> {apiError}
-            {Object.keys(errors).length > 0 && (
-              <ul className="mt-2 ml-4 list-disc space-y-1">
-                {Object.entries(errors).map(([field, msg]) => (
-                  <li key={field}><span className="font-mono text-xs">{field}</span>: {msg}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-8">
-          {/* Basic Info */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-neutral-900 mb-4">Basic Information</h2>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Internship Title *
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                  errors.title ? 'border-red-500' : 'border-neutral-300'
-                }`}
-                placeholder="e.g., Software Engineering Intern"
-              />
-              {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Description * (minimum 50 characters)
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                rows={6}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                  errors.description ? 'border-red-500' : 'border-neutral-300'
-                }`}
-                placeholder="Describe the internship, responsibilities, and what the intern will learn..."
-              />
-              <div className="flex justify-between mt-1">
-                {errors.description && <p className="text-red-600 text-sm">{errors.description}</p>}
-                <p className="text-neutral-500 text-sm ml-auto">{formData.description.length} characters</p>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Requirements
-              </label>
-              <textarea
-                value={formData.requirements.description}
-                onChange={(e) => handleChange('requirements.description', e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="List required skills, education level, experience, etc..."
-              />
-            </div>
-          </section>
-
-          {/* Location */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-neutral-900 mb-4">Location</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Type *</label>
-                <select
-                  value={formData.location.type}
-                  onChange={(e) => handleChange('location.type', e.target.value)}
-                  className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="remote">Remote</option>
-                  <option value="onsite">On-site</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-              </div>
-
-              {formData.location.type !== 'remote' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">City *</label>
-                    <input
-                      type="text"
-                      value={formData.location.city}
-                      onChange={(e) => handleChange('location.city', e.target.value)}
-                      className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                        errors['location.city'] ? 'border-red-500' : 'border-neutral-300'
-                      }`}
-                      placeholder="San Francisco"
-                    />
-                    {errors['location.city'] && <p className="text-red-600 text-sm mt-1">{errors['location.city']}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">Country</label>
-                    <input
-                      type="text"
-                      value={formData.location.country}
-                      onChange={(e) => handleChange('location.country', e.target.value)}
-                      className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="USA"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          {/* Duration */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-neutral-900 mb-4">Duration</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Duration Length *</label>
-                <input
-                  type="text"
-                  value={formData.duration.length}
-                  onChange={(e) => handleChange('duration.length', e.target.value)}
-                  className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                    errors['duration.length'] ? 'border-red-500' : 'border-neutral-300'
-                  }`}
-                  placeholder="e.g., 3 months, Summer 2025"
-                />
-                {errors['duration.length'] && <p className="text-red-600 text-sm mt-1">{errors['duration.length']}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Positions Available</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.positions.total}
-                  onChange={(e) => handleChange('positions.total', parseInt(e.target.value) || 1)}
-                  className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Compensation */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-neutral-900 mb-4">Compensation</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Type *</label>
-                <select
-                  value={formData.compensation.type}
-                  onChange={(e) => handleChange('compensation.type', e.target.value)}
-                  className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="paid">Paid</option>
-                  <option value="unpaid">Unpaid</option>
-                  <option value="stipend">Stipend</option>
-                </select>
-              </div>
-
-              {formData.compensation.type === 'paid' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">Min Amount (monthly)</label>
-                    <input
-                      type="number"
-                      value={formData.compensation.amount.min}
-                      onChange={(e) => handleChange('compensation.amount.min', e.target.value)}
-                      className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="2000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">Max Amount (monthly)</label>
-                    <input
-                      type="number"
-                      value={formData.compensation.amount.max}
-                      onChange={(e) => handleChange('compensation.amount.max', e.target.value)}
-                      className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="3000"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          {/* Timeline */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-neutral-900 mb-4">Timeline</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Start Date *</label>
-                <input
-                  type="date"
-                  value={formData.timeline.startDate}
-                  onChange={(e) => handleChange('timeline.startDate', e.target.value)}
-                  className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                    errors['timeline.startDate'] ? 'border-red-500' : 'border-neutral-300'
-                  }`}
-                />
-                {errors['timeline.startDate'] && <p className="text-red-600 text-sm mt-1">{errors['timeline.startDate']}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={formData.timeline.endDate}
-                  onChange={(e) => handleChange('timeline.endDate', e.target.value)}
-                  className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Application Deadline *</label>
-                <input
-                  type="date"
-                  value={formData.timeline.applicationDeadline}
-                  onChange={(e) => handleChange('timeline.applicationDeadline', e.target.value)}
-                  className={`w-full h-12 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                    errors['timeline.applicationDeadline'] ? 'border-red-500' : 'border-neutral-300'
-                  }`}
-                />
-                {errors['timeline.applicationDeadline'] && <p className="text-red-600 text-sm mt-1">{errors['timeline.applicationDeadline']}</p>}
-              </div>
-            </div>
-          </section>
-
-          {/* Status */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-neutral-900 mb-4">Status</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Internship Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => handleChange('status', e.target.value)}
-                  className="w-full h-12 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="paused">Paused</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          {/* Submit */}
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard/my-internships')}
-              className="flex-1 h-12 px-6 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 h-12 px-6 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              {saving ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  Save Changes
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        backTo="/dashboard/my-internships"
+        backLabel="My internships"
+        title="Edit internship"
+        description={<StatusBadge kind="internship" status={current.status} />}
+      />
+      <InternshipForm
+        isEdit
+        initial={current}
+        hidePublish={!toggleable}
+        onSubmit={save}
+        onCancel={() => navigate('/dashboard/my-internships')}
+      />
     </div>
   );
-};
-
-export default EditInternshipPage;
+}

@@ -61,9 +61,9 @@ const ForgotPasswordPage = () => {
           <CheckCircle className="w-10 h-10 text-green-600" />
         </div>
 
-        <h2 className="text-2xl font-bold text-neutral-900 mb-3">
+        <h1 className="text-2xl font-bold text-neutral-900 mb-3">
           Check Your Email
-        </h2>
+        </h1>
 
         <p className="text-neutral-600 mb-6">
           If an account exists for <strong>{email}</strong>, we've sent a password reset link to it.
@@ -105,9 +105,9 @@ const ForgotPasswordPage = () => {
   return (
     <div>
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-neutral-900 mb-2">
+        <h1 className="text-3xl font-bold text-neutral-900 mb-2">
           Forgot Password?
-        </h2>
+        </h1>
         <p className="text-neutral-600">
           No worries! Enter your email and we'll send you a reset link.
         </p>

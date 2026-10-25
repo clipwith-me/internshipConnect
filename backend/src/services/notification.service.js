@@ -18,6 +18,18 @@ import { EventEmitter } from 'events';
  *   notificationService.emit('APPLICATION_SUBMITTED', { application, student, organization });
  */
 
+// Application status -> Notification.type enum value. Building the type from the
+// status string produced values such as "application_under-review" that fail
+// schema validation, so these notifications were silently never created.
+const STATUS_NOTIFICATION_TYPE = {
+  'under-review': 'application_reviewed',
+  shortlisted: 'application_shortlisted',
+  interview: 'interview_scheduled',
+  offered: 'offer_extended',
+  accepted: 'offer_accepted',
+  rejected: 'application_rejected',
+};
+
 class NotificationService extends EventEmitter {
   constructor() {
     super();
@@ -234,7 +246,7 @@ class NotificationService extends EventEmitter {
 
     await this.createNotification({
       user: student.user._id || student.user,
-      type: `application_${newStatus}`,
+      type: STATUS_NOTIFICATION_TYPE[newStatus],
       title: notification.title,
       message: notification.message,
       actionUrl: `/dashboard/applications?id=${application._id}`,

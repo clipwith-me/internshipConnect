@@ -92,9 +92,9 @@ const ResetPasswordPage = () => {
           <AlertCircle className="w-10 h-10 text-red-600" />
         </div>
 
-        <h2 className="text-2xl font-bold text-neutral-900 mb-3">
+        <h1 className="text-2xl font-bold text-neutral-900 mb-3">
           Invalid Reset Link
-        </h2>
+        </h1>
 
         <p className="text-neutral-600 mb-6">
           This password reset link is invalid or has expired.
@@ -117,9 +117,9 @@ const ResetPasswordPage = () => {
           <CheckCircle className="w-10 h-10 text-green-600" />
         </div>
 
-        <h2 className="text-2xl font-bold text-neutral-900 mb-3">
+        <h1 className="text-2xl font-bold text-neutral-900 mb-3">
           Password Reset Successful!
-        </h2>
+        </h1>
 
         <p className="text-neutral-600 mb-6">
           Your password has been successfully reset.
@@ -138,9 +138,9 @@ const ResetPasswordPage = () => {
   return (
     <div>
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-neutral-900 mb-2">
+        <h1 className="text-3xl font-bold text-neutral-900 mb-2">
           Reset Your Password
-        </h2>
+        </h1>
         <p className="text-neutral-600">
           Enter your new password below
         </p>

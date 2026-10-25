@@ -1,416 +1,309 @@
-// frontend/src/pages/InternshipDetailPage.jsx
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { internshipAPI, applicationAPI } from '../services/api';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Calendar, CheckCircle2, FileText, Laptop, MapPin, Upload, Users, Wallet, X } from 'lucide-react';
+import { applicationAPI, internshipAPI } from '../services/api';
+import { isAbortError } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
+import { Alert, Button, EmptyState, Modal, PageHeader } from '../components';
+import StatusBadge from '../components/StatusBadge';
 import {
-  ArrowLeft, MapPin, Briefcase, DollarSign, Clock, Building2,
-  Calendar, Users, TrendingUp, CheckCircle2, AlertCircle, Upload, X, FileText
-} from 'lucide-react';
+  formatCompensation,
+  formatPlace,
+  getArrangement,
+  getDeadline,
+  getOrgName,
+} from '../utils/internship';
 
-const InternshipDetailPage = () => {
+const ALLOWED_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+];
+const MAX_FILE = 2 * 1024 * 1024;
+const MAX_LETTER = 3000;
+
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null);
+
+const Fact = ({ icon: Icon, label, children }) => (
+  <div className="flex items-start gap-3">
+    <Icon size={18} className="mt-0.5 shrink-0 text-neutral-400" aria-hidden="true" />
+    <div>
+      <dt className="text-xs font-medium text-neutral-500">{label}</dt>
+      <dd className="text-sm font-medium text-neutral-900">{children}</dd>
+    </div>
+  </div>
+);
+
+export default function InternshipDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [internship, setInternship] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [applying, setApplying] = useState(false);
-
-  useEffect(() => {
-    fetchInternship();
-  }, [id]);
-
-  const fetchInternship = async () => {
-    try {
-      setLoading(true);
-      const response = await internshipAPI.getById(id);
-      if (response.data.success) {
-        setInternship(response.data.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load internship');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [showApplicationModal, setShowApplicationModal] = useState(false);
-  const [coverLetter, setCoverLetter] = useState('');
-  const [coverLetterFile, setCoverLetterFile] = useState(null);
-  const [uploadError, setUploadError] = useState('');
-
-  // Allowed file types for cover letter
-  const allowedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain'
-  ];
-  const maxFileSize = 2 * 1024 * 1024; // 2MB
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setUploadError('');
-
-    if (!file) {
-      setCoverLetterFile(null);
-      return;
-    }
-
-    // Validate file type
-    if (!allowedTypes.includes(file.type)) {
-      setUploadError('Invalid file type. Please upload PDF, DOC, DOCX, or TXT file.');
-      e.target.value = '';
-      return;
-    }
-
-    // Validate file size
-    if (file.size > maxFileSize) {
-      setUploadError('File too large. Maximum size is 2MB.');
-      e.target.value = '';
-      return;
-    }
-
-    setCoverLetterFile(file);
-  };
-
-  const removeFile = () => {
-    setCoverLetterFile(null);
-    setUploadError('');
-    // Reset file input
-    const fileInput = document.getElementById('coverLetterFileInput');
-    if (fileInput) fileInput.value = '';
-  };
-
-  const handleApply = async () => {
-    setApplying(true);
-    try {
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('internshipId', id);
-
-      if (coverLetter.trim()) {
-        formData.append('coverLetter', coverLetter.trim());
-      }
-
-      if (coverLetterFile) {
-        formData.append('coverLetterFile', coverLetterFile);
-      }
-
-      await applicationAPI.submit(formData);
-      alert('Application submitted successfully!');
-      setShowApplicationModal(false);
-      setCoverLetter('');
-      setCoverLetterFile(null);
-      navigate('/dashboard/applications');
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to submit application');
-    } finally {
-      setApplying(false);
-    }
-  };
-
-  // Check if form is valid (at least cover letter text or file)
-  const isFormValid = coverLetter.trim().length > 0 || coverLetterFile !== null;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 flex items-center justify-center">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (error || !internship) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <button
-            onClick={() => navigate('/dashboard/internships')}
-            className="flex items-center text-neutral-600 hover:text-neutral-900 mb-6"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to listings
-          </button>
-          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
-            {error || 'Internship not found'}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const isStudent = user?.role === 'student';
 
+  const [state, setState] = useState({ status: 'loading', data: null });
+  const [existing, setExisting] = useState(null); // this student's application, if any
+  const [open, setOpen] = useState(false);
+  const [letter, setLetter] = useState('');
+  const [file, setFile] = useState(null);
+  const [fileError, setFileError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setState({ status: 'loading', data: null });
+    internshipAPI
+      .getById(id, { signal: controller.signal })
+      .then((res) => setState({ status: 'ready', data: res.data?.data }))
+      .catch((err) => {
+        if (isAbortError(err)) return;
+        setState({ status: err.response?.status === 404 ? 'missing' : 'error', data: null });
+      });
+    return () => controller.abort();
+  }, [id]);
+
+  // Has this student already applied? (prevents a confusing duplicate error)
+  useEffect(() => {
+    if (!isStudent) return undefined;
+    const controller = new AbortController();
+    applicationAPI
+      .getMyApplications({ signal: controller.signal })
+      .then((res) => {
+        const list = res.data?.data?.applications || res.data?.data || [];
+        const match = Array.isArray(list)
+          ? list.find((a) => (a.internship?._id || a.internship) === id)
+          : null;
+        setExisting(match || null);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [id, isStudent]);
+
+  useEffect(() => {
+    if (state.data?.title) document.title = `${state.data.title} | InternshipConnect`;
+  }, [state.data]);
+
+  const closeModal = () => {
+    setOpen(false);
+    setSubmitError('');
+  };
+
+  const onFile = (e) => {
+    const f = e.target.files?.[0];
+    setFileError('');
+    if (!f) return setFile(null);
+    if (!ALLOWED_TYPES.includes(f.type)) {
+      setFileError('Unsupported file type. Use PDF, DOC, DOCX or TXT.');
+      e.target.value = '';
+      return;
+    }
+    if (f.size > MAX_FILE) {
+      setFileError('File is too large. The maximum is 2 MB.');
+      e.target.value = '';
+      return;
+    }
+    setFile(f);
+  };
+
+  const submit = async () => {
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const form = new FormData();
+      form.append('internshipId', id);
+      if (letter.trim()) form.append('coverLetter', letter.trim());
+      if (file) form.append('coverLetterFile', file);
+      await applicationAPI.submit(form);
+      setOpen(false);
+      navigate('/dashboard/applications', { state: { justApplied: state.data?.title } });
+    } catch (err) {
+      setSubmitError(err.response?.data?.error || 'We could not submit your application. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (state.status === 'loading') {
+    return <div className="mx-auto max-w-4xl animate-pulse space-y-4" aria-busy="true"><div className="h-10 w-2/3 rounded bg-neutral-200" /><div className="h-64 rounded-xl bg-neutral-200" /></div>;
+  }
+
+  if (state.status !== 'ready') {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <EmptyState
+          title={state.status === 'missing' ? 'This internship is no longer available' : "We couldn't load this internship"}
+          description={state.status === 'missing' ? 'It may have been closed or removed by the employer.' : 'Please check your connection and try again.'}
+          action={<Button as={Link} to="/dashboard/internships" variant="secondary">Back to internships</Button>}
+        />
+      </div>
+    );
+  }
+
+  const i = state.data;
+  const org = getOrgName(i);
+  const place = formatPlace(i);
+  const arrangement = getArrangement(i);
+  const pay = formatCompensation(i);
+  const deadline = getDeadline(i);
+  const isOpen = i.status === 'active' && !deadline?.passed;
+  const benefits = i.compensation?.benefits || [];
+  const skills = (i.requirements?.skills || []).map((s) => s.name || s).filter(Boolean);
+  const canSubmit = (letter.trim().length > 0 || file) && letter.length <= MAX_LETTER && !submitting;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/dashboard/internships')}
-          className="flex items-center text-neutral-600 hover:text-neutral-900 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to listings
-        </button>
+    <div className="mx-auto max-w-4xl">
+      <PageHeader
+        backTo="/dashboard/internships"
+        backLabel="All internships"
+        title={i.title}
+        description={org ? `${org}` : undefined}
+      />
 
-        {/* Main Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 overflow-hidden">
-          {/* Header */}
-          <div className="p-8 bg-gradient-to-r from-primary-50 to-primary-100/50">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h1 className="text-3xl font-semibold text-neutral-900 mb-3">
-                  {internship.title}
-                </h1>
-                <div className="flex items-center text-neutral-700 mb-2">
-                  <Building2 className="w-5 h-5 mr-2" />
-                  <span className="text-lg font-medium">
-                    {internship.organization?.companyInfo?.name || 'Company Name'}
-                  </span>
-                </div>
-              </div>
-              {internship.featured?.isFeatured && (
-                <span className="px-4 py-2 bg-amber-100 text-amber-700 font-medium rounded-full">
-                  Featured
-                </span>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          {!isOpen && (
+            <Alert variant="warning" title="Not accepting applications">
+              {i.status === 'active' ? 'The application deadline has passed.' : 'The employer has closed or paused this listing.'}
+            </Alert>
+          )}
+
+          <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="text-lg font-semibold text-neutral-900">About this internship</h2>
+            <p className="mt-3 whitespace-pre-line leading-relaxed text-neutral-700">{i.description}</p>
+          </section>
+
+          {(i.requirements?.description || skills.length > 0) && (
+            <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-lg font-semibold text-neutral-900">Requirements</h2>
+              {i.requirements?.description && (
+                <p className="mt-3 whitespace-pre-line leading-relaxed text-neutral-700">{i.requirements.description}</p>
               )}
-            </div>
-
-            {/* Quick Info */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-              <InfoBox
-                icon={<MapPin className="w-5 h-5" />}
-                label="Location"
-                value={internship.location?.type === 'remote' ? 'Remote' : internship.location?.city || 'N/A'}
-              />
-              <InfoBox
-                icon={<Briefcase className="w-5 h-5" />}
-                label="Type"
-                value={internship.location?.type?.charAt(0).toUpperCase() + internship.location?.type?.slice(1) || 'N/A'}
-              />
-              <InfoBox
-                icon={<DollarSign className="w-5 h-5" />}
-                label="Compensation"
-                value={internship.compensationDisplay || 'Not specified'}
-              />
-              <InfoBox
-                icon={<Users className="w-5 h-5" />}
-                label="Applicants"
-                value={internship.statistics?.applications || 0}
-              />
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-8">
-            {/* Description */}
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold text-neutral-900 mb-4 flex items-center">
-                <AlertCircle className="w-5 h-5 mr-2 text-primary-600" />
-                About This Internship
-              </h2>
-              <p className="text-neutral-700 leading-relaxed whitespace-pre-line">
-                {internship.description}
-              </p>
-            </section>
-
-            {/* Requirements */}
-            {internship.requirements?.description && (
-              <section className="mb-8">
-                <h2 className="text-xl font-semibold text-neutral-900 mb-4 flex items-center">
-                  <CheckCircle2 className="w-5 h-5 mr-2 text-primary-600" />
-                  Requirements
-                </h2>
-                <p className="text-neutral-700 leading-relaxed whitespace-pre-line">
-                  {internship.requirements.description}
-                </p>
-              </section>
-            )}
-
-            {/* Timeline */}
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold text-neutral-900 mb-4 flex items-center">
-                <Calendar className="w-5 h-5 mr-2 text-primary-600" />
-                Timeline
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {internship.timeline?.startDate && (
-                  <TimelineBox
-                    label="Start Date"
-                    date={new Date(internship.timeline.startDate).toLocaleDateString()}
-                  />
-                )}
-                {internship.timeline?.endDate && (
-                  <TimelineBox
-                    label="End Date"
-                    date={new Date(internship.timeline.endDate).toLocaleDateString()}
-                  />
-                )}
-                {internship.timeline?.applicationDeadline && (
-                  <TimelineBox
-                    label="Application Deadline"
-                    date={new Date(internship.timeline.applicationDeadline).toLocaleDateString()}
-                    urgent
-                  />
-                )}
-              </div>
-            </section>
-
-            {/* Benefits */}
-            {internship.compensation?.benefits && internship.compensation.benefits.length > 0 && (
-              <section className="mb-8">
-                <h2 className="text-xl font-semibold text-neutral-900 mb-4 flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2 text-primary-600" />
-                  Benefits
-                </h2>
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {internship.compensation.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start text-neutral-700">
-                      <CheckCircle2 className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span>{benefit}</span>
-                    </li>
+              {skills.length > 0 && (
+                <ul className="mt-4 flex flex-wrap gap-2" aria-label="Skills">
+                  {skills.map((s) => (
+                    <li key={s} className="rounded-full bg-neutral-100 px-3 py-1 text-sm text-neutral-700">{s}</li>
                   ))}
                 </ul>
-              </section>
-            )}
+              )}
+            </section>
+          )}
 
-            {/* Apply Button */}
-            {isStudent && (
-              <div className="pt-6 border-t border-neutral-200">
-                <button
-                  onClick={() => setShowApplicationModal(true)}
-                  disabled={internship.status !== 'active'}
-                  className="w-full h-14 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-                >
-                  {internship.status !== 'active' ? 'Not Available' : 'Apply Now'}
-                </button>
-              </div>
-            )}
-          </div>
+          {benefits.length > 0 && (
+            <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-lg font-semibold text-neutral-900">Benefits</h2>
+              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                {benefits.map((b) => (
+                  <li key={b} className="flex items-start gap-2 text-sm text-neutral-700">
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-success-600" aria-hidden="true" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
 
-        {/* Application Modal */}
-        {showApplicationModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-2xl w-full p-8 animate-scaleIn max-h-[90vh] overflow-y-auto">
-              <h3 className="text-2xl font-semibold text-neutral-900 mb-4">Submit Application</h3>
-              <p className="text-neutral-600 mb-6">
-                Applying for: <span className="font-medium">{internship.title}</span>
-              </p>
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <dl className="space-y-4">
+              {(place || arrangement) && (
+                <Fact icon={arrangement === 'Remote' ? Laptop : MapPin} label="Location">
+                  {[place, arrangement].filter(Boolean).join(' · ')}
+                </Fact>
+              )}
+              {pay && <Fact icon={Wallet} label="Compensation">{pay}</Fact>}
+              {i.timeline?.startDate && (
+                <Fact icon={Calendar} label="Dates">
+                  {fmtDate(i.timeline.startDate)}{i.timeline.endDate ? ` – ${fmtDate(i.timeline.endDate)}` : ''}
+                </Fact>
+              )}
+              {deadline && <Fact icon={Calendar} label="Deadline">{deadline.label}</Fact>}
+              {typeof i.statistics?.applications === 'number' && (
+                <Fact icon={Users} label="Applications so far">{i.statistics.applications}</Fact>
+              )}
+            </dl>
 
-              {/* Cover Letter Text */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Cover Letter (Optional - max 3000 characters)
-                </label>
-                <textarea
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  rows={6}
-                  placeholder="Explain why you're interested in this internship and why you'd be a great fit..."
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <p className="text-neutral-500 text-sm mt-1">{coverLetter.length} / 3000 characters</p>
-              </div>
-
-              {/* File Upload */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Or Upload Cover Letter File (PDF, DOC, DOCX, TXT - max 2MB)
-                </label>
-
-                {!coverLetterFile ? (
-                  <div className="border-2 border-dashed border-neutral-300 rounded-lg p-6 text-center hover:border-primary-400 transition-colors">
-                    <input
-                      id="coverLetterFileInput"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="coverLetterFileInput"
-                      className="cursor-pointer flex flex-col items-center"
-                    >
-                      <Upload className="w-8 h-8 text-neutral-400 mb-2" />
-                      <span className="text-sm text-neutral-600">Click to upload or drag and drop</span>
-                      <span className="text-xs text-neutral-400 mt-1">PDF, DOC, DOCX, or TXT up to 2MB</span>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between p-4 bg-primary-50 border border-primary-200 rounded-lg">
-                    <div className="flex items-center">
-                      <FileText className="w-5 h-5 text-primary-600 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-neutral-900">{coverLetterFile.name}</p>
-                        <p className="text-xs text-neutral-500">
-                          {(coverLetterFile.size / 1024).toFixed(1)} KB
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={removeFile}
-                      className="p-1 hover:bg-primary-100 rounded-full transition-colors"
-                    >
-                      <X className="w-5 h-5 text-neutral-500 hover:text-red-500" />
-                    </button>
-                  </div>
-                )}
-
-                {uploadError && (
-                  <p className="text-red-600 text-sm mt-2">{uploadError}</p>
-                )}
-              </div>
-
-              <p className="text-sm text-neutral-500 mb-6">
-                You can provide a text cover letter, upload a file, or both.
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowApplicationModal(false);
-                    setCoverLetter('');
-                    setCoverLetterFile(null);
-                    setUploadError('');
-                  }}
-                  className="flex-1 h-12 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleApply}
-                  disabled={applying || !isFormValid}
-                  className="flex-1 h-12 px-4 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
-                >
-                  {applying ? 'Submitting...' : 'Submit Application'}
-                </button>
-              </div>
+            <div className="mt-5 border-t border-neutral-100 pt-5">
+              {isStudent && existing && (
+                <div className="space-y-3">
+                  <p className="text-sm text-neutral-600">You applied to this internship.</p>
+                  <StatusBadge status={existing.status} />
+                  <Button as={Link} to="/dashboard/applications" variant="secondary" fullWidth>Track application</Button>
+                </div>
+              )}
+              {isStudent && !existing && (
+                <Button fullWidth size="lg" disabled={!isOpen} onClick={() => setOpen(true)}>
+                  {isOpen ? 'Apply now' : 'Applications closed'}
+                </Button>
+              )}
+              {!isStudent && (
+                <p className="text-sm text-neutral-600">Only student accounts can apply to internships.</p>
+              )}
             </div>
           </div>
-        )}
+        </aside>
       </div>
+
+      <Modal isOpen={open} onClose={submitting ? undefined : closeModal} size="lg">
+        <Modal.Title>Apply to {i.title}</Modal.Title>
+        <div className="mt-4 space-y-5">
+          {submitError && <Alert variant="error">{submitError}</Alert>}
+
+          <div>
+            <label htmlFor="cover" className="mb-1.5 block text-sm font-medium text-neutral-800">Cover letter</label>
+            <textarea
+              id="cover"
+              rows={6}
+              value={letter}
+              maxLength={MAX_LETTER}
+              onChange={(e) => setLetter(e.target.value)}
+              placeholder="Why are you interested, and what would you bring to the role?"
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-500 hover:border-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
+            />
+            <p className="mt-1 text-xs text-neutral-500 tabular">{letter.length} / {MAX_LETTER}</p>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-neutral-800">Or attach a file</p>
+            {file ? (
+              <div className="flex items-center justify-between gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm text-neutral-800">
+                  <FileText size={18} className="shrink-0 text-neutral-500" aria-hidden="true" />
+                  <span className="truncate">{file.name}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setFile(null); setFileError(''); }}
+                  aria-label={`Remove ${file.name}`}
+                  className="rounded p-1 text-neutral-500 hover:bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <label
+                htmlFor="cover-file"
+                className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 hover:border-primary-400 focus-within:ring-4 focus-within:ring-primary-500/30"
+              >
+                <Upload size={18} aria-hidden="true" />
+                <span>Choose a PDF, DOC, DOCX or TXT (max 2 MB)</span>
+                <input id="cover-file" type="file" accept=".pdf,.doc,.docx,.txt" onChange={onFile} className="sr-only" />
+              </label>
+            )}
+            {fileError && <p className="mt-1.5 text-sm text-error-700" role="alert">{fileError}</p>}
+          </div>
+
+          <p className="text-xs text-neutral-500">
+            Your profile and default resume are shared with the employer. Provide a letter, a file, or both.
+          </p>
+
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button variant="secondary" onClick={closeModal} disabled={submitting}>Cancel</Button>
+            <Button onClick={submit} disabled={!canSubmit} loading={submitting}>Submit application</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
-};
-
-const InfoBox = ({ icon, label, value }) => (
-  <div className="bg-white/50 rounded-lg p-4 border border-neutral-200/50">
-    <div className="flex items-center text-primary-600 mb-2">
-      {icon}
-    </div>
-    <p className="text-xs text-neutral-600 mb-1">{label}</p>
-    <p className="font-semibold text-neutral-900">{value}</p>
-  </div>
-);
-
-const TimelineBox = ({ label, date, urgent }) => (
-  <div className={`rounded-lg p-4 border ${urgent ? 'bg-red-50 border-red-200' : 'bg-neutral-50 border-neutral-200'}`}>
-    <p className={`text-sm font-medium ${urgent ? 'text-red-700' : 'text-neutral-600'} mb-2`}>{label}</p>
-    <p className={`text-lg font-semibold ${urgent ? 'text-red-900' : 'text-neutral-900'}`}>{date}</p>
-  </div>
-);
-
-export default InternshipDetailPage;
+}

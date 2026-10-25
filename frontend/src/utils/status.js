@@ -20,3 +20,17 @@ export const INTERNSHIP_STATUS = {
   filled: { label: 'Filled', tone: 'bg-primary-100 text-primary-800', dot: 'bg-primary-600' },
   expired: { label: 'Expired', tone: 'bg-neutral-100 text-neutral-600', dot: 'bg-neutral-400' },
 };
+
+const PIPELINE = ['submitted', 'under-review', 'shortlisted', 'interview', 'offered', 'accepted'];
+
+/**
+ * Statuses an employer may move an application to. Mirrors the server rule
+ * (backend utils/requestSafety.js canTransitionApplication); the server remains
+ * the authority and rejects anything else with 409.
+ */
+export const nextApplicationStatuses = (current) => {
+  const i = PIPELINE.indexOf(current);
+  if (i === -1 || current === 'accepted') return [];
+  const forward = PIPELINE.slice(i + 1).filter((s) => s !== 'accepted' || current === 'offered');
+  return [...forward, 'rejected'];
+};

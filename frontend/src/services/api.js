@@ -262,7 +262,7 @@ export const applicationAPI = {
   getMyApplications: (config) => api.get('/applications', config),
   getInternshipApplications: (internshipId) => api.get(`/applications/internship/${internshipId}`),
   // ✅ OPTIMIZED: Get all org applications in single query with pagination
-  getOrganizationApplications: (params = {}) => api.get('/applications/organization', { params }),
+  getOrganizationApplications: (params = {}, config = {}) => api.get('/applications/organization', { params, ...config }),
   updateStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),
   withdraw: (id) => api.delete(`/applications/${id}`),
 };

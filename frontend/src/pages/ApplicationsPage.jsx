@@ -1,574 +1,283 @@
-// frontend/src/pages/ApplicationsPage.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Briefcase, Calendar, Download, Eye, FileText, Mail } from 'lucide-react';
 import { applicationAPI, resumeAPI } from '../services/api';
+import { isAbortError } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
-import { Briefcase, Calendar, Eye, X, User, FileText, Building2, Download, Mail, GraduationCap, Code, Crown, Star } from 'lucide-react';
+import { Alert, Button, EmptyState, Modal, PageHeader } from '../components';
+import StatusBadge from '../components/StatusBadge';
+import { getOrgName } from '../utils/internship';
+import { APPLICATION_STATUS, nextApplicationStatuses } from '../utils/status';
 
-const ApplicationsPage = () => {
-  const navigate = useNavigate();
+const fmt = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+
+const studentName = (a) => {
+  const p = a.student?.personalInfo;
+  return [p?.firstName, p?.lastName].filter(Boolean).join(' ') || 'Applicant';
+};
+
+export default function ApplicationsPage() {
   const { user } = useAuth();
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const location = useLocation();
+  const isOrg = user?.role === 'organization';
 
-  // Determine if user is organization or student
-  const isOrganization = user?.role === 'organization';
+  const [state, setState] = useState({ status: 'loading', items: [] });
+  const [notice, setNotice] = useState(location.state?.justApplied ? { type: 'success', text: `Application submitted for ${location.state.justApplied}.` } : null);
+  const [reload, setReload] = useState(0);
+  const [busyId, setBusyId] = useState(null);
+  const [confirmWithdraw, setConfirmWithdraw] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    if (isOrganization) {
-      fetchOrganizationApplications();
-    } else {
-      fetchStudentApplications();
-    }
-  }, [isOrganization]);
+    document.title = `${isOrg ? 'Applicants' : 'My applications'} | InternshipConnect`;
+  }, [isOrg]);
 
-  // Fetch applications for students (their own applications)
-  const fetchStudentApplications = async () => {
+  useEffect(() => {
+    const controller = new AbortController();
+    const config = { signal: controller.signal };
+    const request = isOrg
+      ? applicationAPI.getOrganizationApplications({ limit: 100 }, config)
+      : applicationAPI.getMyApplications(config);
+    request
+      .then((res) => setState({ status: 'ready', items: res.data?.data?.applications || res.data?.data || [] }))
+      .catch((err) => {
+        if (!isAbortError(err)) setState({ status: 'error', items: [] });
+      });
+    return () => controller.abort();
+  }, [isOrg, reload]);
+
+  const refresh = useCallback(() => setReload((n) => n + 1), []);
+
+  const updateStatus = async (id, status) => {
+    setBusyId(id);
+    setNotice(null);
     try {
-      setLoading(true);
-      setError('');
-      const response = await applicationAPI.getMyApplications();
-      if (response.data.success) {
-        setApplications(response.data.data);
-      }
+      await applicationAPI.updateStatus(id, status);
+      setNotice({ type: 'success', text: `Moved to “${APPLICATION_STATUS[status]?.label || status}”.` });
+      refresh();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load applications');
+      setNotice({ type: 'error', text: err.response?.data?.error || 'Could not update the status.' });
     } finally {
-      setLoading(false);
+      setBusyId(null);
     }
   };
 
-  // Fetch applications for organizations (applications to their internships)
-  // ✅ OPTIMIZED: Single API call instead of N+1 queries
-  const fetchOrganizationApplications = async () => {
+  const withdraw = async () => {
+    const app = confirmWithdraw;
+    setBusyId(app._id);
     try {
-      setLoading(true);
-      setError('');
-
-      // Single optimized API call to get all organization applications
-      const response = await applicationAPI.getOrganizationApplications({ limit: 100 });
-
-      if (response.data.success) {
-        setApplications(response.data.data);
-      } else {
-        setApplications([]);
-      }
+      await applicationAPI.withdraw(app._id);
+      setConfirmWithdraw(null);
+      setNotice({ type: 'success', text: 'Application withdrawn.' });
+      refresh();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load applications');
+      setConfirmWithdraw(null);
+      setNotice({ type: 'error', text: err.response?.data?.error || 'Could not withdraw this application.' });
     } finally {
-      setLoading(false);
+      setBusyId(null);
     }
   };
 
-  const handleWithdraw = async (id) => {
-    if (!confirm('Are you sure you want to withdraw this application?')) return;
-
+  const openProfile = async (app) => {
+    setBusyId(app._id);
     try {
-      await applicationAPI.withdraw(id);
-      fetchStudentApplications();
+      const res = await resumeAPI.viewApplicant(app._id);
+      setProfile(res.data?.data);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to withdraw application');
+      setNotice({ type: 'error', text: err.response?.data?.error || 'Could not load the applicant profile.' });
+    } finally {
+      setBusyId(null);
     }
   };
-
-  const handleUpdateStatus = async (id, newStatus) => {
-    try {
-      await applicationAPI.updateStatus(id, newStatus);
-      fetchOrganizationApplications();
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to update application status');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-semibold text-neutral-900 mb-8">
-          {isOrganization ? 'Received Applications' : 'My Applications'}
-        </h1>
+    <div className="mx-auto max-w-5xl">
+      <PageHeader
+        title={isOrg ? 'Applicants' : 'My applications'}
+        description={isOrg ? 'Review candidates and move them through your hiring pipeline.' : 'Track every application and see where it stands.'}
+      />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
+      {notice && (
+        <Alert variant={notice.type} onDismiss={() => setNotice(null)} className="mb-5">{notice.text}</Alert>
+      )}
 
-        {applications.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-12 text-center">
-            <Briefcase className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-neutral-900 mb-2">
-              {isOrganization ? 'No applications received yet' : 'No applications yet'}
-            </h3>
-            <p className="text-neutral-600 mb-6">
-              {isOrganization
-                ? 'Once students apply to your internships, they will appear here'
-                : 'Start applying to internships that match your interests'}
-            </p>
-            <button
-              onClick={() => navigate(isOrganization ? '/dashboard/my-internships' : '/dashboard/internships')}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium"
-            >
-              {isOrganization ? 'View My Internships' : 'Browse Internships'}
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {applications.map((application) => (
-              isOrganization ? (
-                <OrganizationApplicationCard
-                  key={application._id}
-                  application={application}
-                  onUpdateStatus={handleUpdateStatus}
-                />
-              ) : (
-                <StudentApplicationCard
-                  key={application._id}
-                  application={application}
-                  onView={() => navigate(`/dashboard/internships/${application.internship?._id}`)}
-                  onWithdraw={() => handleWithdraw(application._id)}
-                />
-              )
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Priority Badge Component for Premium/Pro applicants
-const PriorityBadge = ({ plan }) => {
-  if (plan === 'pro') {
-    return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 rounded-full">
-        <Crown className="w-4 h-4 text-amber-600" />
-        <span className="text-xs font-semibold text-amber-700">Pro Applicant</span>
-      </div>
-    );
-  }
-
-  if (plan === 'premium') {
-    return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300 rounded-full">
-        <Star className="w-4 h-4 text-blue-600" />
-        <span className="text-xs font-semibold text-blue-700">Premium Applicant</span>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-// Card for students viewing their applications
-const StudentApplicationCard = ({ application, onView, onWithdraw }) => {
-  const getStatusColor = (status) => {
-    const colors = {
-      submitted: 'bg-blue-100 text-blue-700',
-      'under-review': 'bg-purple-100 text-purple-700',
-      shortlisted: 'bg-cyan-100 text-cyan-700',
-      interview: 'bg-amber-100 text-amber-700',
-      offered: 'bg-green-100 text-green-700',
-      accepted: 'bg-green-100 text-green-700',
-      rejected: 'bg-red-100 text-red-700',
-      withdrawn: 'bg-neutral-100 text-neutral-600'
-    };
-    return colors[status] || 'bg-neutral-100 text-neutral-600';
-  };
-
-  const canWithdraw = ['submitted', 'under-review'].includes(application.status);
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 hover:shadow-md transition-all">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-1">
-            {application.internship?.title || 'Internship Title'}
-          </h3>
-          <p className="text-neutral-600 text-sm">
-            {application.internship?.organization?.companyInfo?.name || 'Company Name'}
-          </p>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-          {application.status?.replace('-', ' ').charAt(0).toUpperCase() + application.status?.slice(1).replace('-', ' ')}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-4 text-sm text-neutral-600 mb-4">
-        <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-1" />
-          Applied {new Date(application.createdAt).toLocaleDateString()}
-        </div>
-      </div>
-
-      {application.coverLetter && (
-        <div className="bg-neutral-50 rounded-lg p-4 mb-4">
-          <p className="text-sm font-medium text-neutral-700 mb-2">Cover Letter</p>
-          <p className="text-sm text-neutral-600 line-clamp-3">{application.coverLetter}</p>
+      {state.status === 'loading' && (
+        <div className="space-y-4" aria-busy="true">
+          {[0, 1, 2].map((n) => <div key={n} className="h-32 animate-pulse rounded-xl border border-neutral-200 bg-white" />)}
         </div>
       )}
 
-      <div className="flex gap-3">
-        <button
-          onClick={onView}
-          className="flex-1 h-10 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
-        >
-          <Eye className="w-4 h-4" />
-          View Internship
-        </button>
-        {canWithdraw && (
-          <button
-            onClick={onWithdraw}
-            className="h-10 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors font-medium flex items-center gap-2"
-          >
-            <X className="w-4 h-4" />
-            Withdraw
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
+      {state.status === 'error' && (
+        <EmptyState title="We couldn't load applications" description="Please check your connection and try again." action={<Button variant="secondary" onClick={refresh}>Try again</Button>} />
+      )}
 
-// Card for organizations viewing received applications
-const OrganizationApplicationCard = ({ application, onUpdateStatus }) => {
-  const [showProfile, setShowProfile] = useState(false);
-  const [profileData, setProfileData] = useState(null);
-  const [loadingProfile, setLoadingProfile] = useState(false);
+      {state.status === 'ready' && state.items.length === 0 && (
+        <EmptyState
+          icon={Briefcase}
+          title={isOrg ? 'No applications yet' : "You haven't applied yet"}
+          description={isOrg ? 'When students apply to your internships, they appear here.' : 'Find an internship that fits and apply with your profile.'}
+          action={<Button as={Link} to={isOrg ? '/dashboard/my-internships' : '/dashboard/internships'}>{isOrg ? 'View my listings' : 'Browse internships'}</Button>}
+        />
+      )}
 
-  const getStatusColor = (status) => {
-    const colors = {
-      submitted: 'bg-blue-100 text-blue-700',
-      'under-review': 'bg-purple-100 text-purple-700',
-      shortlisted: 'bg-cyan-100 text-cyan-700',
-      interview: 'bg-amber-100 text-amber-700',
-      offered: 'bg-green-100 text-green-700',
-      accepted: 'bg-green-100 text-green-700',
-      rejected: 'bg-red-100 text-red-700',
-      withdrawn: 'bg-neutral-100 text-neutral-600'
-    };
-    return colors[status] || 'bg-neutral-100 text-neutral-600';
-  };
-
-  const statusOptions = [
-    { value: 'submitted', label: 'Submitted' },
-    { value: 'under-review', label: 'Under Review' },
-    { value: 'shortlisted', label: 'Shortlisted' },
-    { value: 'interview', label: 'Interview' },
-    { value: 'offered', label: 'Offered' },
-    { value: 'accepted', label: 'Accepted' },
-    { value: 'rejected', label: 'Rejected' }
-  ];
-
-  const studentName = application.student?.personalInfo?.firstName && application.student?.personalInfo?.lastName
-    ? `${application.student.personalInfo.firstName} ${application.student.personalInfo.lastName}`
-    : 'Student';
-
-  // Get student's subscription plan from user object
-  const studentPlan = application.student?.user?.subscription?.plan || 'free';
-
-  const handleViewProfile = async () => {
-    try {
-      setLoadingProfile(true);
-      const response = await resumeAPI.viewApplicant(application._id);
-      if (response.data.success) {
-        setProfileData(response.data.data);
-        setShowProfile(true);
-      }
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to load applicant profile');
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
-
-  return (
-    <>
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 hover:shadow-md transition-all">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <User className="w-5 h-5 text-primary-600" />
-              <h3 className="text-lg font-semibold text-neutral-900">
-                {studentName}
-              </h3>
-              <PriorityBadge plan={studentPlan} />
-            </div>
-            <div className="flex items-center gap-2 text-neutral-600 text-sm">
-              <Building2 className="w-4 h-4" />
-              <span>Applied for: {application.internship?.title || 'Internship'}</span>
-            </div>
-          </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-            {application.status?.replace('-', ' ').charAt(0).toUpperCase() + application.status?.slice(1).replace('-', ' ')}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm text-neutral-600 mb-4">
-          <div className="flex items-center">
-            <Calendar className="w-4 h-4 mr-1" />
-            Applied {new Date(application.createdAt).toLocaleDateString()}
-          </div>
-        </div>
-
-        {application.coverLetter && (
-          <div className="bg-neutral-50 rounded-lg p-4 mb-4">
-            <p className="text-sm font-medium text-neutral-700 mb-2 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Cover Letter
-            </p>
-            <p className="text-sm text-neutral-600 line-clamp-3">{application.coverLetter}</p>
-          </div>
-        )}
-
-        {application.coverLetterFile?.fileName && (
-          <div className="bg-primary-50 border border-primary-200 rounded-lg p-3 mb-4 flex items-center justify-between">
-            <p className="text-sm font-medium text-primary-700 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Attached: {application.coverLetterFile.fileName}
-            </p>
-            {application.coverLetterFile.fileUrl && (
-              <a
-                href={application.coverLetterFile.fileUrl}
-                download={application.coverLetterFile.fileName}
-                className="flex items-center gap-1 px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-medium transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Download className="w-3 h-3" />
-                Download
-              </a>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={handleViewProfile}
-            disabled={loadingProfile}
-            className="h-10 px-4 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
-          >
-            {loadingProfile ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
-            View Profile & Resume
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-neutral-700">Update Status:</label>
-          <select
-            value={application.status}
-            onChange={(e) => onUpdateStatus(application._id, e.target.value)}
-            className="flex-1 h-10 px-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-          >
-            {statusOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Applicant Profile Modal */}
-      {showProfile && profileData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
-            <div className="p-6 border-b border-neutral-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-neutral-900">Applicant Profile</h2>
-                <button
-                  onClick={() => setShowProfile(false)}
-                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-neutral-500" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Personal Info */}
-              <section>
-                <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
-                  <User className="w-5 h-5 text-primary-600" />
-                  Personal Information
-                </h3>
-                <div className="bg-neutral-50 rounded-lg p-4">
-                  <p className="text-lg font-medium text-neutral-900">
-                    {profileData.student.personalInfo?.firstName} {profileData.student.personalInfo?.lastName}
-                  </p>
-                  {profileData.student.email && (
-                    <p className="text-neutral-600 flex items-center gap-2 mt-1">
-                      <Mail className="w-4 h-4" />
-                      {profileData.student.email}
+      {state.status === 'ready' && state.items.length > 0 && (
+        <ul className="space-y-4">
+          {state.items.map((a) => {
+            const options = isOrg ? nextApplicationStatuses(a.status) : [];
+            const canWithdraw = !isOrg && ['submitted', 'under-review'].includes(a.status);
+            return (
+              <li key={a._id} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-neutral-900">
+                      {isOrg ? studentName(a) : a.internship?.title || 'Internship'}
+                    </h2>
+                    <p className="mt-0.5 text-sm text-neutral-600">
+                      {isOrg ? `Applied for ${a.internship?.title || 'an internship'}` : getOrgName(a.internship) || 'Employer'}
                     </p>
+                  </div>
+                  <StatusBadge status={a.status} />
+                </div>
+
+                <p className="mt-3 flex items-center gap-1.5 text-sm text-neutral-600">
+                  <Calendar size={15} aria-hidden="true" /> Applied {fmt(a.createdAt)}
+                </p>
+
+                {a.coverLetter && (
+                  <p className="mt-3 line-clamp-3 rounded-md bg-neutral-50 p-3 text-sm text-neutral-700">{a.coverLetter}</p>
+                )}
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  {isOrg && (
+                    <Button size="sm" variant="secondary" onClick={() => openProfile(a)} loading={busyId === a._id} icon={<Eye size={16} aria-hidden="true" />}>
+                      Profile &amp; resume
+                    </Button>
                   )}
-                  {profileData.student.personalInfo?.phone && (
-                    <p className="text-neutral-600 mt-1">
-                      Phone: {profileData.student.personalInfo.phone}
-                    </p>
+                  {!isOrg && a.internship?._id && (
+                    <Button as={Link} size="sm" variant="secondary" to={`/dashboard/internships/${a.internship._id}`}>View internship</Button>
+                  )}
+                  {canWithdraw && (
+                    <Button size="sm" variant="danger" onClick={() => setConfirmWithdraw(a)}>Withdraw</Button>
+                  )}
+                  {options.length > 0 && (
+                    <div className="flex items-center gap-2 sm:ml-auto">
+                      <label htmlFor={`st-${a._id}`} className="text-sm font-medium text-neutral-700">Move to</label>
+                      <select
+                        id={`st-${a._id}`}
+                        value=""
+                        disabled={busyId === a._id}
+                        onChange={(e) => e.target.value && updateStatus(a._id, e.target.value)}
+                        className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
+                      >
+                        <option value="">Choose stage…</option>
+                        {options.map((s) => <option key={s} value={s}>{APPLICATION_STATUS[s]?.label || s}</option>)}
+                      </select>
+                    </div>
                   )}
                 </div>
-              </section>
-
-              {/* Education */}
-              {profileData.student.education && profileData.student.education.length > 0 && (
-                <section>
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-primary-600" />
-                    Education
-                  </h3>
-                  <div className="space-y-3">
-                    {profileData.student.education.map((edu, index) => (
-                      <div key={index} className="bg-neutral-50 rounded-lg p-4">
-                        <p className="font-medium text-neutral-900">{edu.institution}</p>
-                        <p className="text-neutral-600">{edu.degree} in {edu.fieldOfStudy}</p>
-                        {edu.gpa && <p className="text-neutral-500 text-sm">GPA: {edu.gpa}</p>}
-                        <p className="text-neutral-500 text-sm">
-                          {new Date(edu.startDate).getFullYear()} - {edu.current ? 'Present' : new Date(edu.endDate).getFullYear()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Skills */}
-              {profileData.student.skills && profileData.student.skills.length > 0 && (
-                <section>
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
-                    <Code className="w-5 h-5 text-primary-600" />
-                    Skills
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.student.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
-                      >
-                        {skill.name}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Experience */}
-              {profileData.student.experience && profileData.student.experience.length > 0 && (
-                <section>
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-primary-600" />
-                    Experience
-                  </h3>
-                  <div className="space-y-3">
-                    {profileData.student.experience.map((exp, index) => (
-                      <div key={index} className="bg-neutral-50 rounded-lg p-4">
-                        <p className="font-medium text-neutral-900">{exp.title}</p>
-                        <p className="text-neutral-600">{exp.company}</p>
-                        <p className="text-neutral-500 text-sm">
-                          {new Date(exp.startDate).toLocaleDateString()} - {exp.current ? 'Present' : new Date(exp.endDate).toLocaleDateString()}
-                        </p>
-                        {exp.description && (
-                          <p className="text-neutral-600 text-sm mt-2">{exp.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Resumes */}
-              {profileData.resumes && profileData.resumes.length > 0 && (
-                <section>
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary-600" />
-                    Resumes
-                  </h3>
-                  <div className="space-y-2">
-                    {profileData.resumes.map((resume, index) => (
-                      <div key={index} className="flex items-center justify-between bg-neutral-50 rounded-lg p-4">
-                        <div>
-                          <p className="font-medium text-neutral-900">{resume.fileName || `Resume v${resume.version}`}</p>
-                          <p className="text-neutral-500 text-sm">
-                            Created: {new Date(resume.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        {resume.fileUrl && (
-                          <a
-                            href={resume.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm"
-                          >
-                            <Download className="w-4 h-4" />
-                            Download
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Cover Letter from Application */}
-              {(profileData.application.coverLetter || profileData.application.coverLetterFile) && (
-                <section>
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary-600" />
-                    Cover Letter
-                  </h3>
-                  {profileData.application.coverLetter && (
-                    <div className="bg-neutral-50 rounded-lg p-4 mb-3">
-                      <p className="text-neutral-700 whitespace-pre-line">{profileData.application.coverLetter}</p>
-                    </div>
-                  )}
-                  {profileData.application.coverLetterFile?.fileUrl && (
-                    <div className="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-lg p-4">
-                      <div>
-                        <p className="font-medium text-primary-900">
-                          {profileData.application.coverLetterFile.fileName || 'Cover Letter File'}
-                        </p>
-                        <p className="text-primary-600 text-sm">
-                          {profileData.application.coverLetterFile.mimeType} • {Math.round((profileData.application.coverLetterFile.fileSize || 0) / 1024)} KB
-                        </p>
-                      </div>
-                      <a
-                        href={profileData.application.coverLetterFile.fileUrl}
-                        download={profileData.application.coverLetterFile.fileName || 'cover-letter'}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </a>
-                    </div>
-                  )}
-                </section>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-neutral-200">
-              <button
-                onClick={() => setShowProfile(false)}
-                className="w-full h-11 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors font-medium"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
-    </>
-  );
-};
 
-export default ApplicationsPage;
+      <Modal isOpen={Boolean(confirmWithdraw)} onClose={() => setConfirmWithdraw(null)} size="sm">
+        <Modal.Title>Withdraw application?</Modal.Title>
+        <p className="mt-2 text-sm text-neutral-600">
+          You will withdraw from “{confirmWithdraw?.internship?.title}”. This cannot be undone.
+        </p>
+        <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={() => setConfirmWithdraw(null)}>Keep application</Button>
+          <Button variant="danger" onClick={withdraw} loading={busyId === confirmWithdraw?._id}>Withdraw</Button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={Boolean(profile)} onClose={() => setProfile(null)} size="xl">
+        <Modal.Title>Applicant profile</Modal.Title>
+        {profile && <ApplicantProfile data={profile} />}
+        <div className="mt-6 flex justify-end">
+          <Button variant="secondary" onClick={() => setProfile(null)}>Close</Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+const Section = ({ title, children }) => (
+  <section className="mt-5">
+    <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">{title}</h3>
+    <div className="mt-2 space-y-2">{children}</div>
+  </section>
+);
+
+function ApplicantProfile({ data }) {
+  const s = data.student || {};
+  const p = s.personalInfo || {};
+  const year = (d) => (d ? new Date(d).getFullYear() : '');
+  return (
+    <div className="mt-3">
+      <p className="text-lg font-semibold text-neutral-900">{[p.firstName, p.lastName].filter(Boolean).join(' ')}</p>
+      {s.headline && <p className="text-sm text-neutral-600">{s.headline}</p>}
+      {s.email && (
+        <p className="mt-1 flex items-center gap-2 text-sm text-neutral-600"><Mail size={15} aria-hidden="true" />{s.email}</p>
+      )}
+
+      {s.education?.length > 0 && (
+        <Section title="Education">
+          {s.education.map((e, i) => (
+            <div key={i} className="rounded-md bg-neutral-50 p-3 text-sm">
+              <p className="font-medium text-neutral-900">{e.institution}</p>
+              <p className="text-neutral-600">{[e.degree, e.fieldOfStudy].filter(Boolean).join(' in ')}</p>
+              <p className="text-neutral-500">{year(e.startDate)} – {e.current ? 'Present' : year(e.endDate)}</p>
+            </div>
+          ))}
+        </Section>
+      )}
+
+      {s.skills?.length > 0 && (
+        <Section title="Skills">
+          <ul className="flex flex-wrap gap-2">
+            {s.skills.map((k, i) => <li key={i} className="rounded-full bg-neutral-100 px-3 py-1 text-sm text-neutral-700">{k.name}</li>)}
+          </ul>
+        </Section>
+      )}
+
+      {s.experience?.length > 0 && (
+        <Section title="Experience">
+          {s.experience.map((x, i) => (
+            <div key={i} className="rounded-md bg-neutral-50 p-3 text-sm">
+              <p className="font-medium text-neutral-900">{x.title}{x.company ? ` · ${x.company}` : ''}</p>
+              {x.description && <p className="mt-1 text-neutral-600">{x.description}</p>}
+            </div>
+          ))}
+        </Section>
+      )}
+
+      {data.resumes?.length > 0 && (
+        <Section title="Resumes">
+          {data.resumes.map((r, i) => (
+            <div key={i} className="flex items-center justify-between gap-3 rounded-md bg-neutral-50 p-3 text-sm">
+              <span className="flex min-w-0 items-center gap-2"><FileText size={16} aria-hidden="true" /><span className="truncate">{r.fileName || `Resume v${r.version}`}</span></span>
+              {r.fileUrl && (
+                <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-primary-600 hover:text-primary-700">
+                  <Download size={15} aria-hidden="true" /> Download
+                </a>
+              )}
+            </div>
+          ))}
+        </Section>
+      )}
+
+      {(data.application?.coverLetter || data.application?.coverLetterFile?.fileUrl) && (
+        <Section title="Cover letter">
+          {data.application.coverLetter && <p className="whitespace-pre-line rounded-md bg-neutral-50 p-3 text-sm text-neutral-700">{data.application.coverLetter}</p>}
+          {data.application.coverLetterFile?.fileUrl && (
+            <a href={data.application.coverLetterFile.fileUrl} download className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Download size={15} aria-hidden="true" /> {data.application.coverLetterFile.fileName || 'Download file'}
+            </a>
+          )}
+        </Section>
+      )}
+    </div>
+  );
+}

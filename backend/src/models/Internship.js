@@ -471,7 +471,8 @@ internshipSchema.virtual('isAcceptingApplications').get(function() {
 
 // ✅ FIX: Format compensation for display to avoid "$[object Object]"
 internshipSchema.virtual('compensationDisplay').get(function() {
-  if (!this.compensation) return 'Not specified';
+  // compensation is absent when a query projected only some fields
+  if (!this.compensation || !this.compensation.type) return 'Not specified';
 
   const { type, amount } = this.compensation;
 
