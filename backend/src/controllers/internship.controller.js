@@ -20,6 +20,16 @@ import Internship from '../models/Internship.js';
 import OrganizationProfile from '../models/OrganizationProfile.js';
 import { escapeRegex, validatePagination } from '../utils/security.js';
 
+// Fields an employer may set on their own listing. Everything else (featured,
+// statistics, aiMetadata, positions.filled, organization, ...) is system-managed.
+const EMPLOYER_EDITABLE_FIELDS = [
+  'title', 'description', 'requirements', 'location', 'compensation', 'duration',
+  'timeline', 'positions', 'tags', 'categories', 'visibility', 'applicationProcess',
+];
+
+// 'expired' is set by the system when a deadline passes.
+const EMPLOYER_SETTABLE_STATUSES = ['draft', 'active', 'paused', 'closed', 'filled'];
+
 /**
  * @desc    Get all internships (with pagination, search, and filters)
  * @route   GET /api/internships
@@ -45,8 +55,13 @@ export const getInternships = async (req, res) => {
     // Build query object
     const query = {};
 
-    // Status filter (only show active by default)
-    query.status = req.query.status || 'active';
+    // This endpoint is public, so it only ever returns live listings. The status
+    // used to come straight from the query string, which let anyone read
+    // employers' unpublished drafts (?status=draft). Owners use /my-internships.
+    query.status = 'active';
+
+    // Respect each listing's visibility (documents without the field are public).
+    query.visibility = { $nin: ['unlisted', 'private'] };
 
     // Search filter (case-insensitive) - escape regex to prevent ReDoS
     if (req.query.search) {
@@ -64,23 +79,23 @@ export const getInternships = async (req, res) => {
     }
 
     // Type filter (remote, onsite, hybrid)
-    if (req.query.type) {
+    if (['remote', 'onsite', 'hybrid'].includes(req.query.type)) {
       query['location.type'] = req.query.type;
     }
 
     // Industry filter
-    if (req.query.industry) {
+    if (typeof req.query.industry === 'string' && req.query.industry) {
       query.industry = req.query.industry;
     }
 
     // Compensation type filter (paid, unpaid, stipend)
-    if (req.query.compensationType) {
+    if (['paid', 'unpaid', 'stipend', 'commission', 'negotiable'].includes(req.query.compensationType)) {
       query['compensation.type'] = req.query.compensationType;
     }
 
     // Execute query with pagination
     const internships = await Internship.find(query)
-      .populate('organization', 'companyInfo.companyName companyInfo.logo')
+      .populate('organization', 'companyInfo.name companyInfo.logo companyInfo.industry')
       .sort({ createdAt: -1 }) // Newest first
       .skip(skip)
       .limit(limit);
@@ -128,9 +143,27 @@ export const getInternshipById = async (req, res) => {
       });
     }
 
-    // Increment view count
-    internship.statistics.views += 1;
-    await internship.save();
+    // Unpublished (draft) and private listings are only visible to their owner
+    // and admins. Closed/filled listings stay readable so applicants can still
+    // open the internship behind an existing application.
+    const isOwner =
+      req.user.role === 'organization' &&
+      internship.organization?.user?.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin && (internship.status === 'draft' || internship.visibility === 'private')) {
+      return res.status(404).json({
+        success: false,
+        error: 'Internship not found'
+      });
+    }
+
+    // Count the view atomically (a read-modify-save loses concurrent increments
+    // and re-runs full validation on a simple GET). Owners' own views don't count.
+    if (!isOwner) {
+      Internship.updateOne({ _id: internship._id }, { $inc: { 'statistics.views': 1 } }).catch((err) =>
+        console.error('View count update failed:', err.message)
+      );
+    }
 
     res.json({
       success: true,
@@ -186,14 +219,21 @@ export const createInternship = async (req, res) => {
 
     // Create internship with organization reference
     // ✅ FIX: Allow immediate publishing if publish=true is sent in request body
+    // Only whitelisted, employer-editable fields are accepted. Spreading the
+    // whole body let an employer set paid/system fields such as
+    // featured.isFeatured, statistics, positions.filled or aiMetadata.
+    const fields = {};
+    for (const path of EMPLOYER_EDITABLE_FIELDS) {
+      if (req.body[path] !== undefined) fields[path] = req.body[path];
+    }
     const internship = await Internship.create({
-      ...req.body,
+      ...fields,
       organization: orgProfile._id,
       status: req.body.publish === true ? 'active' : 'draft' // Publish immediately or start as draft
     });
 
     // Populate organization data for response
-    await internship.populate('organization', 'companyInfo.companyName');
+    await internship.populate('organization', 'companyInfo.name companyInfo.logo');
 
     res.status(201).json({
       success: true,
@@ -257,16 +297,22 @@ export const updateInternship = async (req, res) => {
     // Update only the fields sent in the request body.
     // internship.set() is the Mongoose-safe way to merge nested subdocuments —
     // Object.assign does a shallow replace that can corrupt subdocument validators.
-    const allowedPaths = [
-      'title', 'description', 'requirements', 'location',
-      'compensation', 'duration', 'timeline', 'positions', 'status',
-      'tags', 'categories', 'visibility', 'applicationProcess',
-    ];
     const update = {};
-    for (const path of allowedPaths) {
+    for (const path of EMPLOYER_EDITABLE_FIELDS) {
       if (req.body[path] !== undefined) {
         update[path] = req.body[path];
       }
+    }
+    // Status is employer-settable, but only to values an employer may choose
+    // (validators are off on this update, so enforce the enum here).
+    if (req.body.status !== undefined) {
+      if (!EMPLOYER_SETTABLE_STATUSES.includes(req.body.status)) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid status. Allowed: ${EMPLOYER_SETTABLE_STATUSES.join(', ')}`
+        });
+      }
+      update.status = req.body.status;
     }
     const updated = await Internship.findByIdAndUpdate(
       req.params.id,

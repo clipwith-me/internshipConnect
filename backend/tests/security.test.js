@@ -6,6 +6,7 @@ import {
   toStringList,
   requireCampaignKey,
   canAccessResume,
+  canTransitionApplication,
 } from '../src/utils/requestSafety.js';
 
 const mockRes = () => {
@@ -146,5 +147,46 @@ describe('canAccessResume (broken access control regression)', () => {
   test('university and unknown roles: denied', () => {
     expect(canAccessResume({ role: 'university', isOwner: true, hasApplicationToOrg: true })).toBe(false);
     expect(canAccessResume({ role: undefined })).toBe(false);
+  });
+});
+
+describe('canTransitionApplication (hiring pipeline integrity)', () => {
+  test('allows normal forward progress and skipping a stage', () => {
+    expect(canTransitionApplication('submitted', 'under-review').ok).toBe(true);
+    expect(canTransitionApplication('under-review', 'shortlisted').ok).toBe(true);
+    expect(canTransitionApplication('submitted', 'shortlisted').ok).toBe(true);
+    expect(canTransitionApplication('interview', 'offered').ok).toBe(true);
+  });
+
+  test('allows rejecting from any open stage', () => {
+    for (const s of ['submitted', 'under-review', 'shortlisted', 'interview', 'offered']) {
+      expect(canTransitionApplication(s, 'rejected').ok).toBe(true);
+    }
+  });
+
+  test("'accepted' requires a prior offer (placements can't be invented)", () => {
+    expect(canTransitionApplication('offered', 'accepted').ok).toBe(true);
+    expect(canTransitionApplication('submitted', 'accepted').ok).toBe(false);
+    expect(canTransitionApplication('interview', 'accepted').ok).toBe(false);
+  });
+
+  test('closed applications cannot be reopened or changed', () => {
+    for (const s of ['accepted', 'rejected', 'withdrawn']) {
+      expect(canTransitionApplication(s, 'under-review').ok).toBe(false);
+      expect(canTransitionApplication(s, 'accepted').ok).toBe(false);
+    }
+    expect(canTransitionApplication('rejected', 'accepted').ok).toBe(false);
+  });
+
+  test('no backwards moves, no no-ops, employers cannot set withdrawn', () => {
+    expect(canTransitionApplication('shortlisted', 'submitted').ok).toBe(false);
+    expect(canTransitionApplication('interview', 'under-review').ok).toBe(false);
+    expect(canTransitionApplication('submitted', 'submitted').ok).toBe(false);
+    expect(canTransitionApplication('submitted', 'withdrawn').ok).toBe(false);
+  });
+
+  test('unknown statuses are rejected', () => {
+    expect(canTransitionApplication('submitted', 'hired').ok).toBe(false);
+    expect(canTransitionApplication('nonsense', 'rejected').ok).toBe(false);
   });
 });

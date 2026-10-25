@@ -7,6 +7,7 @@ import Notification from '../models/Notification.js';
 import mongoose from 'mongoose';
 import { notificationService } from '../services/notification.service.js';
 import { sendApplicationStatusEmail, sendNewApplicationEmail } from '../services/resend-email.service.js';
+import { canTransitionApplication } from '../utils/requestSafety.js';
 
 /**
  * @desc    Submit application
@@ -348,6 +349,16 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to update this application'
+      });
+    }
+
+    // Enforce a sane hiring pipeline (no backwards moves, no changing closed
+    // applications, no 'accepted' without an offer, no employer-set 'withdrawn').
+    const transition = canTransitionApplication(application.status, status);
+    if (!transition.ok) {
+      return res.status(409).json({
+        success: false,
+        error: transition.reason
       });
     }
 

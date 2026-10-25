@@ -48,6 +48,48 @@ export const requireCampaignKey = (req, res, next) => {
   return next();
 };
 
+// Hiring pipeline, in order. 'rejected' can be reached from any open stage;
+// 'withdrawn' is a student-only outcome and is never set by an employer.
+const PIPELINE = ['submitted', 'under-review', 'shortlisted', 'interview', 'offered', 'accepted'];
+const TERMINAL = ['accepted', 'rejected', 'withdrawn'];
+
+/**
+ * Can an employer move an application from `current` to `next`?
+ *
+ *  - closed applications (accepted / rejected / withdrawn) cannot change
+ *  - rejecting is allowed from any open stage
+ *  - otherwise only forward moves are allowed (skipping a stage is fine)
+ *  - 'accepted' requires a prior offer, so placements can't be recorded
+ *    for someone who was never offered the role
+ *
+ * Returns { ok: true } or { ok: false, reason }.
+ */
+export const canTransitionApplication = (current, next) => {
+  if (!PIPELINE.includes(current) && current !== 'rejected' && current !== 'withdrawn') {
+    return { ok: false, reason: 'Unknown current status' };
+  }
+  if (TERMINAL.includes(current)) {
+    return { ok: false, reason: `This application is already ${current} and can no longer be changed` };
+  }
+  if (next === current) {
+    return { ok: false, reason: 'The application already has this status' };
+  }
+  if (next === 'withdrawn') {
+    return { ok: false, reason: 'Only the applicant can withdraw an application' };
+  }
+  if (next === 'rejected') return { ok: true };
+  if (!PIPELINE.includes(next)) {
+    return { ok: false, reason: 'Invalid status' };
+  }
+  if (PIPELINE.indexOf(next) < PIPELINE.indexOf(current)) {
+    return { ok: false, reason: 'An application cannot move back to an earlier stage' };
+  }
+  if (next === 'accepted' && current !== 'offered') {
+    return { ok: false, reason: 'Make an offer before marking an application as accepted' };
+  }
+  return { ok: true };
+};
+
 /**
  * Decide whether a requester may download a given student's resume.
  *  - the owning student: yes
