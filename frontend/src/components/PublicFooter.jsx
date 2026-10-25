@@ -63,7 +63,7 @@ export default function PublicFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-neutral-800 pt-6 text-sm text-neutral-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-2 border-t border-neutral-800 pt-6 text-sm text-neutral-400 sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} InternshipConnect. All rights reserved.</p>
           <p>Built in Nigeria for early-career talent.</p>
         </div>

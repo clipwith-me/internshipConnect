@@ -233,7 +233,7 @@ function Steps({ id, eyebrow, title, steps, cta }) {
             </span>
             <div>
               <p className="font-semibold text-neutral-900">
-                <span className="mr-1.5 text-neutral-400 tabular">{i + 1}.</span>
+                <span className="mr-1.5 text-neutral-500 tabular">{i + 1}.</span>
                 {t}
               </p>
               <p className="mt-1 text-sm leading-relaxed text-neutral-600">{body}</p>
