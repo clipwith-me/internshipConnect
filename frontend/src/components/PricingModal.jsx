@@ -205,7 +205,7 @@ const PricingModal = ({ isOpen, onClose, currentUsage, limit }) => {
 
             {/* Footer Note */}
             <div className="mt-8 text-center text-gray-600 text-sm">
-              <p>All plans include secure payment processing and 30-day money-back guarantee.</p>
+              <p>Payments are processed securely by Stripe. Refund terms are in our Terms of Service.</p>
               <p className="mt-1">Your free resumes reset on the 1st of each month.</p>
             </div>
           </div>

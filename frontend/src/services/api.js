@@ -237,7 +237,7 @@ export const studentAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   // Search students (for organizations)
-  search: (params) => api.get('/students/search', { params }),
+  search: (params, config = {}) => api.get('/students/search', { params, ...config }),
   // Toggle featured profile (Pro feature)
   toggleFeatured: (isFeatured) => api.put('/students/featured', { isFeatured }),
 };

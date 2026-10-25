@@ -227,7 +227,7 @@ function ApplicantProfile({ data }) {
           {s.education.map((e, i) => (
             <div key={i} className="rounded-md bg-neutral-50 p-3 text-sm">
               <p className="font-medium text-neutral-900">{e.institution}</p>
-              <p className="text-neutral-600">{[e.degree, e.fieldOfStudy].filter(Boolean).join(' in ')}</p>
+              <p className="text-neutral-600">{[e.degree && e.degree.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase()), e.major].filter(Boolean).join(' · ')}</p>
               <p className="text-neutral-500">{year(e.startDate)} – {e.current ? 'Present' : year(e.endDate)}</p>
             </div>
           ))}

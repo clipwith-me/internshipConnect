@@ -1,249 +1,165 @@
-// frontend/src/pages/MyInternshipsPage.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Briefcase, Eye, Pencil, Plus, Send, Trash2 } from 'lucide-react';
 import { internshipAPI } from '../services/api';
-import { Plus, Edit, Trash2, Eye, TrendingUp, Users, AlertCircle } from 'lucide-react';
+import { isAbortError } from '../hooks/useApi';
+import { Alert, Button, EmptyState, Modal, PageHeader } from '../components';
+import StatusBadge from '../components/StatusBadge';
+import { formatPlace, getArrangement } from '../utils/internship';
 
-const MyInternshipsPage = () => {
-  const navigate = useNavigate();
-  const [internships, setInternships] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
+const fmt = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+
+const Stat = ({ label, value }) => (
+  <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <p className="text-sm text-neutral-600">{label}</p>
+    <p className="mt-1 text-2xl font-semibold text-neutral-900 tabular">{value}</p>
+  </div>
+);
+
+export default function MyInternshipsPage() {
+  const [state, setState] = useState({ status: 'loading', items: [] });
+  const [reload, setReload] = useState(0);
+  const [notice, setNotice] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [toDelete, setToDelete] = useState(null);
 
   useEffect(() => {
-    fetchMyInternships();
+    document.title = 'My internships | InternshipConnect';
   }, []);
 
-  const fetchMyInternships = async () => {
+  useEffect(() => {
+    const controller = new AbortController();
+    internshipAPI
+      .getMyInternships({ signal: controller.signal })
+      .then((res) => setState({ status: 'ready', items: res.data?.data || [] }))
+      .catch((err) => {
+        if (!isAbortError(err)) setState({ status: 'error', items: [] });
+      });
+    return () => controller.abort();
+  }, [reload]);
+
+  const refresh = () => setReload((n) => n + 1);
+
+  const publish = async (item) => {
+    setBusyId(item._id);
     try {
-      setLoading(true);
-      setError('');
-      const response = await internshipAPI.getMyInternships();
-      if (response.data.success) {
-        setInternships(response.data.data);
-      }
+      await internshipAPI.publish(item._id);
+      setNotice({ type: 'success', text: `“${item.title}” is now live.` });
+      refresh();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load internships');
+      setNotice({ type: 'error', text: err.response?.data?.error || 'Could not publish this listing.' });
     } finally {
-      setLoading(false);
+      setBusyId(null);
     }
   };
 
-  const handlePublish = async (id) => {
+  const remove = async () => {
+    const item = toDelete;
+    setBusyId(item._id);
     try {
-      await internshipAPI.publish(id);
-      fetchMyInternships();
+      await internshipAPI.delete(item._id);
+      setToDelete(null);
+      setNotice({ type: 'success', text: `“${item.title}” was closed. Existing applications are kept.` });
+      refresh();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to publish internship');
+      setToDelete(null);
+      setNotice({ type: 'error', text: err.response?.data?.error || 'Could not close this listing.' });
+    } finally {
+      setBusyId(null);
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      await internshipAPI.delete(deleteModal.id);
-      setDeleteModal({ show: false, id: null });
-      fetchMyInternships();
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete internship');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const items = state.items;
+  const open = items.filter((i) => i.status === 'active').length;
+  const drafts = items.filter((i) => i.status === 'draft').length;
+  const applications = items.reduce((n, i) => n + (i.statistics?.applications || 0), 0);
 
   return (
-    <div className="py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-semibold text-neutral-900 mb-2">My Internships</h1>
-            <p className="text-neutral-600">Manage your posted internship opportunities</p>
-          </div>
-          <button
-            onClick={() => navigate('/dashboard/internships/create')}
-            className="h-12 px-6 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Post Internship
-          </button>
+    <div className="mx-auto max-w-5xl">
+      <PageHeader
+        title="My internships"
+        description="Post, edit and close your listings."
+        actions={
+          <Button as={Link} to="/dashboard/internships/create" icon={<Plus size={16} aria-hidden="true" />}>
+            Post internship
+          </Button>
+        }
+      />
+
+      {notice && <Alert variant={notice.type} onDismiss={() => setNotice(null)} className="mb-5">{notice.text}</Alert>}
+
+      {state.status === 'loading' && (
+        <div className="space-y-4" aria-busy="true">
+          {[0, 1, 2].map((n) => <div key={n} className="h-28 animate-pulse rounded-xl border border-neutral-200 bg-white" />)}
         </div>
+      )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
+      {state.status === 'error' && (
+        <EmptyState title="We couldn't load your listings" description="Please check your connection and try again." action={<Button variant="secondary" onClick={refresh}>Try again</Button>} />
+      )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            icon={<TrendingUp className="w-6 h-6" />}
-            label="Total Posted"
-            value={internships.length}
-            color="blue"
-          />
-          <StatCard
-            icon={<Eye className="w-6 h-6" />}
-            label="Active"
-            value={internships.filter(i => i.status === 'active').length}
-            color="green"
-          />
-          <StatCard
-            icon={<Users className="w-6 h-6" />}
-            label="Total Applications"
-            value={internships.reduce((sum, i) => sum + (i.statistics?.applications || 0), 0)}
-            color="purple"
-          />
-          <StatCard
-            icon={<AlertCircle className="w-6 h-6" />}
-            label="Draft"
-            value={internships.filter(i => i.status === 'draft').length}
-            color="amber"
-          />
+      {state.status === 'ready' && items.length === 0 && (
+        <EmptyState
+          icon={Briefcase}
+          title="No listings yet"
+          description="Post your first internship to start receiving applications."
+          action={<Button as={Link} to="/dashboard/internships/create">Post an internship</Button>}
+        />
+      )}
+
+      {state.status === 'ready' && items.length > 0 && (
+        <>
+          <dl className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Listings" value={items.length} />
+            <Stat label="Open" value={open} />
+            <Stat label="Drafts" value={drafts} />
+            <Stat label="Applications" value={applications} />
+          </dl>
+
+          <ul className="space-y-3">
+            {items.map((i) => {
+              const where = [formatPlace(i), getArrangement(i)].filter(Boolean).join(' · ');
+              return (
+                <li key={i._id} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold text-neutral-900 sm:text-lg">{i.title}</h2>
+                      <p className="mt-0.5 text-sm text-neutral-600">{where || 'Location not set'}</p>
+                    </div>
+                    <StatusBadge kind="internship" status={i.status} />
+                  </div>
+
+                  <p className="mt-3 text-sm text-neutral-600 tabular">
+                    {i.statistics?.applications || 0} applications · {i.statistics?.views || 0} views · Posted {fmt(i.createdAt)}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {i.status === 'draft' && (
+                      <Button size="sm" onClick={() => publish(i)} loading={busyId === i._id} icon={<Send size={15} aria-hidden="true" />}>Publish</Button>
+                    )}
+                    <Button as={Link} size="sm" variant="secondary" to={`/dashboard/internships/${i._id}`} icon={<Eye size={15} aria-hidden="true" />}>View</Button>
+                    <Button as={Link} size="sm" variant="secondary" to={`/dashboard/internships/${i._id}/edit`} icon={<Pencil size={15} aria-hidden="true" />}>Edit</Button>
+                    {i.status !== 'closed' && (
+                      <Button size="sm" variant="ghost" onClick={() => setToDelete(i)} icon={<Trash2 size={15} aria-hidden="true" />}>Close</Button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+
+      <Modal isOpen={Boolean(toDelete)} onClose={() => setToDelete(null)} size="sm">
+        <Modal.Title>Close this listing?</Modal.Title>
+        <p className="mt-2 text-sm text-neutral-600">
+          “{toDelete?.title}” will stop accepting applications and disappear from search. Existing applications are kept.
+        </p>
+        <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={() => setToDelete(null)}>Keep open</Button>
+          <Button variant="danger" onClick={remove} loading={busyId === toDelete?._id}>Close listing</Button>
         </div>
-
-        {/* Internships List */}
-        {internships.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-12 text-center">
-            <Plus className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-neutral-900 mb-2">No internships yet</h3>
-            <p className="text-neutral-600 mb-6">Start by posting your first internship opportunity</p>
-            <button
-              onClick={() => navigate('/dashboard/internships/create')}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium"
-            >
-              Post Your First Internship
-            </button>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-neutral-50 border-b border-neutral-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700">Title</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700">Applications</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700">Views</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700">Posted</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-neutral-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-200">
-                {internships.map((internship) => (
-                  <tr key={internship._id} className="hover:bg-neutral-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-neutral-900">{internship.title}</div>
-                      <div className="text-sm text-neutral-500">{internship.location?.city || 'Remote'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        internship.status === 'active' ? 'bg-green-100 text-green-700' :
-                        internship.status === 'draft' ? 'bg-amber-100 text-amber-700' :
-                        'bg-neutral-100 text-neutral-600'
-                      }`}>
-                        {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-neutral-900">{internship.statistics?.applications || 0}</td>
-                    <td className="px-6 py-4 text-neutral-900">{internship.statistics?.views || 0}</td>
-                    <td className="px-6 py-4 text-neutral-600 text-sm">
-                      {new Date(internship.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {internship.status === 'draft' && (
-                          <button
-                            onClick={() => handlePublish(internship._id)}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title="Publish"
-                          >
-                            <TrendingUp className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => navigate(`/dashboard/internships/${internship._id}`)}
-                          className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
-                          title="View"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/dashboard/internships/${internship._id}/edit`)}
-                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteModal({ show: true, id: internship._id })}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Delete Modal */}
-        {deleteModal.show && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-md w-full p-6 animate-scaleIn">
-              <h3 className="text-xl font-semibold text-neutral-900 mb-2">Delete Internship?</h3>
-              <p className="text-neutral-600 mb-6">
-                This will mark the internship as closed. Applications will be preserved.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setDeleteModal({ show: false, id: null })}
-                  className="flex-1 h-11 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="flex-1 h-11 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      </Modal>
     </div>
   );
-};
-
-const StatCard = ({ icon, label, value, color }) => {
-  const colors = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    purple: 'bg-purple-50 text-purple-600',
-    amber: 'bg-amber-50 text-amber-600'
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
-      <div className={`w-12 h-12 rounded-lg ${colors[color]} flex items-center justify-center mb-4`}>
-        {icon}
-      </div>
-      <div className="text-3xl font-bold text-neutral-900 mb-1">{value}</div>
-      <div className="text-sm text-neutral-600">{label}</div>
-    </div>
-  );
-};
-
-export default MyInternshipsPage;
+}

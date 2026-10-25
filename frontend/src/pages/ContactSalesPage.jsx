@@ -255,7 +255,7 @@ const ContactSalesPage = () => {
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span>AI-powered candidate matching</span>
+                  <span>Candidate search by skills and location</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />

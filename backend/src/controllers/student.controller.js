@@ -281,7 +281,10 @@ export const searchStudents = async (req, res) => {
     // Filter by skills (accepts "a,b" or repeated ?skills[]=a)
     const skillsArray = toStringList(skills);
     if (skillsArray.length) {
-      query['skills.name'] = { $in: skillsArray };
+      // exact, case-insensitive match ("react" finds "React")
+      query['skills.name'] = {
+        $in: skillsArray.map((n) => new RegExp(`^${escapeRegex(n.slice(0, 50))}$`, 'i')),
+      };
     }
 
     // Filter by education level (string only; objects are rejected)

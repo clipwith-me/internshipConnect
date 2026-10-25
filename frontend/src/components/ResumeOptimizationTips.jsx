@@ -8,7 +8,7 @@ import { Card, Button, Badge } from './index';
 /**
  * 🎯 RESUME OPTIMIZATION TIPS COMPONENT
  *
- * Premium feature that provides AI-powered resume optimization tips
+ * Premium feature that provides resume optimization tips
  * categorized by priority and impact.
  */
 
@@ -79,7 +79,7 @@ const ResumeOptimizationTips = ({ resumeId }) => {
           Premium Feature
         </h3>
         <p className="text-neutral-600 mb-6">
-          Get AI-powered resume optimization tips with actionable improvements.
+          Get suggestions for improving your resume.
           Upgrade to Premium to unlock this feature!
         </p>
         <Button variant="primary" onClick={() => window.location.href = '/dashboard/pricing'}>
