@@ -308,6 +308,34 @@ export const getPlans = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Public pricing, straight from SUBSCRIPTION_PLANS so the marketing page
+ *          can never drift from what the product actually offers.
+ * @route   GET /api/payments/public-plans
+ * @access  Public
+ *
+ * Only presentation fields are returned (no Stripe price IDs).
+ */
+export const getPublicPlans = (req, res) => {
+  const format = (plans) =>
+    Object.entries(plans).map(([key, plan]) => ({
+      id: key,
+      name: plan.name,
+      monthlyPrice: plan.monthlyPrice ?? plan.price ?? 0,
+      yearlyPrice: plan.yearlyPrice ?? plan.price ?? 0,
+      features: plan.features,
+    }));
+
+  res.set('Cache-Control', 'public, max-age=300');
+  res.json({
+    success: true,
+    data: {
+      student: format(SUBSCRIPTION_PLANS.student),
+      organization: format(SUBSCRIPTION_PLANS.organization),
+    },
+  });
+};
+
 export default {
   createCheckoutSession,
   handleStripeWebhook,

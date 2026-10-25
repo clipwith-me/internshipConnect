@@ -58,6 +58,9 @@ const userSchema = new mongoose.Schema({
   
   // Session tracking
   lastLogin: Date,
+
+  // Set when the user deletes their account (data is erased/anonymised; see accountDeletion.service.js)
+  deletedAt: Date,
   loginAttempts: {
     type: Number,
     default: 0

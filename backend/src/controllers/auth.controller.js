@@ -1,6 +1,7 @@
 // backend/src/controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
 import { User, StudentProfile, OrganizationProfile, ReferralCode, Referral, University } from '../models/index.js';
+import { eraseAccount, hasActivePaidSubscription } from '../services/accountDeletion.service.js';
 import { sendStudentWelcomeEmail, sendCompanyWelcomeEmail, sendPasswordResetEmail } from '../services/resend-email.service.js';
 /**
  * 🎓 LEARNING: Authentication Controller
@@ -721,3 +722,49 @@ export const changePassword = async (req, res) => {
  * router.post('/logout', authMiddleware, authController.logout);
  * router.put('/change-password', authMiddleware, authController.changePassword);
  */
+// ═══════════════════════════════════════════════════════════
+// DELETE ACCOUNT (right to erasure)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * @route   DELETE /api/auth/account
+ * @desc    Permanently erase/anonymise the caller's personal data and disable login
+ * @access  Private (requires the current password)
+ */
+export const deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body || {};
+    if (typeof password !== 'string' || !password) {
+      return res.status(400).json({ success: false, message: 'Your password is required to delete your account' });
+    }
+
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Admins are platform operators; removing the last one would lock everyone out.
+    if (user.role === 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin accounts cannot be deleted from here' });
+    }
+
+    if (!(await user.comparePassword(password))) {
+      return res.status(401).json({ success: false, message: 'Incorrect password' });
+    }
+
+    // Don't leave a Stripe subscription billing a deleted account.
+    if (hasActivePaidSubscription(user)) {
+      return res.status(409).json({
+        success: false,
+        message: 'Please cancel your paid subscription first (Settings > Plan), then delete your account.'
+      });
+    }
+
+    await eraseAccount(user);
+
+    return res.json({ success: true, message: 'Your account and personal data have been deleted.' });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete account. Please try again or contact support.' });
+  }
+};

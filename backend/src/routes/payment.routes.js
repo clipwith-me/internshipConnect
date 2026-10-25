@@ -20,10 +20,11 @@ import {
   getSubscriptionStatus,
   createPortalSession,
   cancelSubscription,
-  getPlans
+  getPlans,
+  getPublicPlans
 } from '../controllers/payment.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
-import { paymentLimiter } from '../middleware/security.middleware.js';
+import { paymentLimiter, apiLimiter } from '../middleware/security.middleware.js';
 
 const router = express.Router();
 
@@ -40,6 +41,9 @@ router.post('/webhook', express.raw({ type: 'application/json' }), handleStripeW
 // ✅ FIX: Add JSON body parser for authenticated routes
 // The webhook route above uses raw body, but all other routes need JSON parsing
 router.use(express.json());
+
+// Public pricing for the marketing site (no authentication, read-only)
+router.get('/public-plans', apiLimiter, getPublicPlans);
 
 // All other routes require authentication and rate limiting
 router.use(authenticate);

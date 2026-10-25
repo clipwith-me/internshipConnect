@@ -195,6 +195,21 @@ router.put('/change-password',
   authController.changePassword
 );
 
+/**
+ * @route   DELETE /api/auth/account
+ * @desc    Delete the authenticated user's account (requires password)
+ * @access  Private
+ */
+router.delete('/account',
+  authenticate,
+  authLimiter, // this endpoint checks a password, so it gets the same throttling as login
+  [
+    body('password').notEmpty().withMessage('Password is required'),
+    validate
+  ],
+  authController.deleteAccount
+);
+
 export default router;
 
 /**
