@@ -27,6 +27,12 @@ const EMPLOYER_EDITABLE_FIELDS = [
   'timeline', 'positions', 'tags', 'categories', 'visibility', 'applicationProcess',
 ];
 
+const startOfToday = () => {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+};
+
 // 'expired' is set by the system when a deadline passes.
 const EMPLOYER_SETTABLE_STATUSES = ['draft', 'active', 'paused', 'closed', 'filled'];
 
@@ -59,6 +65,9 @@ export const getInternships = async (req, res) => {
     // used to come straight from the query string, which let anyone read
     // employers' unpublished drafts (?status=draft). Owners use /my-internships.
     query.status = 'active';
+
+    // The application deadline is a calendar day: still open all day on that date.
+    query['timeline.applicationDeadline'] = { $gte: startOfToday() };
 
     // Respect each listing's visibility (documents without the field are public).
     query.visibility = { $nin: ['unlisted', 'private'] };
@@ -340,6 +349,16 @@ export const updateInternship = async (req, res) => {
         });
       }
       update.status = req.body.status;
+    }
+    // A listing the system expired comes back to life when the employer moves the
+    // deadline into the future (otherwise it stays hidden from search forever).
+    if (
+      req.body.status === undefined &&
+      internship.status === 'expired' &&
+      update.timeline?.applicationDeadline &&
+      new Date(update.timeline.applicationDeadline) >= startOfToday()
+    ) {
+      update.status = 'active';
     }
     const updated = await Internship.findByIdAndUpdate(
       req.params.id,
