@@ -6,6 +6,7 @@ import { isAbortError } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { Alert, Button, EmptyState, Modal, PageHeader } from '../components';
 import StatusBadge from '../components/StatusBadge';
+import { opportunityLabel } from '../utils/opportunity';
 import {
   formatCompensation,
   formatPlace,
@@ -132,7 +133,7 @@ export default function InternshipDetailPage() {
     return (
       <div className="mx-auto max-w-4xl">
         <EmptyState
-          title={state.status === 'missing' ? 'This internship is no longer available' : "We couldn't load this internship"}
+          title={state.status === 'missing' ? 'This opportunity is no longer available' : "We couldn't load this opportunity"}
           description={state.status === 'missing' ? 'It may have been closed or removed by the employer.' : 'Please check your connection and try again.'}
           action={<Button as={Link} to="/dashboard/internships" variant="secondary">Back to internships</Button>}
         />
@@ -155,9 +156,9 @@ export default function InternshipDetailPage() {
     <div className="mx-auto max-w-4xl">
       <PageHeader
         backTo="/dashboard/internships"
-        backLabel="All internships"
+        backLabel="All opportunities"
         title={i.title}
-        description={org ? `${org}` : undefined}
+        description={[opportunityLabel(i), org].filter(Boolean).join(' · ')}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -169,7 +170,7 @@ export default function InternshipDetailPage() {
           )}
 
           <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-lg font-semibold text-neutral-900">About this internship</h2>
+            <h2 className="text-lg font-semibold text-neutral-900">About this opportunity</h2>
             <p className="mt-3 whitespace-pre-line leading-relaxed text-neutral-700">{i.description}</p>
           </section>
 
@@ -238,7 +239,7 @@ export default function InternshipDetailPage() {
                 </Button>
               )}
               {!isStudent && (
-                <p className="text-sm text-neutral-600">Only student accounts can apply to internships.</p>
+                <p className="text-sm text-neutral-600">Only student accounts can apply.</p>
               )}
             </div>
           </div>

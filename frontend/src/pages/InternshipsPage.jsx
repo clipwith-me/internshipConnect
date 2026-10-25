@@ -8,7 +8,7 @@ import InternshipResults from '../components/InternshipResults';
 import PageHeader from '../components/PageHeader';
 import Button from '../components/Button';
 
-const BASIC_KEYS = ['type', 'compensationType'];
+const BASIC_KEYS = ['opportunityType', 'type', 'compensationType'];
 const ADVANCED_KEYS = ['industry', 'skills', 'minSalary', 'maxSalary'];
 
 /**
@@ -28,12 +28,12 @@ export default function InternshipsPage() {
   });
 
   useEffect(() => {
-    document.title = 'Find internships | InternshipConnect';
+    document.title = 'Find opportunities | InternshipConnect';
   }, []);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <PageHeader title="Find internships" description="Search open roles and apply with your profile." />
+      <PageHeader title="Find opportunities" description="Internships, jobs and more. Search open roles and apply with your profile." />
 
       <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
         <InternshipSearchBar search={search} advanced={hasAdvanced && showAdvanced} />

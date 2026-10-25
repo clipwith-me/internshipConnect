@@ -14,9 +14,9 @@ export default function InternshipResults({ search, emptyHint, cardTo }) {
   const totalPages = state.pagination?.totalPages ?? 1;
 
   let summary = '';
-  if (state.status === 'loading') summary = 'Loading internships…';
+  if (state.status === 'loading') summary = 'Loading opportunities…';
   else if (state.status === 'ready') {
-    summary = total === 0 ? 'No internships match your search.' : `${total} ${total === 1 ? 'internship' : 'internships'} found`;
+    summary = total === 0 ? 'No opportunities match your search.' : `${total} ${total === 1 ? 'opportunity' : 'opportunities'} found`;
   }
 
   return (
@@ -67,7 +67,7 @@ export default function InternshipResults({ search, emptyHint, cardTo }) {
       {state.status === 'ready' && state.items.length === 0 && (
         <EmptyState
           icon={SearchX}
-          title={hasFilters ? 'No internships match those filters' : 'No internships are open right now'}
+          title={hasFilters ? 'No opportunities match those filters' : 'No opportunities are open right now'}
           description={hasFilters ? 'Try a broader keyword or remove a filter.' : emptyHint}
           action={
             hasFilters ? (
@@ -82,7 +82,7 @@ export default function InternshipResults({ search, emptyHint, cardTo }) {
       {state.status === 'error' && (
         <EmptyState
           icon={SearchX}
-          title="We couldn't load internships"
+          title="We couldn't load opportunities"
           description="This is usually a temporary connection problem. Please try again."
           action={<Button variant="secondary" onClick={retry}>Try again</Button>}
         />

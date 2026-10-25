@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, MapPin, Wallet, Laptop } from 'lucide-react';
+import { opportunityLabel } from '../utils/opportunity';
 import {
   formatCompensation,
   formatPlace,
@@ -47,7 +48,10 @@ export default function InternshipCard({ internship, to, className = '' }) {
             {initials(org || internship.title)}
           </div>
         )}
-        <p className="min-w-0 truncate text-sm font-medium text-neutral-600">{org || 'Employer'}</p>
+        <p className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-600">{org || 'Employer'}</p>
+        <span className="shrink-0 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-700">
+          {opportunityLabel(internship)}
+        </span>
       </div>
 
       <h3 className="mt-4 text-lg font-semibold leading-snug text-neutral-900">

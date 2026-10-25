@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Button from './Button';
 
 const NAV_LINKS = [
-  { label: 'Browse internships', to: '/internships' },
+  { label: 'Browse opportunities', to: '/internships' },
   { label: 'How it works', to: '/#how-it-works' },
   { label: 'For employers', to: '/#for-employers' },
   { label: 'Pricing', to: '/pricing' },

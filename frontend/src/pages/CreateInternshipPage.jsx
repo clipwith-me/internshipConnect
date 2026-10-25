@@ -8,7 +8,7 @@ export default function CreateInternshipPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = 'Post an internship | InternshipConnect';
+    document.title = 'Post an opportunity | InternshipConnect';
   }, []);
 
   const create = async (payload) => {
@@ -20,8 +20,8 @@ export default function CreateInternshipPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         backTo="/dashboard/my-internships"
-        backLabel="My internships"
-        title="Post an internship"
+        backLabel="My listings"
+        title="Post an opportunity"
         description="Clear titles, honest pay and a real deadline get better applicants."
       />
       <InternshipForm onSubmit={create} onCancel={() => navigate('/dashboard/my-internships')} />

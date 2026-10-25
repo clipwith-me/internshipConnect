@@ -54,8 +54,8 @@ export default function EditInternshipPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         backTo="/dashboard/my-internships"
-        backLabel="My internships"
-        title="Edit internship"
+        backLabel="My listings"
+        title="Edit listing"
         description={<StatusBadge kind="internship" status={current.status} />}
       />
       <InternshipForm

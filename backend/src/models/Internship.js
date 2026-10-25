@@ -272,6 +272,15 @@ const internshipSchema = new mongoose.Schema({
     index: true
   },
   
+  // What kind of opportunity this is. Listings created before this field
+  // existed have no value and are treated as 'internship'.
+  opportunityType: {
+    type: String,
+    enum: ['internship', 'job', 'graduate-programme', 'apprenticeship', 'volunteering', 'campus-role', 'other'],
+    default: 'internship',
+    index: true
+  },
+
   visibility: {
     type: String,
     enum: ['public', 'unlisted', 'private'],

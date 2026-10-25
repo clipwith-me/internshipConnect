@@ -22,8 +22,10 @@ import { escapeRegex, validatePagination } from '../utils/security.js';
 
 // Fields an employer may set on their own listing. Everything else (featured,
 // statistics, aiMetadata, positions.filled, organization, ...) is system-managed.
+const OPPORTUNITY_TYPES = ['internship', 'job', 'graduate-programme', 'apprenticeship', 'volunteering', 'campus-role', 'other'];
+
 const EMPLOYER_EDITABLE_FIELDS = [
-  'title', 'description', 'requirements', 'location', 'compensation', 'duration',
+  'opportunityType', 'title', 'description', 'requirements', 'location', 'compensation', 'duration',
   'timeline', 'positions', 'tags', 'categories', 'visibility', 'applicationProcess',
 ];
 
@@ -85,6 +87,13 @@ export const getInternships = async (req, res) => {
     if (req.query.location) {
       const escapedLocation = escapeRegex(req.query.location.slice(0, 100));
       query['location.city'] = { $regex: escapedLocation, $options: 'i' };
+    }
+
+    // Opportunity type. Older listings have no value and count as internships.
+    if (OPPORTUNITY_TYPES.includes(req.query.opportunityType)) {
+      query.opportunityType = req.query.opportunityType === 'internship'
+        ? { $in: ['internship', null] }
+        : req.query.opportunityType;
     }
 
     // Type filter (remote, onsite, hybrid)

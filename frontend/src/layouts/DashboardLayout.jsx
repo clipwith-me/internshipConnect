@@ -29,7 +29,7 @@ import NotificationBell from '../components/NotificationBell';
 const NAV = {
   student: [
     { to: '/dashboard', icon: Home, label: 'Dashboard', end: true },
-    { to: '/dashboard/internships', icon: Briefcase, label: 'Internships' },
+    { to: '/dashboard/internships', icon: Briefcase, label: 'Opportunities' },
     { to: '/dashboard/applications', icon: FileText, label: 'My applications' },
     { to: '/dashboard/saved', icon: Bookmark, label: 'Saved' },
     { to: '/dashboard/resumes', icon: FileText, label: 'Resumes' },
@@ -41,7 +41,7 @@ const NAV = {
   ],
   organization: [
     { to: '/dashboard', icon: Home, label: 'Dashboard', end: true },
-    { to: '/dashboard/my-internships', icon: Briefcase, label: 'My internships' },
+    { to: '/dashboard/my-internships', icon: Briefcase, label: 'My listings' },
     { to: '/dashboard/applications', icon: FileText, label: 'Applications' },
     { to: '/dashboard/students', icon: Users, label: 'Find students' },
     { to: '/dashboard/messages', icon: MessageCircle, label: 'Messages' },
@@ -62,7 +62,7 @@ const NAV = {
     { to: '/dashboard/admin', icon: Settings, label: 'Admin panel' },
     { to: '/dashboard/founder', icon: BarChart3, label: 'Founder dashboard' },
     { to: '/dashboard/investor', icon: CreditCard, label: 'Investor view' },
-    { to: '/dashboard/internships', icon: Briefcase, label: 'Internships' },
+    { to: '/dashboard/internships', icon: Briefcase, label: 'Opportunities' },
     { to: '/dashboard/applications', icon: FileText, label: 'Applications' },
     { to: '/dashboard/students', icon: Users, label: 'Students' },
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
@@ -288,7 +288,7 @@ const DashboardLayout = () => {
 
           {canSearch && (
             <form onSubmit={handleSearch} role="search" className="hidden max-w-xl flex-1 md:block">
-              <label htmlFor="global-search" className="sr-only">Search internships</label>
+              <label htmlFor="global-search" className="sr-only">Search opportunities</label>
               <div className="relative">
                 <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
                 <input
@@ -296,7 +296,7 @@ const DashboardLayout = () => {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search internships"
+                  placeholder="Search opportunities"
                   className="h-10 w-full rounded-md border border-neutral-300 bg-neutral-50 pl-10 pr-3 text-sm placeholder:text-neutral-500 hover:border-neutral-400 focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-500/30"
                 />
               </div>

@@ -1,4 +1,5 @@
 import { MapPin, Search } from 'lucide-react';
+import { OPPORTUNITY_TYPES } from '../utils/opportunity';
 
 const ARRANGEMENTS = [
   { value: '', label: 'Any arrangement' },
@@ -30,8 +31,15 @@ export default function InternshipSearchBar({ search, advanced = false }) {
   const { searchInput, setSearchInput, locationInput, setLocationInput, filters, setFilter } = search;
 
   return (
-    <form role="search" aria-label="Search internships" onSubmit={(e) => e.preventDefault()} className="space-y-3">
+    <form role="search" aria-label="Search opportunities" onSubmit={(e) => e.preventDefault()} className="space-y-3">
       <div className="grid gap-3 md:grid-cols-12">
+        <div className="md:col-span-12 lg:col-span-12">
+          <label htmlFor="otype" className="sr-only">Type of opportunity</label>
+          <select id="otype" value={filters.opportunityType} onChange={(e) => setFilter('opportunityType', e.target.value)} className={`${field} px-3 sm:max-w-xs`}>
+            <option value="">All opportunities</option>
+            {OPPORTUNITY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
         <div className="relative md:col-span-5">
           <label htmlFor="q" className="sr-only">Keyword</label>
           <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />

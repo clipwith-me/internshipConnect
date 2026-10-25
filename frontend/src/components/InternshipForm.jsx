@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Alert from './Alert';
 import Button from './Button';
+import { OPPORTUNITY_TYPES } from '../utils/opportunity';
 import { toFormValues, toPayload, validateValues } from '../utils/internshipForm';
 
 const field =
@@ -81,8 +82,13 @@ export default function InternshipForm({ initial, onSubmit, onCancel, isEdit = f
       {apiError && <Alert variant="error">{apiError}</Alert>}
 
       <Group title="The role">
+        <Field id="opportunityType" label="Type of opportunity" required>
+          <select {...props('opportunityType')} className={cls('opportunityType')}>
+            {OPPORTUNITY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </Field>
         <Field id="title" label="Title" required error={errors.title}>
-          <input type="text" {...props('title')} placeholder="e.g. Frontend Developer Intern" className={`${cls('title')}`} />
+          <input type="text" {...props('title')} placeholder="e.g. Frontend Developer" className={`${cls('title')}`} />
         </Field>
         <Field id="description" label="Description" required error={errors.description} hint={`${v.description.trim().length} / 5,000 characters (minimum 50)`}>
           <textarea {...props('description')} rows={6} className={`${field} ${errors.description ? bad : ok} py-2`} placeholder="What will the intern work on, and what will they learn?" />
@@ -113,7 +119,7 @@ export default function InternshipForm({ initial, onSubmit, onCancel, isEdit = f
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="durationLength" label="Duration" required error={errors.durationLength}>
-            <input type="text" {...props('durationLength')} placeholder="e.g. 3 months" className={cls('durationLength')} />
+            <input type="text" {...props('durationLength')} placeholder="e.g. 3 months, Permanent" className={cls('durationLength')} />
           </Field>
           <Field id="positions" label="Open positions">
             <input type="number" min="1" {...props('positions')} className={cls('positions')} />

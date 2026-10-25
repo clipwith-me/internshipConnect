@@ -24,7 +24,7 @@ export default function MyInternshipsPage() {
   const [toDelete, setToDelete] = useState(null);
 
   useEffect(() => {
-    document.title = 'My internships | InternshipConnect';
+    document.title = 'My listings | InternshipConnect';
   }, []);
 
   useEffect(() => {
@@ -77,11 +77,11 @@ export default function MyInternshipsPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <PageHeader
-        title="My internships"
-        description="Post, edit and close your listings."
+        title="My listings"
+        description="Post, edit and close your internships, jobs and other opportunities."
         actions={
           <Button as={Link} to="/dashboard/internships/create" icon={<Plus size={16} aria-hidden="true" />}>
-            Post internship
+            Post opportunity
           </Button>
         }
       />
@@ -102,7 +102,7 @@ export default function MyInternshipsPage() {
         <EmptyState
           icon={Briefcase}
           title="No listings yet"
-          description="Post your first internship to start receiving applications."
+          description="Post your first opportunity to start receiving applications."
           action={<Button as={Link} to="/dashboard/internships/create">Post an internship</Button>}
         />
       )}

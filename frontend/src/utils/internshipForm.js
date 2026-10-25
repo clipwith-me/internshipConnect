@@ -3,6 +3,7 @@ const toDateInput = (v) => (v ? new Date(v).toISOString().slice(0, 10) : '');
 
 /** Build initial form values from an existing listing (edit) or defaults (create). */
 export const toFormValues = (i) => ({
+  opportunityType: i?.opportunityType || 'internship',
   title: i?.title || '',
   description: i?.description || '',
   requirementsText: i?.requirements?.description || '',
@@ -30,6 +31,7 @@ export const toPayload = (v) => {
   const min = num(v.min);
   const max = num(v.max);
   return {
+    opportunityType: v.opportunityType,
     title: v.title.trim(),
     description: v.description.trim(),
     requirements: {
@@ -70,7 +72,7 @@ export const validateValues = (v) => {
   if (desc.length > 5000) e.description = 'Description cannot exceed 5,000 characters.';
   if (v.requirementsText.length > 2000) e.requirementsText = 'Requirements cannot exceed 2,000 characters.';
   if (v.locationType !== 'remote' && v.city.trim().length < 2) e.city = 'City is required for on-site and hybrid roles.';
-  if (!v.durationLength.trim()) e.durationLength = 'Tell students how long it runs, e.g. “3 months”.';
+  if (!v.durationLength.trim()) e.durationLength = 'Say how long it runs, e.g. “3 months” or “Permanent”.';
   if (!v.startDate) e.startDate = 'Choose a start date.';
   if (!v.deadline) e.deadline = 'Choose an application deadline.';
   if (v.startDate && v.deadline && v.deadline > v.startDate) e.deadline = 'The deadline should be on or before the start date.';

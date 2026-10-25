@@ -42,6 +42,11 @@ const router = express.Router();
  * This keeps controllers clean and focused on business logic.
  */
 const internshipValidation = [
+  body('opportunityType')
+    .optional()
+    .isIn(['internship', 'job', 'graduate-programme', 'apprenticeship', 'volunteering', 'campus-role', 'other'])
+    .withMessage('Unknown opportunity type'),
+
   body('title')
     .trim()
     .isLength({ min: 5, max: 100 })

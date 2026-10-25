@@ -6,7 +6,7 @@ import { isAbortError } from './useApi';
 import { useDebounce } from './useDebounce';
 
 // Filters that live in the URL (so results are shareable and back/forward work)
-const SELECT_KEYS = ['type', 'compensationType', 'industry', 'skills', 'minSalary', 'maxSalary'];
+const SELECT_KEYS = ['opportunityType', 'type', 'compensationType', 'industry', 'skills', 'minSalary', 'maxSalary'];
 
 /**
  * Search/filter/paginate internships with the state kept in the URL.
@@ -15,7 +15,7 @@ const SELECT_KEYS = ['type', 'compensationType', 'industry', 'skills', 'minSalar
  * - every change cancels the previous request
  * - `allowedKeys` limits which advanced filters are sent (e.g. plan-gated ones)
  */
-export function useInternshipSearch({ pageSize = 9, allowedKeys = ['type', 'compensationType'] } = {}) {
+export function useInternshipSearch({ pageSize = 9, allowedKeys = ['opportunityType', 'type', 'compensationType'] } = {}) {
   const [params, setParams] = useSearchParams();
 
   const urlSearch = params.get('search') || '';
