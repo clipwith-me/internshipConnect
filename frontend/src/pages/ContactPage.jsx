@@ -1,112 +1,106 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, MessageSquare, ArrowRight } from 'lucide-react';
-import PublicNav from '../components/PublicNav';
+import { useEffect, useState } from 'react';
+import { Mail, MessageSquare } from 'lucide-react';
+import { CONTACT } from '../config/site';
+import { Alert, Button, Input } from '../components';
+import PageHero from '../components/PageHero';
 
-const C = {
-  navy: '#0D1426', amber: '#E8A230',
-  white: '#ffffff', gray50: '#F9FAFB',
-  gray200: '#E5E7EB', gray400: '#9CA3AF', gray600: '#4B5563',
-};
-
+/**
+ * The contact form composes an email in the visitor's own mail app (there is no
+ * server endpoint for it). The page says so plainly instead of implying the
+ * message has already been delivered.
+ */
 export default function ContactPage() {
-  const navigate = useNavigate();
-  const [sent, setSent] = useState(false);
+  const [prepared, setPrepared] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+
+  useEffect(() => {
+    document.title = 'Contact | InternshipConnect';
+  }, []);
+
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`);
-    window.location.href = `mailto:hello@internshipconnect.app?subject=${encodeURIComponent(form.subject || 'Enquiry from website')}&body=${body}`;
-    setSent(true);
+    const subject = encodeURIComponent(form.subject || 'Enquiry from website');
+    window.location.href = `mailto:${CONTACT.general}?subject=${subject}&body=${body}`;
+    setPrepared(true);
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: C.gray50, minHeight: '100vh' }}>
-      <PublicNav />
+    <>
+      <PageHero
+        eyebrow="Contact"
+        title="Contact us"
+        description="Have a question, feedback, or a partnership idea? We'd love to hear from you."
+      />
 
-      <section style={{ background: C.navy, padding: '64px 24px 56px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: C.white, marginBottom: 12 }}>Contact us</h1>
-        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 17, maxWidth: 500, margin: '0 auto' }}>Have a question, feedback, or a partnership idea? We'd love to hear from you.</p>
-      </section>
-
-      <main style={{ maxWidth: 860, margin: '0 auto', padding: '64px 24px 80px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 40, alignItems: 'start' }}>
-
-        {/* Info */}
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: C.navy, marginBottom: 24 }}>Get in touch</h2>
-          {[
-            { icon: Mail, title: 'General enquiries', value: 'hello@internshipconnect.app' },
-            { icon: MessageSquare, title: 'Support', value: 'support@internshipconnect.app' },
-          ].map(({ icon: Icon, title, value }) => (
-            <div key={title} style={{ display: 'flex', gap: 16, marginBottom: 28 }}>
-              <div style={{ width: 48, height: 48, background: C.navy, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon size={20} color={C.amber} />
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.gray400, marginBottom: 4 }}>{title}</div>
-                <a href={`mailto:${value}`} style={{ fontSize: 16, fontWeight: 600, color: C.navy, textDecoration: 'none' }}>{value}</a>
-              </div>
-            </div>
-          ))}
-
-          <div style={{ background: C.amber + '18', border: `1px solid ${C.amber}44`, borderRadius: 12, padding: '16px 20px', marginTop: 8 }}>
-            <p style={{ color: C.navy, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
-              <strong>Response time:</strong> We typically respond within 1–2 business days. For urgent issues, include "URGENT" in your subject line.
-            </p>
-          </div>
+      <div className="mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <h2 className="text-xl font-semibold text-neutral-900">Get in touch</h2>
+          <ul className="mt-6 space-y-6">
+            {[
+              { icon: Mail, title: 'General enquiries', value: CONTACT.general },
+              { icon: MessageSquare, title: 'Support', value: CONTACT.support },
+            ].map(({ icon: Icon, title, value }) => (
+              <li key={title} className="flex gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                  <Icon size={20} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm text-neutral-500">{title}</p>
+                  <a
+                    href={`mailto:${value}`}
+                    className="break-all rounded font-medium text-primary-600 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  >
+                    {value}
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-8 rounded-lg bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-600">
+            <strong className="text-neutral-800">Response time:</strong> we typically respond within 1–2 business days.
+            For urgent issues, include "URGENT" in your subject line.
+          </p>
         </div>
 
-        {/* Form */}
-        <div style={{ background: C.white, borderRadius: 20, padding: '36px 40px', boxShadow: '0 2px 20px rgba(0,0,0,0.07)', border: `1px solid ${C.gray200}` }}>
-          {sent ? (
-            <div style={{ textAlign: 'center', padding: '32px 0' }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>✉️</div>
-              <h3 style={{ fontSize: 20, fontWeight: 800, color: C.navy, marginBottom: 8 }}>Opening your email app…</h3>
-              <p style={{ color: C.gray600, fontSize: 15, lineHeight: 1.7 }}>Your message has been prepared. Send it from your email client to reach us.</p>
+        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8 lg:col-span-3">
+          {prepared ? (
+            <div className="py-6">
+              <Alert variant="success" title="Your message is ready to send">
+                We've opened your email app with the message filled in. Press send there to reach us. If nothing
+                opened, email us directly at{' '}
+                <a className="font-medium underline" href={`mailto:${CONTACT.general}`}>{CONTACT.general}</a>.
+              </Alert>
+              <Button variant="secondary" className="mt-5" onClick={() => setPrepared(false)}>
+                Write another message
+              </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: C.navy, marginBottom: 4 }}>Send us a message</h3>
-              {[
-                { name: 'name', label: 'Your name', type: 'text', placeholder: 'Amara Okonkwo' },
-                { name: 'email', label: 'Your email', type: 'email', placeholder: 'amara@example.com' },
-                { name: 'subject', label: 'Subject', type: 'text', placeholder: 'What is this about?' },
-              ].map(({ name, label, type, placeholder }) => (
-                <div key={name}>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: C.navy, display: 'block', marginBottom: 6 }}>{label}</label>
-                  <input
-                    required
-                    type={type}
-                    placeholder={placeholder}
-                    value={form[name]}
-                    onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', border: `1px solid ${C.gray200}`, borderRadius: 8, fontSize: 15, color: C.navy, outline: 'none', background: C.gray50 }}
-                  />
-                </div>
-              ))}
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: C.navy, display: 'block', marginBottom: 6 }}>Message</label>
-                <textarea
-                  required
-                  rows={5}
-                  placeholder="Tell us what you need help with…"
-                  value={form.message}
-                  onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', border: `1px solid ${C.gray200}`, borderRadius: 8, fontSize: 15, color: C.navy, outline: 'none', resize: 'vertical', background: C.gray50, fontFamily: 'inherit' }}
-                />
-              </div>
-              <button type="submit" style={{ background: C.navy, color: C.white, fontWeight: 700, fontSize: 15, padding: '13px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                Send message <ArrowRight size={17} />
-              </button>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <h2 className="text-lg font-semibold text-neutral-900">Send us a message</h2>
+              <Input label="Your name" required autoComplete="name" value={form.name} onChange={set('name')} />
+              <Input label="Your email" type="email" required autoComplete="email" value={form.email} onChange={set('email')} />
+              <Input label="Subject" required value={form.subject} onChange={set('subject')} />
+              <Input
+                label="Message"
+                type="textarea"
+                rows={5}
+                required
+                maxLength={2000}
+                showCount
+                value={form.message}
+                onChange={set('message')}
+                helperText="This opens your email app so you can review and send it."
+              />
+              <Button type="submit" size="lg" fullWidth>
+                Prepare message
+              </Button>
             </form>
           )}
         </div>
-      </main>
-
-      <footer style={{ background: '#080E1C', padding: '28px 24px', textAlign: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>© {new Date().getFullYear()} InternshipConnect. All rights reserved.</p>
-      </footer>
-    </div>
+      </div>
+    </>
   );
 }

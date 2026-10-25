@@ -1,528 +1,300 @@
 // frontend/src/pages/DashboardPage.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  Briefcase,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Inbox,
+  Plus,
+  Users,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { applicationAPI, internshipAPI } from '../services/api';
-import { useApi } from '../hooks/useApi';
+import { isAbortError } from '../hooks/useApi';
+import { Alert, Button, EmptyState, PageHeader, StatusBadge } from '../components';
 import JoinUniversityCard from '../components/JoinUniversityCard';
-import {
-  Briefcase,
-  FileText,
-  TrendingUp,
-  Users,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Eye
-} from 'lucide-react';
+import { formatPlace, getOrgName } from '../utils/internship';
 
-const DashboardPage = () => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+/* ───────────────────────── Shared pieces ───────────────────────── */
 
-  // ✅ SECURITY FIX: Wait for user to be loaded before rendering role-specific content
-  // This prevents the wrong dashboard from flashing during initial load
-  if (loading || !user) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+const StatTile = ({ label, value, icon: Icon, hint }) => (
+  <div className="rounded-xl border border-neutral-200 bg-white p-5">
+    <div className="flex items-center justify-between">
+      <p className="text-sm font-medium text-neutral-600">{label}</p>
+      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+        <Icon size={18} aria-hidden="true" />
+      </span>
+    </div>
+    <p className="mt-3 text-3xl font-semibold tracking-tight text-neutral-900 tabular">{value}</p>
+    {hint && <p className="mt-1 text-xs text-neutral-500">{hint}</p>}
+  </div>
+);
 
-  // ✅ SECURITY FIX: Explicit role check with proper validation
-  const isStudent = user.role === 'student';
-  const isOrganization = user.role === 'organization';
-  const isAdmin = user.role === 'admin';
-  const isUniversity = user.role === 'university';
+const StatSkeleton = () => (
+  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true" aria-label="Loading">
+    {[0, 1, 2, 3].map((i) => (
+      <div key={i} className="h-[116px] animate-pulse rounded-xl border border-neutral-200 bg-white" />
+    ))}
+  </div>
+);
 
-  // ✅ ADMIN / UNIVERSITY: Redirect to their dedicated dashboards
+const Panel = ({ title, action, children }) => (
+  <section className="rounded-xl border border-neutral-200 bg-white">
+    <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
+      <h2 className="text-base font-semibold text-neutral-900">{title}</h2>
+      {action}
+    </div>
+    <div className="p-2 sm:p-3">{children}</div>
+  </section>
+);
+
+const RowLink = ({ to, title, subtitle, badge }) => (
+  <Link
+    to={to}
+    className="flex items-center justify-between gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+  >
+    <div className="min-w-0">
+      <p className="truncate font-medium text-neutral-900">{title}</p>
+      {subtitle && <p className="mt-0.5 truncate text-sm text-neutral-600">{subtitle}</p>}
+    </div>
+    {badge}
+  </Link>
+);
+
+const ViewAll = ({ to }) => (
+  <Link
+    to={to}
+    className="inline-flex items-center gap-1 rounded text-sm font-medium text-primary-600 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+  >
+    View all <ArrowRight size={14} aria-hidden="true" />
+  </Link>
+);
+
+/* ───────────────────────── Student ───────────────────────── */
+
+function StudentDashboard({ profile }) {
+  const [state, setState] = useState({ status: 'loading', applications: [] });
+
   useEffect(() => {
-    if (isAdmin) {
-      navigate('/dashboard/admin', { replace: true });
-    } else if (isUniversity) {
-      navigate('/dashboard/university', { replace: true });
-    }
-  }, [isAdmin, isUniversity, navigate]);
+    const controller = new AbortController();
+    applicationAPI
+      .getMyApplications({ signal: controller.signal })
+      .then((res) => setState({ status: 'ready', applications: res.data?.data || [] }))
+      .catch((err) => {
+        if (!isAbortError(err)) setState({ status: 'error', applications: [] });
+      });
+    return () => controller.abort();
+  }, []);
 
-  // ✅ SECURITY FIX: Handle invalid/unknown roles gracefully
-  if (!isStudent && !isOrganization && !isAdmin && !isUniversity) {
-    return (
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-error-50 border border-error-200 rounded-lg p-6 text-center">
-            <h2 className="text-xl font-semibold text-error-800">Invalid Account Role</h2>
-            <p className="text-error-600 mt-2">
-              Your account has an invalid role configuration. Please contact support.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const stats = useMemo(() => {
+    const apps = state.applications;
+    const count = (list) => apps.filter((a) => list.includes(a.status)).length;
+    return {
+      total: apps.length,
+      inReview: count(['submitted', 'under-review']),
+      progressing: count(['shortlisted', 'interview']),
+      offers: count(['offered', 'accepted']),
+    };
+  }, [state.applications]);
 
-  // Show loading during admin/university redirect
-  if (isAdmin || isUniversity) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  // Get display name based on role
-  const displayName = isStudent
-    ? (user.name || 'User')
-    : (user.name || 'User');
+  const completeness = typeof profile?.profileCompleteness === 'number' ? profile.profileCompleteness : null;
 
   return (
-    <div className="py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-neutral-900">
-            Welcome back, {displayName}
-          </h1>
-          <p className="text-neutral-600 mt-2">
-            {isStudent
-              ? 'Track your internship applications and discover new opportunities'
-              : 'Manage your internship postings and review applications'}
-          </p>
-        </div>
+    <div className="space-y-6">
+      {completeness !== null && completeness < 100 && (
+        <Alert variant="info" title={`Your profile is ${completeness}% complete`}>
+          A complete profile helps employers understand your background and improves your match scores.{' '}
+          <Link to="/dashboard/profile" className="font-semibold underline">Complete your profile</Link>
+        </Alert>
+      )}
 
-        {isStudent ? <StudentDashboard /> : <OrganizationDashboard />}
-      </div>
+      {state.status === 'loading' && <StatSkeleton />}
+      {state.status === 'error' && (
+        <Alert variant="error" title="We couldn't load your applications">
+          Please refresh the page to try again.
+        </Alert>
+      )}
+
+      {state.status === 'ready' && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatTile label="Applications" value={stats.total} icon={FileText} />
+            <StatTile label="In review" value={stats.inReview} icon={Clock} hint="Submitted or under review" />
+            <StatTile label="Moving forward" value={stats.progressing} icon={Users} hint="Shortlisted or interviewing" />
+            <StatTile label="Offers" value={stats.offers} icon={CheckCircle2} />
+          </div>
+
+          <Panel title="Recent applications" action={state.applications.length > 0 && <ViewAll to="/dashboard/applications" />}>
+            {state.applications.length === 0 ? (
+              <EmptyState
+                icon={Briefcase}
+                title="You haven't applied to anything yet"
+                description="Browse open internships and apply in a few clicks. Your applications will appear here."
+                action={<Button as={Link} to="/dashboard/internships">Browse internships</Button>}
+                className="border-0"
+              />
+            ) : (
+              <div className="divide-y divide-neutral-100">
+                {state.applications.slice(0, 5).map((a) => (
+                  <RowLink
+                    key={a._id}
+                    to={a.internship?._id ? `/dashboard/internships/${a.internship._id}` : '/dashboard/applications'}
+                    title={a.internship?.title || 'Internship no longer available'}
+                    subtitle={getOrgName(a.internship) || undefined}
+                    badge={<StatusBadge status={a.status} />}
+                  />
+                ))}
+              </div>
+            )}
+          </Panel>
+        </>
+      )}
+
+      <JoinUniversityCard />
     </div>
   );
-};
+}
 
-const StudentDashboard = () => {
-  const navigate = useNavigate();
-  const abortController = useApi();
-  const [stats, setStats] = useState({
-    totalApplications: 0,
-    underReview: 0,
-    shortlisted: 0,
-    rejected: 0,
-  });
-  const [recentApplications, setRecentApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
+/* ───────────────────────── Employer ───────────────────────── */
+
+function OrganizationDashboard() {
+  const [state, setState] = useState({ status: 'loading', internships: [], totalApplications: 0, awaiting: 0 });
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
+    const config = { signal: controller.signal };
+    Promise.all([
+      internshipAPI.getMyInternships(config),
+      applicationAPI.getOrganizationApplications({ limit: 1 }),
+      applicationAPI.getOrganizationApplications({ limit: 1, status: 'submitted' }),
+    ])
+      .then(([mine, all, awaiting]) =>
+        setState({
+          status: 'ready',
+          internships: mine.data?.data || [],
+          totalApplications: all.data?.pagination?.total ?? 0,
+          awaiting: awaiting.data?.pagination?.total ?? 0,
+        })
+      )
+      .catch((err) => {
+        if (!isAbortError(err)) setState((s) => ({ ...s, status: 'error' }));
+      });
+    return () => controller.abort();
+  }, []);
 
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await applicationAPI.getMyApplications({
-          signal: abortController?.signal
-        });
-
-        if (!isMounted) return; // Component unmounted
-
-        if (response.data.success) {
-          const applications = response.data.data;
-
-          // Calculate stats
-          setStats({
-            totalApplications: applications.length,
-            underReview: applications.filter(app =>
-              ['submitted', 'under-review'].includes(app.status)
-            ).length,
-            shortlisted: applications.filter(app =>
-              ['shortlisted', 'interview', 'offered'].includes(app.status)
-            ).length,
-            rejected: applications.filter(app =>
-              app.status === 'rejected'
-            ).length,
-          });
-
-          // Get recent applications (last 5)
-          setRecentApplications(applications.slice(0, 5));
-        }
-      } catch (err) {
-        if (err.name === 'AbortError' || err.name === 'CanceledError') {
-          return; // Request was cancelled
-        }
-        if (isMounted) {
-          console.error('Failed to fetch dashboard data:', err);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchDashboardData();
-
-    return () => {
-      isMounted = false; // Cleanup
-    };
-  }, []); // ✅ FIX: Empty dependency array - only fetch once on mount
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const { internships } = state;
+  const active = internships.filter((i) => i.status === 'active').length;
 
   return (
-    <>
-      {/* Link-your-university prompt (self-dismisses once linked) */}
-      <JoinUniversityCard />
+    <div className="space-y-6">
+      {state.status === 'loading' && <StatSkeleton />}
+      {state.status === 'error' && (
+        <Alert variant="error" title="We couldn't load your dashboard">Please refresh the page to try again.</Alert>
+      )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Applications"
-          value={stats.totalApplications}
-          icon={FileText}
-          color="bg-blue-500"
-          trend="+12% from last month"
-        />
-        <StatCard
-          title="Under Review"
-          value={stats.underReview}
-          icon={Clock}
-          color="bg-amber-500"
-        />
-        <StatCard
-          title="Shortlisted"
-          value={stats.shortlisted}
-          icon={CheckCircle}
-          color="bg-green-500"
-        />
-        <StatCard
-          title="Rejected"
-          value={stats.rejected}
-          icon={XCircle}
-          color="bg-red-500"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <QuickActionCard
-          title="Browse Internships"
-          description="Discover new internship opportunities"
-          icon={Briefcase}
-          onClick={() => navigate('/dashboard/internships')}
-          buttonText="Browse Now"
-        />
-        <QuickActionCard
-          title="Generate Resume"
-          description="Create an AI-powered resume"
-          icon={FileText}
-          onClick={() => navigate('/dashboard/resumes')}
-          buttonText="Generate"
-        />
-      </div>
-
-      {/* Recent Applications */}
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-neutral-900">Recent Applications</h2>
-          <button
-            onClick={() => navigate('/dashboard/applications')}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-          >
-            View All
-          </button>
-        </div>
-
-        {recentApplications.length === 0 ? (
-          <div className="text-center py-8">
-            <Briefcase className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-            <p className="text-neutral-600">No applications yet</p>
-            <button
-              onClick={() => navigate('/dashboard/internships')}
-              className="mt-4 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
-            >
-              Start Applying
-            </button>
+      {state.status === 'ready' && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatTile label="Open listings" value={active} icon={Briefcase} hint="Currently accepting applications" />
+            <StatTile label="All listings" value={internships.length} icon={FileText} hint="Including drafts and closed" />
+            <StatTile label="Applications received" value={state.totalApplications} icon={Inbox} />
+            <StatTile label="Awaiting review" value={state.awaiting} icon={Clock} hint="Not yet reviewed" />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {recentApplications.map((application) => (
-              <ApplicationItem
-                key={application._id}
-                application={application}
-                onClick={() => navigate(`/dashboard/internships/${application.internship._id}`)}
+
+          {state.awaiting > 0 && (
+            <Alert variant="info" title={`${state.awaiting} ${state.awaiting === 1 ? 'application is' : 'applications are'} waiting for your review`}>
+              <Link to="/dashboard/applications" className="font-semibold underline">Review applications</Link>
+            </Alert>
+          )}
+
+          <Panel title="Your internships" action={internships.length > 0 && <ViewAll to="/dashboard/my-internships" />}>
+            {internships.length === 0 ? (
+              <EmptyState
+                icon={Briefcase}
+                title="You haven't posted an internship yet"
+                description="Publish your first listing to start receiving applications from students."
+                action={<Button as={Link} to="/dashboard/internships/create" icon={<Plus size={16} aria-hidden="true" />}>Post an internship</Button>}
+                className="border-0"
               />
-            ))}
-          </div>
-        )}
-      </div>
-    </>
-  );
-};
-
-const OrganizationDashboard = () => {
-  const navigate = useNavigate();
-  const abortController = useApi();
-  const [stats, setStats] = useState({
-    totalInternships: 0,
-    activeInternships: 0,
-    totalApplications: 0,
-    pendingReview: 0,
-  });
-  const [recentInternships, setRecentInternships] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await internshipAPI.getMyInternships({
-          signal: abortController?.signal
-        });
-
-        if (!isMounted) return; // Component unmounted
-
-        if (response.data.success) {
-          const internships = response.data.data;
-
-          // Calculate stats
-          const activeCount = internships.filter(i => i.status === 'active').length;
-          const totalApps = internships.reduce((sum, i) => sum + (i.statistics?.totalApplications || 0), 0);
-
-          setStats({
-            totalInternships: internships.length,
-            activeInternships: activeCount,
-            totalApplications: totalApps,
-            pendingReview: 0, // Will be calculated from applications endpoint if implemented
-          });
-
-          // Get recent internships (last 5)
-          setRecentInternships(internships.slice(0, 5));
-        }
-      } catch (err) {
-        if (err.name === 'AbortError' || err.name === 'CanceledError') {
-          return; // Request was cancelled
-        }
-        if (isMounted) {
-          console.error('Failed to fetch dashboard data:', err);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchDashboardData();
-
-    return () => {
-      isMounted = false; // Cleanup
-    };
-  }, []); // ✅ FIX: Empty dependency array - only fetch once on mount
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Internships"
-          value={stats.totalInternships}
-          icon={Briefcase}
-          color="bg-blue-500"
-        />
-        <StatCard
-          title="Active Postings"
-          value={stats.activeInternships}
-          icon={TrendingUp}
-          color="bg-green-500"
-        />
-        <StatCard
-          title="Total Applications"
-          value={stats.totalApplications}
-          icon={Users}
-          color="bg-purple-500"
-        />
-        <StatCard
-          title="Pending Review"
-          value={stats.pendingReview}
-          icon={Clock}
-          color="bg-amber-500"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <QuickActionCard
-          title="Post New Internship"
-          description="Create a new internship opportunity"
-          icon={Briefcase}
-          onClick={() => navigate('/dashboard/internships/create')}
-          buttonText="Create Posting"
-        />
-        <QuickActionCard
-          title="View Applications"
-          description="Review and manage applications"
-          icon={Users}
-          onClick={() => navigate('/dashboard/applications')}
-          buttonText="View All"
-        />
-      </div>
-
-      {/* Recent Internships */}
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-neutral-900">Recent Internships</h2>
-          <button
-            onClick={() => navigate('/dashboard/my-internships')}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-          >
-            View All
-          </button>
-        </div>
-
-        {recentInternships.length === 0 ? (
-          <div className="text-center py-8">
-            <Briefcase className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-            <p className="text-neutral-600">No internships posted yet</p>
-            <button
-              onClick={() => navigate('/dashboard/internships/create')}
-              className="mt-4 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
-            >
-              Post Internship
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {recentInternships.map((internship) => (
-              <InternshipItem
-                key={internship._id}
-                internship={internship}
-                onClick={() => navigate(`/dashboard/internships/${internship._id}`)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </>
-  );
-};
-
-const StatCard = ({ title, value, icon: Icon, color, trend }) => {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-      </div>
-      <div className="mb-1">
-        <div className="text-3xl font-bold text-neutral-900">{value}</div>
-      </div>
-      <div className="text-sm text-neutral-600">{title}</div>
-      {trend && (
-        <div className="mt-2 text-xs text-green-600 font-medium">{trend}</div>
+            ) : (
+              <div className="divide-y divide-neutral-100">
+                {internships.slice(0, 5).map((i) => (
+                  <RowLink
+                    key={i._id}
+                    to={`/dashboard/internships/${i._id}`}
+                    title={i.title}
+                    subtitle={[formatPlace(i), `${i.statistics?.applications ?? 0} applications`].filter(Boolean).join(' · ')}
+                    badge={<StatusBadge kind="internship" status={i.status} />}
+                  />
+                ))}
+              </div>
+            )}
+          </Panel>
+        </>
       )}
     </div>
   );
-};
+}
 
-const QuickActionCard = ({ title, description, icon: Icon, onClick, buttonText }) => {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 hover:shadow-md transition-all">
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Icon className="w-6 h-6 text-primary-600" />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-1">{title}</h3>
-          <p className="text-sm text-neutral-600 mb-4">{description}</p>
-          <button
-            onClick={onClick}
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm font-medium"
-          >
-            {buttonText}
-          </button>
-        </div>
+/* ───────────────────────── Page ───────────────────────── */
+
+const DashboardPage = () => {
+  const { user, profile, loading } = useAuth();
+
+  useEffect(() => {
+    document.title = 'Dashboard | InternshipConnect';
+  }, []);
+
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center py-16" role="status" aria-label="Loading">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent motion-reduce:animate-none" />
       </div>
-    </div>
-  );
-};
+    );
+  }
 
-const ApplicationItem = ({ application, onClick }) => {
-  const getStatusColor = (status) => {
-    const colors = {
-      submitted: 'bg-blue-100 text-blue-700',
-      'under-review': 'bg-purple-100 text-purple-700',
-      shortlisted: 'bg-cyan-100 text-cyan-700',
-      interview: 'bg-amber-100 text-amber-700',
-      offered: 'bg-green-100 text-green-700',
-      rejected: 'bg-red-100 text-red-700',
-    };
-    return colors[status] || 'bg-neutral-100 text-neutral-600';
-  };
+  // Roles with their own home are redirected declaratively (no hooks after a return).
+  if (user.role === 'admin') return <Navigate to="/dashboard/admin" replace />;
+  if (user.role === 'university') return <Navigate to="/dashboard/university" replace />;
 
-  return (
-    <div
-      onClick={onClick}
-      className="flex items-center justify-between p-4 rounded-lg border border-neutral-200 hover:border-primary-300 hover:bg-primary-50/50 transition-all cursor-pointer"
-    >
-      <div className="flex-1">
-        <h4 className="font-medium text-neutral-900">
-          {application.internship?.title || 'Internship Title'}
-        </h4>
-        <p className="text-sm text-neutral-600">
-          {application.internship?.organization?.companyInfo?.companyName || 'Company'}
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-          {application.status?.replace('-', ' ').charAt(0).toUpperCase() + application.status?.slice(1).replace('-', ' ')}
-        </span>
-        <Eye className="w-5 h-5 text-neutral-400" />
-      </div>
-    </div>
-  );
-};
+  const isStudent = user.role === 'student';
+  const isOrganization = user.role === 'organization';
+  if (!isStudent && !isOrganization) {
+    return (
+      <Alert variant="error" title="Account type not recognised">
+        Your account has an unexpected role. Please contact support.
+      </Alert>
+    );
+  }
 
-const InternshipItem = ({ internship, onClick }) => {
-  const getStatusColor = (status) => {
-    const colors = {
-      draft: 'bg-neutral-100 text-neutral-600',
-      active: 'bg-green-100 text-green-700',
-      paused: 'bg-amber-100 text-amber-700',
-      closed: 'bg-red-100 text-red-700',
-      filled: 'bg-blue-100 text-blue-700',
-    };
-    return colors[status] || 'bg-neutral-100 text-neutral-600';
-  };
+  const name = isStudent
+    ? profile?.personalInfo?.firstName
+    : profile?.companyInfo?.name;
 
   return (
-    <div
-      onClick={onClick}
-      className="flex items-center justify-between p-4 rounded-lg border border-neutral-200 hover:border-primary-300 hover:bg-primary-50/50 transition-all cursor-pointer"
-    >
-      <div className="flex-1">
-        <h4 className="font-medium text-neutral-900">{internship.title}</h4>
-        <p className="text-sm text-neutral-600">
-          {internship.location?.city || 'Location'} • {internship.statistics?.totalApplications || 0} applications
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(internship.status)}`}>
-          {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
-        </span>
-        <Eye className="w-5 h-5 text-neutral-400" />
-      </div>
-    </div>
+    <>
+      <PageHeader
+        title={name ? `Welcome back, ${name}` : 'Welcome back'}
+        description={
+          isStudent
+            ? 'Track your applications and find new opportunities.'
+            : 'Manage your internship listings and review applicants.'
+        }
+        actions={
+          isStudent ? (
+            <Button as={Link} to="/dashboard/internships">Browse internships</Button>
+          ) : (
+            <Button as={Link} to="/dashboard/internships/create" icon={<Plus size={16} aria-hidden="true" />}>
+              Post an internship
+            </Button>
+          )
+        }
+      />
+      {isStudent ? <StudentDashboard profile={profile} /> : <OrganizationDashboard />}
+    </>
   );
 };
 

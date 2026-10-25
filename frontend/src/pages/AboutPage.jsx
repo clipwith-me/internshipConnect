@@ -1,86 +1,99 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Target, Heart, Globe } from 'lucide-react';
-import PublicNav from '../components/PublicNav';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Globe, Heart, Target } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Button } from '../components';
+import PageHero from '../components/PageHero';
 
-const C = {
-  navy: '#0D1426', amber: '#E8A230', teal: '#0D9488', white: '#ffffff',
-  gray50: '#F9FAFB', gray200: '#E5E7EB', gray600: '#4B5563',
-};
+const VALUES = [
+  {
+    icon: Target,
+    title: 'Opportunity for all',
+    body: 'Every student deserves a fair shot at work experience, regardless of their university ranking, city, or connections.',
+  },
+  {
+    icon: Heart,
+    title: 'Honest and transparent',
+    body: "No fake listings, no bait-and-switch pricing, no inflated numbers. We show you what's real and let the product speak for itself.",
+  },
+  {
+    icon: Globe,
+    title: 'Built for Africa',
+    body: "Africa's workforce is young, talented, and growing. We're designing tools that reflect the realities of the African job market, not copied from elsewhere.",
+  },
+];
 
 export default function AboutPage() {
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const ctaPath = isAuthenticated ? '/dashboard' : '/auth/register';
-  const ctaLabel = isAuthenticated ? 'Go to Dashboard' : 'Create free account';
+
+  useEffect(() => {
+    document.title = 'About | InternshipConnect';
+  }, []);
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: C.gray50, minHeight: '100vh' }}>
-      <PublicNav />
+    <>
+      <PageHero
+        eyebrow="About us"
+        title="About InternshipConnect"
+        description="A platform built to help African students find real internship opportunities and take their first steps into the professional world."
+      />
 
-      {/* Hero */}
-      <section style={{ background: C.navy, padding: '72px 24px 64px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 900, color: C.white, marginBottom: 16, lineHeight: 1.15 }}>
-          About <span style={{ color: C.amber }}>InternshipConnect</span>
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18, maxWidth: 600, margin: '0 auto', lineHeight: 1.7 }}>
-          A platform built to help African students find real internship opportunities and take their first steps into the professional world.
-        </p>
+      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6" aria-labelledby="story-heading">
+        <h2 id="story-heading" className="text-2xl font-semibold text-neutral-900">Our story</h2>
+        <div className="mt-6 space-y-5 text-lg leading-relaxed text-neutral-600">
+          <p>
+            InternshipConnect was created with one goal in mind: make it easier for African students to find and
+            apply for internships without the friction of fragmented job boards, unanswered emails, and opaque
+            application processes.
+          </p>
+          <p>
+            Too many talented students miss out on valuable work experience simply because they don't know where to
+            look, or companies don't know how to reach them. We're building the bridge between students ready to
+            learn and companies ready to invest in the next generation.
+          </p>
+          <p>
+            We're an early-stage platform, which means your feedback directly shapes what we build. Every feature,
+            every workflow, every improvement comes from listening to students and employers who use
+            InternshipConnect every day.
+          </p>
+        </div>
       </section>
 
-      {/* Story */}
-      <section style={{ maxWidth: 860, margin: '0 auto', padding: '72px 24px' }}>
-        <h2 style={{ fontSize: 28, fontWeight: 800, color: C.navy, marginBottom: 20 }}>Our story</h2>
-        <p style={{ color: C.gray600, fontSize: 17, lineHeight: 1.9, marginBottom: 20 }}>
-          InternshipConnect was created with one goal in mind: make it easier for African students to find and apply for internships without the friction of fragmented job boards, unanswered emails, and opaque application processes.
-        </p>
-        <p style={{ color: C.gray600, fontSize: 17, lineHeight: 1.9, marginBottom: 20 }}>
-          Too many talented students miss out on valuable work experience simply because they don't know where to look, or companies don't know how to reach them. We're building the bridge between students ready to learn and companies ready to invest in the next generation.
-        </p>
-        <p style={{ color: C.gray600, fontSize: 17, lineHeight: 1.9 }}>
-          We're an early-stage platform — which means your feedback directly shapes what we build. Every feature, every workflow, every improvement comes from listening to students and employers who use InternshipConnect every day.
-        </p>
-      </section>
-
-      {/* Values */}
-      <section style={{ background: C.white, padding: '72px 24px' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 800, color: C.navy, marginBottom: 48, textAlign: 'center' }}>What we stand for</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32 }}>
-            {[
-              { icon: Target, title: 'Opportunity for all', body: 'Every student deserves a fair shot at work experience, regardless of their university ranking, city, or connections.' },
-              { icon: Heart, title: 'Honest and transparent', body: 'No fake listings, no bait-and-switch pricing, no inflated numbers. We show you what\'s real and let the product speak for itself.' },
-              { icon: Globe, title: 'Built for Africa', body: 'Africa\'s workforce is young, talented, and growing. We\'re designing tools that reflect the realities of the African job market, not copied from elsewhere.' },
-            ].map(({ icon: Icon, title, body }) => (
-              <div key={title} style={{ background: C.gray50, borderRadius: 16, padding: 32 }}>
-                <div style={{ width: 52, height: 52, background: C.navy, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-                  <Icon size={24} color={C.amber} />
-                </div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginBottom: 10 }}>{title}</h3>
-                <p style={{ color: C.gray600, fontSize: 15, lineHeight: 1.7 }}>{body}</p>
-              </div>
+      <section className="border-y border-neutral-200 bg-neutral-50" aria-labelledby="values-heading">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <h2 id="values-heading" className="text-center text-2xl font-semibold text-neutral-900">What we stand for</h2>
+          <ul className="mt-10 grid gap-6 md:grid-cols-3">
+            {VALUES.map(({ icon: Icon, title, body }) => (
+              <li key={title} className="rounded-xl border border-neutral-200 bg-white p-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                  <Icon size={20} aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 font-semibold text-neutral-900">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{body}</p>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={{ background: C.navy, padding: '72px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 32, fontWeight: 800, color: C.white, marginBottom: 16 }}>Ready to get started?</h2>
-        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 17, marginBottom: 36 }}>Join students and companies building something together.</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <button onClick={() => navigate(ctaPath)} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 15, padding: '14px 36px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-            {ctaLabel} <ArrowRight size={17} />
-          </button>
-          <button onClick={() => navigate('/contact')} style={{ background: 'rgba(255,255,255,0.08)', color: C.white, fontWeight: 700, fontSize: 15, padding: '14px 36px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}>
+      <section className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
+        <h2 className="text-2xl font-semibold text-neutral-900">Ready to get started?</h2>
+        <p className="mt-3 text-neutral-600">Join the students and companies building something together.</p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button
+            as={Link}
+            to={isAuthenticated ? '/dashboard' : '/auth/register'}
+            size="lg"
+            icon={<ArrowRight size={18} aria-hidden="true" />}
+            iconPosition="right"
+          >
+            {isAuthenticated ? 'Go to dashboard' : 'Create a free account'}
+          </Button>
+          <Button as={Link} to="/contact" size="lg" variant="secondary">
             Contact us
-          </button>
+          </Button>
         </div>
       </section>
-
-      <footer style={{ background: '#080E1C', padding: '28px 24px', textAlign: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>© {new Date().getFullYear()} InternshipConnect. All rights reserved.</p>
-      </footer>
-    </div>
+    </>
   );
 }

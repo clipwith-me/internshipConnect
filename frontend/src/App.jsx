@@ -1,6 +1,6 @@
 // frontend/src/App.jsx - OPTIMIZED WITH CODE SPLITTING
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute, { GuestRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -8,9 +8,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 // ✅ PERFORMANCE: Keep critical layouts loaded immediately
 import DashboardLayout from './layouts/DashboardLayout';
 import AuthLayout from './layouts/AuthLayout';
+import PublicLayout from './layouts/PublicLayout';
 
 // ✅ PERFORMANCE: Lazy load all page components for code splitting
 const LandingPage = lazy(() => import('./pages/LandingPage'));
+const PublicInternshipsPage = lazy(() => import('./pages/PublicInternshipsPage'));
 const ComponentShowcase = lazy(() => import('./pages/ComponentShowcase'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
@@ -36,6 +38,7 @@ const DemoPage = lazy(() => import('./pages/DemoPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const UniversityDashboardPage = lazy(() => import('./pages/UniversityDashboardPage'));
 const UniversityStudentsPage = lazy(() => import('./pages/UniversityStudentsPage'));
+const UniversityProfilePage = lazy(() => import('./pages/UniversityProfilePage'));
 const SavedInternshipsPage = lazy(() => import('./pages/SavedInternshipsPage'));
 const ReferralPage = lazy(() => import('./pages/ReferralPage'));
 const VerificationPage = lazy(() => import('./pages/VerificationPage'));
@@ -65,21 +68,24 @@ function App() {
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* Landing Page */}
-              <Route path="/" element={<LandingPage />} />
+              {/* Public site: one shared layout (nav, footer, skip link) */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/internships" element={<PublicInternshipsPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/career-tips" element={<CareerTipsPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/pricing" element={<PublicPricingPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+              </Route>
 
-              {/* Component Showcase (for testing) */}
-              <Route path="/showcase" element={<ComponentShowcase />} />
-
-              {/* Public Routes */}
+              {/* Standalone public pages with their own layouts */}
               <Route path="/contact-sales" element={<ContactSalesPage />} />
               <Route path="/demo" element={<DemoPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/career-tips" element={<CareerTipsPage />} />
-              <Route path="/privacy" element={<PrivacyPolicyPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/pricing" element={<PublicPricingPage />} />
-              <Route path="/contact" element={<ContactPage />} />
+
+              {/* Internal component gallery: development builds only */}
+              {import.meta.env.DEV && <Route path="/showcase" element={<ComponentShowcase />} />}
 
           {/* Auth Routes (Guest only - redirect if logged in) */}
           <Route
@@ -161,6 +167,11 @@ function App() {
                 <UniversityStudentsPage />
               </ProtectedRoute>
             } />
+            <Route path="university/profile" element={
+              <ProtectedRoute requiredRole="university">
+                <UniversityProfilePage />
+              </ProtectedRoute>
+            } />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="pricing" element={<PricingPage />} />
             <Route path="saved" element={<SavedInternshipsPage />} />
@@ -178,8 +189,10 @@ function App() {
             } />
           </Route>
 
-              {/* 404 Not Found */}
-              <Route path="*" element={<NotFoundPage />} />
+              {/* 404 Not Found (inside the public layout so users keep their bearings) */}
+              <Route element={<PublicLayout />}>
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
             </Routes>
           </Suspense>
         </AuthProvider>
@@ -193,17 +206,27 @@ function App() {
 // ═══════════════════════════════════════════════════════════
 
 function NotFoundPage() {
+  useEffect(() => {
+    document.title = 'Page not found | InternshipConnect';
+  }, []);
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-      <div className="text-center">
-        <h1 className="text-6xl font-bold text-neutral-900 mb-4">404</h1>
-        <p className="text-xl text-neutral-600 mb-8">Page not found</p>
-        <a 
-          href="/dashboard" 
-          className="inline-block px-6 py-3 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors"
+    <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-24 text-center">
+      <p className="text-sm font-semibold text-primary-600">404</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">Page not found</h1>
+      <p className="mt-3 text-neutral-600">The page you're looking for doesn't exist or may have moved.</p>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Link
+          to="/"
+          className="inline-flex h-11 items-center justify-center rounded-md bg-primary-500 px-5 text-sm font-medium text-white hover:bg-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
         >
-          Go to Dashboard
-        </a>
+          Go to home
+        </Link>
+        <Link
+          to="/internships"
+          className="inline-flex h-11 items-center justify-center rounded-md border border-neutral-300 bg-white px-5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2"
+        >
+          Browse internships
+        </Link>
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 // frontend/src/pages/DemoPage.jsx
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BarChart3, MessageCircle, Users, Settings, Star,
@@ -8,7 +7,6 @@ import {
 } from 'lucide-react';
 
 const DemoPage = () => {
-  const [activeDemo, setActiveDemo] = useState('overview');
 
   const features = [
     {

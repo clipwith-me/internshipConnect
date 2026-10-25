@@ -65,7 +65,8 @@ const Badge = ({
       {onRemove && (
         <button
           onClick={onRemove}
-          className="ml-1 hover:opacity-70 transition-opacity"
+          type="button"
+          className="ml-1 rounded-full hover:opacity-70 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
           aria-label="Remove"
         >
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

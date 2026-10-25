@@ -10,7 +10,6 @@ const UsersManagement = () => {
     role: 'all',
     status: 'all'
   });
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchUsers();

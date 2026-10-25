@@ -114,7 +114,9 @@ export default function FounderDashboardPage() {
       try {
         const res = await founderAPI.realtime();
         setRtData(res.data.data);
-      } catch (_) {}
+      } catch {
+        // Live ticker is best-effort; keep the last good values on a failed poll.
+      }
     };
     load();
     const id = setInterval(load, 30000);
@@ -331,7 +333,7 @@ export default function FounderDashboardPage() {
                   <YAxis type="category" dataKey="stage" stroke="#64748B" tick={{ fontSize: 11 }} width={130} />
                   <Tooltip
                     contentStyle={{ background: '#1E293B', border: 'none', color: '#F1F5F9' }}
-                    formatter={(v, n, p) => [v, n === 'count' ? 'Students' : 'Drop-off']}
+                    formatter={(v, n) => [v, n === 'count' ? 'Students' : 'Drop-off']}
                   />
                   <Legend />
                   <Bar dataKey="count"   fill={AMBER} name="Remaining" radius={[0,4,4,0]} />

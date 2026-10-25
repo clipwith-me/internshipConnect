@@ -61,6 +61,10 @@ const userSchema = new mongoose.Schema({
 
   // Set when the user deletes their account (data is erased/anonymised; see accountDeletion.service.js)
   deletedAt: Date,
+
+  // Bumped on password change/reset and "sign out everywhere"; tokens carry the
+  // version they were issued with, so older tokens stop working immediately.
+  tokenVersion: { type: Number, default: 0 },
   loginAttempts: {
     type: Number,
     default: 0

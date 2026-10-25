@@ -331,7 +331,7 @@ const DEFAULT_NOTIF = {
   marketingEmails: false,
 };
 
-const NotificationSettings = ({ user, showMessage }) => {
+const NotificationSettings = ({ showMessage }) => {
   const [settings, setSettings] = useState(() => {
     try { return { ...DEFAULT_NOTIF, ...JSON.parse(localStorage.getItem(NOTIF_KEY) || '{}') }; }
     catch { return DEFAULT_NOTIF; }
@@ -392,6 +392,7 @@ const SecuritySettings = ({ user, showMessage }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -399,8 +400,14 @@ const SecuritySettings = ({ user, showMessage }) => {
     if (pwForm.newPassword.length < 8) { showMessage('error', 'Password must be at least 8 characters.'); return; }
     try {
       setLoading(true);
-      await authAPI.changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
-      showMessage('success', 'Password changed successfully.');
+      const res = await authAPI.changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
+      // Other devices are signed out by a password change; keep this one signed in.
+      const tokens = res.data?.data?.tokens;
+      if (tokens) {
+        localStorage.setItem('accessToken', tokens.accessToken);
+        localStorage.setItem('refreshToken', tokens.refreshToken);
+      }
+      showMessage('success', 'Password changed. Other devices have been signed out.');
       setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
       showMessage('error', err.response?.data?.message || err.response?.data?.error || 'Failed to change password. Check your current password and try again.');
@@ -409,14 +416,16 @@ const SecuritySettings = ({ user, showMessage }) => {
 
   const handleDeleteAccount = async () => {
     if (confirmDelete !== user?.email) { showMessage('error', 'Email does not match. Please type your email exactly.'); return; }
+    if (!deletePassword) { showMessage('error', 'Enter your password to confirm.'); return; }
     try {
       setDeleteLoading(true);
-      // Call delete account API — fall back to logout if not available
-      try { await authAPI.deleteAccount?.(); } catch {}
-      showMessage('success', 'Account deletion requested. You will be signed out.');
-      setTimeout(() => logout(), 2000);
-    } catch { showMessage('error', 'Failed to delete account. Please contact support.'); }
-    finally { setDeleteLoading(false); }
+      await authAPI.deleteAccount(deletePassword);
+      showMessage('success', 'Your account has been deleted. Signing you out…');
+      setTimeout(() => logout(), 1500);
+    } catch (err) {
+      // Show the server's real reason (wrong password, active subscription, ...)
+      showMessage('error', err.response?.data?.message || 'Failed to delete account. Please try again or contact support.');
+    } finally { setDeleteLoading(false); }
   };
 
   const PwField = ({ field, label, placeholder }) => (
@@ -458,7 +467,7 @@ const SecuritySettings = ({ user, showMessage }) => {
       {/* Active Sessions */}
       <div className="mb-8">
         <h3 className="text-base font-semibold text-neutral-900 mb-2">Active Session</h3>
-        <p className="text-sm text-neutral-500 mb-4">You are currently signed in. Signing out will end this session on all devices.</p>
+        <p className="text-sm text-neutral-500 mb-4">You are signed in on this device. You can sign out everywhere, which ends every active session, including this one.</p>
         <div className="flex items-center justify-between bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 mb-4">
           <div>
             <p className="text-sm font-medium text-neutral-900">Current device</p>
@@ -468,7 +477,15 @@ const SecuritySettings = ({ user, showMessage }) => {
         </div>
         <button
           type="button"
-          onClick={() => { try { authAPI.logout(); } catch {} window.location.href = '/'; }}
+          onClick={async () => {
+            try {
+              await authAPI.logoutAll(); // revokes every session on the server
+            } catch (err) {
+              showMessage('error', err.response?.data?.message || 'We could not sign you out of all devices. Please try again.');
+              return;
+            }
+            await logout(); // clears this device's tokens and returns to sign-in
+          }}
           className="flex items-center gap-2 px-5 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 font-medium text-sm transition-colors"
         >
           <LogOut size={16} /> Sign out of all devices
@@ -490,6 +507,18 @@ const SecuritySettings = ({ user, showMessage }) => {
             value={confirmDelete}
             onChange={e => setConfirmDelete(e.target.value)}
             placeholder={user?.email}
+            autoComplete="off"
+            className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent mb-3 bg-white"
+          />
+          <label htmlFor="delete-password" className="block text-sm font-medium text-neutral-700 mb-2">
+            Enter your password
+          </label>
+          <input
+            id="delete-password"
+            type="password"
+            value={deletePassword}
+            onChange={e => setDeletePassword(e.target.value)}
+            autoComplete="current-password"
             className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent mb-3 bg-white"
           />
           <SaveBtn

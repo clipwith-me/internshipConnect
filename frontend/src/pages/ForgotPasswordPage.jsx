@@ -41,7 +41,7 @@ const ForgotPasswordPage = () => {
       if (response.data.success) {
         setSuccess(true);
         // Log reset token in development
-        if (response.data.resetToken) {
+        if (import.meta.env.DEV && response.data.resetToken) {
           console.log('🔑 Reset Token (DEV ONLY):', response.data.resetToken);
           console.log('🔗 Reset URL:', `/auth/reset-password/${response.data.resetToken}`);
         }
@@ -66,9 +66,9 @@ const ForgotPasswordPage = () => {
         </h2>
 
         <p className="text-neutral-600 mb-6">
-          We've sent a password reset link to <strong>{email}</strong>.
+          If an account exists for <strong>{email}</strong>, we've sent a password reset link to it.
           <br />
-          The link will expire in 10 minutes.
+          The link expires in 10 minutes.
         </p>
 
         <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">

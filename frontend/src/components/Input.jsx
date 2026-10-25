@@ -1,205 +1,174 @@
 // frontend/src/components/Input.jsx
-import { forwardRef, useState } from 'react';
+import { forwardRef, useId, useState } from 'react';
 import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 
 /**
- * 🎓 LEARNING: Input Component
- * 
- * A versatile input component following Microsoft Fluent Design.
- * 
- * Features:
- * - Text, email, password, number, textarea types
- * - Label and helper text
- * - Error and success states
- * - Icon support (left/right)
- * - Password visibility toggle
- * - Character counter for textarea
- * - Disabled and readonly states
- * - Full accessibility
+ * Input / Textarea with label, helper text, validation states and icons.
+ *
+ * Works controlled (value + onChange) or uncontrolled. Caller-supplied
+ * onChange/onFocus/onBlur are always honoured: they are called, never replaced.
+ *
+ * Accessibility: label bound by id (generated when none is given), errors are
+ * announced (role="alert"), aria-invalid / aria-describedby are wired, and the
+ * password visibility toggle is a real, keyboard-reachable, labelled button.
  */
+const Input = forwardRef(function Input(
+  {
+    label,
+    type = 'text',
+    error,
+    success,
+    helperText,
+    icon,
+    iconPosition = 'left',
+    required = false,
+    disabled = false,
+    fullWidth = true,
+    maxLength,
+    showCount = false,
+    rows = 4,
+    className = '',
+    id: idProp,
+    onChange,
+    ...props
+  },
+  ref
+) {
+  const generatedId = useId();
+  const id = idProp || `field-${generatedId}`;
+  const errorId = `${id}-error`;
+  const helperId = `${id}-helper`;
 
-const Input = forwardRef(({
-  label,
-  type = 'text',
-  error,
-  success,
-  helperText,
-  icon,
-  iconPosition = 'left',
-  required = false,
-  disabled = false,
-  fullWidth = true,
-  maxLength,
-  showCount = false,
-  rows = 4,
-  className = '',
-  ...props
-}, ref) => {
-  
   const [showPassword, setShowPassword] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [value, setValue] = useState(props.value || props.defaultValue || '');
-  
-  // Determine actual input type
-  const inputType = type === 'password' && showPassword ? 'text' : type;
+  // Only needed for the character counter when the field is uncontrolled.
+  const [uncontrolledLength, setUncontrolledLength] = useState(
+    String(props.defaultValue ?? '').length
+  );
+
   const isTextarea = type === 'textarea';
   const isPassword = type === 'password';
-  
-  // Base input styles
-  const baseStyles = `
-    w-full px-4 py-2
-    border rounded-md
-    transition-all duration-200
-    focus:outline-none focus:ring-2
-    disabled:bg-neutral-100 disabled:cursor-not-allowed
-    placeholder:text-neutral-400
-  `;
-  
-  // State-based styles
-  const stateStyles = error
-    ? 'border-error-500 focus:border-error-500 focus:ring-error-500'
-    : success
-    ? 'border-success-500 focus:border-success-500 focus:ring-success-500'
-    : focused
-    ? 'border-primary-500 focus:border-primary-500 focus:ring-primary-500'
-    : 'border-neutral-200 focus:border-primary-500 focus:ring-primary-500';
-  
-  // Icon padding
-  const iconPaddingStyles = icon
-    ? iconPosition === 'left'
-      ? 'pl-10'
-      : 'pr-10'
-    : '';
-  
-  // Password toggle padding
-  const passwordPaddingStyles = isPassword ? 'pr-10' : '';
-  
-  // Combined input classes
-  const inputClasses = `
-    ${baseStyles}
-    ${stateStyles}
-    ${iconPaddingStyles}
-    ${passwordPaddingStyles}
-    ${className}
-  `.replace(/\s+/g, ' ').trim();
-  
-  // Handle value change
+  const inputType = isPassword && showPassword ? 'text' : type;
+
+  const currentLength =
+    props.value !== undefined ? String(props.value ?? '').length : uncontrolledLength;
+
   const handleChange = (e) => {
-    setValue(e.target.value);
-    if (props.onChange) {
-      props.onChange(e);
-    }
+    if (props.value === undefined) setUncontrolledLength(e.target.value.length);
+    onChange?.(e);
   };
-  
-  // Common input props
-  const commonProps = {
+
+  const stateStyles = error
+    ? 'border-error-500 focus:border-error-500 focus:ring-error-500/30'
+    : success
+    ? 'border-success-500 focus:border-success-500 focus:ring-success-500/30'
+    : 'border-neutral-300 hover:border-neutral-400 focus:border-primary-500 focus:ring-primary-500/30';
+
+  const paddingLeft = icon && iconPosition === 'left' ? 'pl-10' : 'pl-3.5';
+  const paddingRight =
+    isPassword || (icon && iconPosition === 'right') || error || success ? 'pr-10' : 'pr-3.5';
+
+  const fieldClasses = [
+    'block w-full rounded-md border bg-white text-sm text-neutral-900',
+    'placeholder:text-neutral-500 transition-colors duration-150',
+    'focus:outline-none focus:ring-4',
+    'disabled:bg-neutral-100 disabled:text-neutral-500 disabled:cursor-not-allowed',
+    isTextarea ? 'py-2.5 resize-y min-h-[5rem]' : 'h-10',
+    paddingLeft,
+    paddingRight,
+    stateStyles,
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const describedBy = error ? errorId : helperText && !success ? helperId : undefined;
+
+  const common = {
+    id,
     ref,
     disabled,
     required,
     maxLength,
-    className: inputClasses,
-    onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
-    onChange: handleChange,
-    value,
-    'aria-invalid': error ? 'true' : 'false',
-    'aria-describedby': error ? `${props.id}-error` : helperText ? `${props.id}-helper` : undefined,
+    className: fieldClasses,
+    'aria-invalid': error ? true : undefined,
+    'aria-describedby': describedBy,
     ...props,
+    onChange: handleChange,
   };
-  
+
   return (
     <div className={fullWidth ? 'w-full' : ''}>
-      {/* Label */}
       {label && (
-        <label
-          htmlFor={props.id}
-          className="block text-sm font-medium text-neutral-700 mb-1"
-        >
+        <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-neutral-700">
           {label}
-          {required && <span className="text-error-500 ml-1">*</span>}
+          {required && (
+            <span className="ml-0.5 text-error-500" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
-      
-      {/* Input container */}
+
       <div className="relative">
-        {/* Left icon */}
         {icon && iconPosition === 'left' && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400"
+            aria-hidden="true"
+          >
             {icon}
           </div>
         )}
-        
-        {/* Input or Textarea */}
-        {isTextarea ? (
-          <textarea
-            {...commonProps}
-            rows={rows}
-          />
-        ) : (
-          <input
-            type={inputType}
-            {...commonProps}
-          />
-        )}
-        
-        {/* Right icon */}
-        {icon && iconPosition === 'right' && !isPassword && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-neutral-400">
+
+        {isTextarea ? <textarea {...common} rows={rows} /> : <input type={inputType} {...common} />}
+
+        {icon && iconPosition === 'right' && !isPassword && !error && !success && (
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400"
+            aria-hidden="true"
+          >
             {icon}
           </div>
         )}
-        
-        {/* Password visibility toggle */}
+
         {isPassword && (
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600"
-            tabIndex={-1}
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-3 text-neutral-500 hover:text-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
           </button>
         )}
-        
-        {/* Success indicator */}
-        {success && !error && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+
+        {/* Status icons (not on password fields, where the toggle lives) */}
+        {!isPassword && success && !error && (
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3" aria-hidden="true">
             <CheckCircle size={18} className="text-success-500" />
           </div>
         )}
-        
-        {/* Error indicator */}
-        {error && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+        {!isPassword && error && (
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3" aria-hidden="true">
             <AlertCircle size={18} className="text-error-500" />
           </div>
         )}
       </div>
-      
-      {/* Character counter */}
+
       {showCount && maxLength && (
-        <div className="mt-1 text-xs text-neutral-500 text-right">
-          {value.length}/{maxLength}
+        <div className="mt-1 text-right text-xs text-neutral-500 tabular">
+          {currentLength}/{maxLength}
         </div>
       )}
-      
-      {/* Error message */}
+
       {error && (
-        <p id={`${props.id}-error`} className="mt-1 text-sm text-error-500">
+        <p id={errorId} role="alert" className="mt-1.5 text-sm text-error-600">
           {error}
         </p>
       )}
-      
-      {/* Success message */}
-      {success && !error && (
-        <p className="mt-1 text-sm text-success-500">
-          {success}
-        </p>
-      )}
-      
-      {/* Helper text */}
+      {success && !error && <p className="mt-1.5 text-sm text-success-600">{success}</p>}
       {helperText && !error && !success && (
-        <p id={`${props.id}-helper`} className="mt-1 text-sm text-neutral-500">
+        <p id={helperId} className="mt-1.5 text-sm text-neutral-500">
           {helperText}
         </p>
       )}
@@ -207,66 +176,4 @@ const Input = forwardRef(({
   );
 });
 
-Input.displayName = 'Input';
-
 export default Input;
-
-/**
- * 🎓 USAGE EXAMPLES:
- * 
- * // Basic input
- * <Input
- *   id="name"
- *   label="Full Name"
- *   placeholder="Enter your name"
- * />
- * 
- * // Email input with icon
- * <Input
- *   id="email"
- *   type="email"
- *   label="Email Address"
- *   icon={<Mail size={18} />}
- *   required
- * />
- * 
- * // Password input
- * <Input
- *   id="password"
- *   type="password"
- *   label="Password"
- *   required
- * />
- * 
- * // Input with error
- * <Input
- *   id="username"
- *   label="Username"
- *   error="Username already exists"
- * />
- * 
- * // Input with success
- * <Input
- *   id="email"
- *   label="Email"
- *   success="Email is available"
- * />
- * 
- * // Textarea with character counter
- * <Input
- *   id="bio"
- *   type="textarea"
- *   label="Bio"
- *   rows={6}
- *   maxLength={500}
- *   showCount
- *   helperText="Tell us about yourself"
- * />
- * 
- * // Controlled input
- * const [value, setValue] = useState('');
- * <Input
- *   value={value}
- *   onChange={(e) => setValue(e.target.value)}
- * />
- */

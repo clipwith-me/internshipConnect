@@ -22,7 +22,7 @@ const Card = ({
   padding = 'normal',
   ...props 
 }) => {
-  const baseStyles = 'bg-white rounded-lg overflow-hidden transition-shadow duration-200';
+  const baseStyles = 'bg-white rounded-xl border border-neutral-200 overflow-hidden transition-shadow duration-200';
   
   // Elevation (shadow) levels
   const elevations = {
@@ -34,10 +34,10 @@ const Card = ({
   };
   
   // Hover effect
-  const hoverStyles = hover ? 'hover:shadow-lg' : '';
+  const hoverStyles = hover ? 'hover:shadow-md' : '';
   
   // Clickable styling
-  const clickableStyles = clickable ? 'cursor-pointer hover:shadow-lg' : '';
+  const clickableStyles = clickable ? 'cursor-pointer hover:shadow-md' : '';
   
   // Padding variants
   const paddings = {
@@ -85,7 +85,7 @@ const CardTitle = ({
   className = '' 
 }) => {
   return (
-    <h3 className={`text-xl font-semibold text-neutral-900 ${className}`}>
+    <h3 className={`text-lg font-semibold text-neutral-900 ${className}`}>
       {children}
     </h3>
   );

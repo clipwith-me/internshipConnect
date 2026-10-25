@@ -208,6 +208,10 @@ api.interceptors.response.use(
  * Authentication endpoints
  */
 export const authAPI = {
+  // Invalidates every session on every device (server bumps the user's token version)
+  logoutAll: () => api.post('/auth/logout-all'),
+  // Permanently erases the account's personal data (server verifies the password)
+  deleteAccount: (password) => api.delete('/auth/account', { data: { password } }),
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   logout: () => api.post('/auth/logout'),
@@ -239,8 +243,8 @@ export const studentAPI = {
 };
 
 export const internshipAPI = {
-  getAll: (params) => api.get('/internships', { params }),
-  getById: (id) => api.get(`/internships/${id}`),
+  getAll: (params, config) => api.get('/internships', { params, ...config }),
+  getById: (id, config) => api.get(`/internships/${id}`, config),
   create: (data) => api.post('/internships', data),
   update: (id, data) => api.put(`/internships/${id}`, data),
   delete: (id) => api.delete(`/internships/${id}`),
@@ -361,6 +365,8 @@ export const messagingAPI = {
  * Payment/Subscription endpoints
  */
 export const paymentAPI = {
+  // Public, no auth: plan definitions for the marketing pricing page
+  getPublicPlans: (config) => api.get('/payments/public-plans', config),
   // Subscription management
   createCheckout: (plan, billingPeriod = 'monthly') =>
     api.post('/payments/create-checkout', { plan, billingPeriod }),
@@ -443,15 +449,16 @@ export const verificationAPI = {
  */
 export const universityAPI = {
   // Public directory (for the student "join your university" selector)
-  list: (search) => api.get('/universities', { params: search ? { search } : {} }),
+  list: (search, config) => api.get('/universities', { params: search ? { search } : {}, ...config }),
   // Student affiliation
+  getMine: (config) => api.get('/universities/mine', config), // current affiliation (student)
   join: (payload) => api.post('/universities/join', payload), // { joinCode } or { universityId }
   leave: () => api.post('/universities/leave'),
   // University coordinator
-  getMe: () => api.get('/universities/me'),
+  getMe: (config) => api.get('/universities/me', config),
   updateMe: (data) => api.put('/universities/me', data),
-  getDashboard: () => api.get('/universities/me/dashboard'),
-  getStudents: () => api.get('/universities/me/students'),
+  getDashboard: (config) => api.get('/universities/me/dashboard', config),
+  getStudents: (config) => api.get('/universities/me/students', config),
 };
 
 export default api;

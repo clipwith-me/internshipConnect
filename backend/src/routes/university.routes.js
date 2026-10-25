@@ -8,6 +8,7 @@ import {
   getStudents,
   joinUniversity,
   leaveUniversity,
+  getMyAffiliation,
 } from '../controllers/university.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 
@@ -17,6 +18,7 @@ const router = express.Router();
 router.get('/', listUniversities);
 
 // Student: affiliate with / leave a university.
+router.get('/mine', authenticate, authorize('student'), getMyAffiliation);
 router.post('/join', authenticate, authorize('student'), joinUniversity);
 router.post('/leave', authenticate, authorize('student'), leaveUniversity);
 

@@ -64,12 +64,39 @@ export const updateMyUniversity = async (req, res) => {
   try {
     const uni = await requireUniversity(req, res);
     if (!uni) return;
-    const { name, shortName, contact, location, website } = req.body;
-    if (name) uni.name = name;
+
+    // Accept only known string fields with sane lengths; ignore everything else.
+    const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : undefined);
+    const body = req.body || {};
+
+    const name = str(body.name, 150);
+    if (name !== undefined) {
+      if (!name) return res.status(400).json({ success: false, message: 'University name is required' });
+      uni.name = name;
+    }
+    const shortName = str(body.shortName, 30);
     if (shortName !== undefined) uni.shortName = shortName;
-    if (contact) uni.contact = { ...uni.contact?.toObject?.() ?? uni.contact, ...contact };
-    if (location) uni.location = { ...uni.location?.toObject?.() ?? uni.location, ...location };
-    if (website !== undefined) uni.website = website;
+
+    const website = str(body.website, 200);
+    if (website !== undefined) {
+      if (website && !/^https?:\/\/\S+\.\S+$/i.test(website)) {
+        return res.status(400).json({ success: false, message: 'Website must start with http:// or https://' });
+      }
+      uni.website = website;
+    }
+
+    const contact = body.contact && typeof body.contact === 'object' ? body.contact : {};
+    for (const [key, max] of [['coordinatorName', 120], ['email', 150], ['phone', 40]]) {
+      const v = str(contact[key], max);
+      if (v !== undefined) uni.set(`contact.${key}`, key === 'email' ? v.toLowerCase() : v);
+    }
+
+    const location = body.location && typeof body.location === 'object' ? body.location : {};
+    for (const key of ['city', 'state', 'country']) {
+      const v = str(location[key], 80);
+      if (v !== undefined) uni.set(`location.${key}`, v);
+    }
+
     await uni.save();
     res.json({ success: true, data: uni });
   } catch (err) {
@@ -290,5 +317,28 @@ export const leaveUniversity = async (req, res) => {
   } catch (err) {
     console.error('leaveUniversity error:', err);
     res.status(500).json({ success: false, message: 'Failed to leave university' });
+  }
+};
+
+/**
+ * GET /api/universities/mine   (student only)
+ * The university the logged-in student is currently linked to, or null.
+ */
+export const getMyAffiliation = async (req, res) => {
+  try {
+    const profile = await StudentProfile.findOne({ user: req.user._id })
+      .select('university universityJoinedAt')
+      .populate('university', 'name shortName location.state location.city')
+      .lean();
+    const uni = profile?.university;
+    res.json({
+      success: true,
+      data: uni
+        ? { id: uni._id, name: uni.name, shortName: uni.shortName, joinedAt: profile.universityJoinedAt }
+        : null,
+    });
+  } catch (err) {
+    console.error('getMyAffiliation error:', err);
+    res.status(500).json({ success: false, message: 'Failed to load your university' });
   }
 };

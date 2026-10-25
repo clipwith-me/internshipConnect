@@ -83,10 +83,37 @@ export const getInternships = async (req, res) => {
       query['location.type'] = req.query.type;
     }
 
-    // Industry filter
+    // Industry is a property of the employer (listings have no industry field of
+    // their own), so resolve matching employers first. Filtering on a field that
+    // does not exist on listings made this return nothing.
     if (typeof req.query.industry === 'string' && req.query.industry) {
-      query.industry = req.query.industry;
+      const orgIds = await OrganizationProfile.find({ 'companyInfo.industry': req.query.industry }).distinct('_id');
+      query.organization = { $in: orgIds };
     }
+
+    // Required skills: "react, python" matches listings that ask for any of them
+    if (typeof req.query.skills === 'string' && req.query.skills.trim()) {
+      const names = req.query.skills.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 10);
+      if (names.length) {
+        query['requirements.skills.name'] = {
+          $in: names.map((n) => new RegExp(`^${escapeRegex(n.slice(0, 50))}$`, 'i')),
+        };
+      }
+    }
+
+    // Pay range (compared against the listing's stated min/max, per month as shown in the UI)
+    const minPay = Number.parseFloat(req.query.minSalary);
+    const maxPay = Number.parseFloat(req.query.maxSalary);
+    const payConditions = [];
+    if (Number.isFinite(minPay) && minPay > 0) {
+      payConditions.push({
+        $or: [{ 'compensation.amount.max': { $gte: minPay } }, { 'compensation.amount.min': { $gte: minPay } }],
+      });
+    }
+    if (Number.isFinite(maxPay) && maxPay > 0) {
+      payConditions.push({ 'compensation.amount.min': { $lte: maxPay } });
+    }
+    if (payConditions.length) query.$and = [...(query.$and || []), ...payConditions];
 
     // Compensation type filter (paid, unpaid, stipend)
     if (['paid', 'unpaid', 'stipend', 'commission', 'negotiable'].includes(req.query.compensationType)) {

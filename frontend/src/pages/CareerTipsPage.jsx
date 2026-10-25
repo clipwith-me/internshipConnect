@@ -1,13 +1,9 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle, BookOpen, Briefcase, Users, Star, FileText, MessageSquare } from 'lucide-react';
-import PublicNav from '../components/PublicNav';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, BookOpen, Briefcase, Check, FileText, MessageSquare, Star, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const C = {
-  navy: '#0D1426', amber: '#E8A230', amberDk: '#c8871a',
-  teal: '#0D9488', white: '#ffffff',
-  gray50: '#F9FAFB', gray200: '#E5E7EB', gray400: '#9CA3AF', gray600: '#4B5563',
-};
+import { Button } from '../components';
+import PageHero from '../components/PageHero';
 
 const tips = [
   {
@@ -79,69 +75,66 @@ const tips = [
 ];
 
 export default function CareerTipsPage() {
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const ctaPath = isAuthenticated ? '/dashboard' : '/auth/register';
-  const ctaLabel = isAuthenticated ? 'Browse internships' : 'Find internships';
+
+  useEffect(() => {
+    document.title = 'Career tips | InternshipConnect';
+  }, []);
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: C.gray50, minHeight: '100vh' }}>
-      <PublicNav />
+    <>
+      <PageHero
+        eyebrow="Career tips"
+        title="How to land your first internship"
+        description="Practical, honest advice for students applying to internships, from profile setup to following up after an interview."
+      />
 
-      {/* Hero */}
-      <section style={{ background: C.navy, padding: '72px 24px 64px', textAlign: 'center' }}>
-        <span style={{ background: 'rgba(232,162,48,0.15)', color: C.amber, fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 100, letterSpacing: '0.05em', display: 'inline-block', marginBottom: 20 }}>CAREER TIPS</span>
-        <h1 style={{ fontSize: 'clamp(30px, 5vw, 48px)', fontWeight: 900, color: C.white, marginBottom: 16, lineHeight: 1.15 }}>
-          How to land your first internship
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18, maxWidth: 580, margin: '0 auto', lineHeight: 1.7 }}>
-          Practical, honest advice for students applying to internships — from profile setup to following up after an interview.
-        </p>
-      </section>
-
-      {/* Tips */}
-      <section style={{ maxWidth: 860, margin: '0 auto', padding: '72px 24px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+      <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6" aria-label="Tips">
+        <ol className="space-y-8">
           {tips.map((tip, i) => {
             const Icon = tip.icon;
             return (
-              <div key={i} style={{ background: C.white, borderRadius: 20, padding: '36px 40px', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: `1px solid ${C.gray200}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-                  <div style={{ width: 52, height: 52, background: C.navy, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon size={24} color={C.amber} />
-                  </div>
+              <li key={tip.title} className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+                <div className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                    <Icon size={24} aria-hidden="true" />
+                  </span>
                   <div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: C.gray400, letterSpacing: '0.07em' }}>TIP {String(i + 1).padStart(2, '0')}</span>
-                    <h2 style={{ fontSize: 20, fontWeight: 800, color: C.navy, marginTop: 2 }}>{tip.title}</h2>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Tip {i + 1}</p>
+                    <h2 className="text-xl font-semibold text-neutral-900">{tip.title}</h2>
                   </div>
                 </div>
-                <p style={{ color: C.gray600, fontSize: 16, lineHeight: 1.8, marginBottom: 24 }}>{tip.body}</p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {tip.bullets.map(b => (
-                    <li key={b} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: C.gray600, fontSize: 15 }}>
-                      <CheckCircle size={17} color={C.teal} style={{ flexShrink: 0, marginTop: 2 }} />
+                <p className="mt-5 leading-relaxed text-neutral-600">{tip.body}</p>
+                <ul className="mt-5 space-y-2.5">
+                  {tip.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-3 text-sm text-neutral-700">
+                      <Check size={18} className="mt-0.5 shrink-0 text-success-600" aria-hidden="true" />
                       {b}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </li>
             );
           })}
+        </ol>
+      </section>
+
+      <section className="border-t border-neutral-200 bg-neutral-50">
+        <div className="mx-auto max-w-3xl px-4 py-14 text-center sm:px-6">
+          <h2 className="text-2xl font-semibold text-neutral-900">Ready to apply?</h2>
+          <p className="mt-3 text-neutral-600">Browse internships on InternshipConnect. Free for students.</p>
+          <Button
+            as={Link}
+            to={isAuthenticated ? '/dashboard/internships' : '/internships'}
+            size="lg"
+            className="mt-6"
+            icon={<ArrowRight size={18} aria-hidden="true" />}
+            iconPosition="right"
+          >
+            Browse internships
+          </Button>
         </div>
       </section>
-
-      {/* CTA */}
-      <section style={{ background: C.navy, padding: '72px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 32, fontWeight: 800, color: C.white, marginBottom: 16 }}>Ready to apply?</h2>
-        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 17, marginBottom: 36 }}>Browse internships on InternshipConnect — free for students.</p>
-        <button onClick={() => navigate(ctaPath)} style={{ background: C.amber, color: C.navy, fontWeight: 800, fontSize: 15, padding: '14px 40px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          {ctaLabel} <ArrowRight size={17} />
-        </button>
-      </section>
-
-      <footer style={{ background: '#080E1C', padding: '28px 24px', textAlign: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>© {new Date().getFullYear()} InternshipConnect. All rights reserved.</p>
-      </footer>
-    </div>
+    </>
   );
 }

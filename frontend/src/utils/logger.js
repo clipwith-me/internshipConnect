@@ -14,7 +14,7 @@
 const isDevelopment = import.meta.env.MODE === 'development';
 
 class Logger {
-  info(message, ...args) {
+  info(_message, ..._args) {
     // ✅ PRODUCTION: Disable info logs for cleaner console
     // Keep console clean - only show errors and warnings
     // Uncomment below for debugging during development
@@ -44,7 +44,7 @@ class Logger {
     }
   }
 
-  performance(label, duration) {
+  performance(_label, _duration) {
     // ✅ PRODUCTION: Disable performance warnings in console for cleaner output
     // Performance monitoring should be done via external tools (e.g., Lighthouse, New Relic)
     // Uncomment below for performance debugging during development

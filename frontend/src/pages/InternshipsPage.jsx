@@ -1,453 +1,69 @@
-// frontend/src/pages/InternshipsPage.jsx
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { internshipAPI } from '../services/api';
-import { Search, MapPin, Briefcase, Clock, DollarSign, Building2, Filter, ChevronDown, Crown, Star } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useDebounce } from '../hooks/useDebounce';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronDown, Crown, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useInternshipSearch } from '../hooks/useInternshipSearch';
+import InternshipSearchBar from '../components/InternshipSearchBar';
+import InternshipResults from '../components/InternshipResults';
+import PageHeader from '../components/PageHeader';
+import Button from '../components/Button';
 
-const InternshipsPage = () => {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+const BASIC_KEYS = ['type', 'compensationType'];
+const ADVANCED_KEYS = ['industry', 'skills', 'minSalary', 'maxSalary'];
+
+/**
+ * In-app browse page. Advanced filters (industry, skills, pay range) are
+ * implemented server-side and available on paid plans; experience-level and
+ * duration filters were removed because no listing data backs them.
+ */
+export default function InternshipsPage() {
   const { user } = useAuth();
-  const [internships, setInternships] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [pagination, setPagination] = useState({});
-  const abortControllerRef = useRef(null);
+  const plan = user?.subscription?.plan || 'free';
+  const hasAdvanced = ['premium', 'pro'].includes(plan);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Check if user has premium plan
-  const userPlan = user?.subscription?.plan || 'free';
-  const hasPremium = ['premium', 'pro'].includes(userPlan);
-
-  // Initialize filters from URL search params
-  const [filters, setFilters] = useState({
-    search: searchParams.get('search') || '',
-    location: searchParams.get('location') || '',
-    type: searchParams.get('type') || '',
-    compensationType: searchParams.get('compensationType') || '',
-    // Premium filters
-    industry: searchParams.get('industry') || '',
-    experienceLevel: searchParams.get('experienceLevel') || '',
-    duration: searchParams.get('duration') || '',
-    minSalary: searchParams.get('minSalary') || '',
-    maxSalary: searchParams.get('maxSalary') || '',
-    skills: searchParams.get('skills') || ''
+  const search = useInternshipSearch({
+    pageSize: 9,
+    allowedKeys: hasAdvanced ? [...BASIC_KEYS, ...ADVANCED_KEYS] : BASIC_KEYS,
   });
-  const [showFilters, setShowFilters] = useState(false);
 
-  // Update filters when URL search params change
   useEffect(() => {
-    const searchFromUrl = searchParams.get('search');
-    if (searchFromUrl && searchFromUrl !== filters.search) {
-      setFilters(prev => ({ ...prev, search: searchFromUrl }));
-    }
-  }, [searchParams]);
-
-  // Debounce search and location inputs to prevent API flood
-  const debouncedSearch = useDebounce(filters.search, 300);
-  const debouncedLocation = useDebounce(filters.location, 300);
-
-  // Fetch when debounced values or select filters change
-  useEffect(() => {
-    fetchInternships();
-
-    // Cleanup: abort pending request on unmount or new request
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [debouncedSearch, debouncedLocation, filters.type, filters.compensationType,
-      filters.industry, filters.experienceLevel, filters.duration, filters.minSalary,
-      filters.maxSalary, filters.skills]);
-
-  const fetchInternships = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const params = {};
-      if (filters.search) params.search = filters.search;
-      if (filters.location) params.location = filters.location;
-      if (filters.type) params.type = filters.type;
-      if (filters.compensationType) params.compensationType = filters.compensationType;
-
-      // Premium filters (only sent if user has premium)
-      if (hasPremium) {
-        if (filters.industry) params.industry = filters.industry;
-        if (filters.experienceLevel) params.experienceLevel = filters.experienceLevel;
-        if (filters.duration) params.duration = filters.duration;
-        if (filters.minSalary) params.minSalary = filters.minSalary;
-        if (filters.maxSalary) params.maxSalary = filters.maxSalary;
-        if (filters.skills) params.skills = filters.skills;
-      }
-
-      const response = await internshipAPI.getAll(params);
-
-      if (response.data.success) {
-        setInternships(response.data.data.internships);
-        setPagination(response.data.data.pagination);
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load internships');
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchInternships();
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      search: '',
-      location: '',
-      type: '',
-      compensationType: '',
-      industry: '',
-      experienceLevel: '',
-      duration: '',
-      minSalary: '',
-      maxSalary: '',
-      skills: ''
-    });
-  };
+    document.title = 'Find internships | InternshipConnect';
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-neutral-900 mb-2">Find Internships</h1>
-          <p className="text-neutral-600">Discover opportunities that match your skills and interests</p>
-        </div>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <PageHeader title="Find internships" description="Search open roles and apply with your profile." />
 
-        {/* Search Bar */}
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 mb-6">
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by title or description..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="w-full h-12 pl-12 pr-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-              />
-            </div>
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
+        <InternshipSearchBar search={search} advanced={hasAdvanced && showAdvanced} />
+
+        <div className="mt-3">
+          {hasAdvanced ? (
             <button
               type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="h-12 px-6 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors flex items-center gap-2"
+              aria-expanded={showAdvanced}
+              onClick={() => setShowAdvanced((v) => !v)}
+              className="inline-flex items-center gap-2 rounded text-sm font-medium text-primary-600 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             >
-              <Filter className="w-5 h-5" />
-              Filters
-              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              <SlidersHorizontal size={16} aria-hidden="true" />
+              Advanced filters
+              <ChevronDown size={16} className={showAdvanced ? 'rotate-180' : ''} aria-hidden="true" />
             </button>
-            <button
-              type="submit"
-              className="h-12 px-8 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium"
-            >
-              Search
-            </button>
-          </form>
-
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="mt-6 pt-6 border-t border-neutral-200">
-              {/* Basic Filters (Free + Premium) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Location</label>
-                  <input
-                    type="text"
-                    placeholder="City or remote"
-                    value={filters.location}
-                    onChange={(e) => handleFilterChange('location', e.target.value)}
-                    className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Type</label>
-                  <select
-                    value={filters.type}
-                    onChange={(e) => handleFilterChange('type', e.target.value)}
-                    className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">All Types</option>
-                    <option value="remote">Remote</option>
-                    <option value="onsite">On-site</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">Compensation</label>
-                  <select
-                    value={filters.compensationType}
-                    onChange={(e) => handleFilterChange('compensationType', e.target.value)}
-                    className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">All Types</option>
-                    <option value="paid">Paid</option>
-                    <option value="unpaid">Unpaid</option>
-                    <option value="stipend">Stipend</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Premium Filters */}
-              {hasPremium ? (
-                <div className="pt-6 border-t border-neutral-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    {userPlan === 'pro' ? (
-                      <Crown className="w-5 h-5 text-amber-500" />
-                    ) : (
-                      <Star className="w-5 h-5 text-blue-500" />
-                    )}
-                    <h4 className="text-sm font-semibold text-neutral-700">
-                      Premium Filters
-                    </h4>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">Industry</label>
-                      <select
-                        value={filters.industry}
-                        onChange={(e) => handleFilterChange('industry', e.target.value)}
-                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option value="">All Industries</option>
-                        <option value="technology">Technology</option>
-                        <option value="finance">Finance</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="education">Education</option>
-                        <option value="marketing">Marketing</option>
-                        <option value="consulting">Consulting</option>
-                        <option value="engineering">Engineering</option>
-                        <option value="design">Design</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">Experience Level</label>
-                      <select
-                        value={filters.experienceLevel}
-                        onChange={(e) => handleFilterChange('experienceLevel', e.target.value)}
-                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option value="">All Levels</option>
-                        <option value="entry">Entry Level</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">Duration</label>
-                      <select
-                        value={filters.duration}
-                        onChange={(e) => handleFilterChange('duration', e.target.value)}
-                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option value="">Any Duration</option>
-                        <option value="1-3">1-3 months</option>
-                        <option value="3-6">3-6 months</option>
-                        <option value="6-12">6-12 months</option>
-                        <option value="12+">12+ months</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">Min Salary ($/month)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 1000"
-                        value={filters.minSalary}
-                        onChange={(e) => handleFilterChange('minSalary', e.target.value)}
-                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">Max Salary ($/month)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 5000"
-                        value={filters.maxSalary}
-                        onChange={(e) => handleFilterChange('maxSalary', e.target.value)}
-                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">Required Skills</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. React, Python"
-                        value={filters.skills}
-                        onChange={(e) => handleFilterChange('skills', e.target.value)}
-                        className="w-full h-10 px-4 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="pt-6 border-t border-neutral-200 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 text-center">
-                  <Crown className="w-12 h-12 text-primary-500 mx-auto mb-3" />
-                  <h4 className="text-lg font-semibold text-neutral-900 mb-2">
-                    Unlock Advanced Search Filters
-                  </h4>
-                  <p className="text-neutral-600 mb-4 max-w-md mx-auto">
-                    Get access to industry, experience level, salary range, duration, and skills filters with Premium
-                  </p>
-                  <button
-                    onClick={() => navigate('/dashboard/pricing')}
-                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    Upgrade to Premium
-                  </button>
-                </div>
-              )}
-
-              <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                >
-                  Clear all filters
-                </button>
-              </div>
-            </div>
+          ) : (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+              <Crown size={16} className="text-warning-600" aria-hidden="true" />
+              Filter by industry, skills and pay range with a paid plan.
+              <Button as={Link} to="/dashboard/pricing" variant="secondary" size="sm">View plans</Button>
+            </p>
           )}
         </div>
-
-        {/* Results */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-neutral-600 mt-4">Loading internships...</p>
-          </div>
-        ) : internships.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-12 text-center">
-            <Briefcase className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-neutral-900 mb-2">No internships found</h3>
-            <p className="text-neutral-600">Try adjusting your search filters</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {internships.map((internship) => (
-                <InternshipCard
-                  key={internship._id}
-                  internship={internship}
-                  onClick={() => navigate(`/dashboard/internships/${internship._id}`)}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-center gap-2">
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => handleFilterChange('page', page)}
-                    className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-                      page === pagination.currentPage
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-300'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
       </div>
+
+      <InternshipResults
+        search={search}
+        emptyHint="New internships are added by employers regularly. Check back soon."
+      />
     </div>
   );
-};
-
-const InternshipCard = ({ internship, onClick }) => {
-  return (
-    <div
-      onClick={onClick}
-      className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6 hover:shadow-md hover:border-primary-300 transition-all cursor-pointer group"
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-neutral-900 group-hover:text-primary-600 transition-colors mb-1">
-            {internship.title}
-          </h3>
-          <div className="flex items-center text-neutral-600 text-sm">
-            <Building2 className="w-4 h-4 mr-1" />
-            {internship.organization?.companyInfo?.companyName || 'Company Name'}
-          </div>
-        </div>
-        {internship.featured?.isFeatured && (
-          <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
-            Featured
-          </span>
-        )}
-      </div>
-
-      {/* Description */}
-      <p className="text-neutral-600 text-sm mb-4 line-clamp-2">
-        {internship.description}
-      </p>
-
-      {/* Metadata */}
-      <div className="flex flex-wrap gap-4 text-sm text-neutral-600">
-        <div className="flex items-center">
-          <MapPin className="w-4 h-4 mr-1" />
-          {internship.location?.type === 'remote' ? 'Remote' : internship.location?.city || 'Location'}
-        </div>
-        <div className="flex items-center">
-          <Briefcase className="w-4 h-4 mr-1" />
-          {internship.location?.type?.charAt(0).toUpperCase() + internship.location?.type?.slice(1) || 'Type'}
-        </div>
-        <div className="flex items-center">
-          <DollarSign className="w-4 h-4 mr-1" />
-          {/* ✅ FIX: Use compensationDisplay virtual field from backend */}
-          {internship.compensationDisplay || 'Not specified'}
-        </div>
-        {internship.timeline?.applicationDeadline && (
-          <div className="flex items-center">
-            <Clock className="w-4 h-4 mr-1" />
-            Deadline: {new Date(internship.timeline.applicationDeadline).toLocaleDateString()}
-          </div>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between">
-        <span className="text-xs text-neutral-500">
-          {internship.statistics?.applications || 0} applications
-        </span>
-        <span className={`px-2 py-1 rounded text-xs font-medium ${
-          internship.status === 'active'
-            ? 'bg-green-100 text-green-700'
-            : 'bg-neutral-100 text-neutral-600'
-        }`}>
-          {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-export default InternshipsPage;
+}

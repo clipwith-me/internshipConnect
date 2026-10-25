@@ -2,6 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Base layer: typography, focus, motion ─────────────────────────────────
+   Page background/colour live on <html> (not <body>) so the html.dark
+   overrides below always win and there is no light flash in dark mode.
+   ─────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    background-color: theme('colors.neutral.50');
+    color: theme('colors.neutral.800');
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold tracking-tight text-neutral-900;
+  }
+
+  /* Visible keyboard focus everywhere; controls that draw their own ring
+     (focus:ring-*) set outline-none, so there is no double indicator. */
+  :focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: theme('colors.primary.100');
+    color: theme('colors.primary.900');
+  }
+
+  /* Tabular figures keep counts and tables from jittering */
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+/* Skip-to-content link: hidden until focused by keyboard users */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 2000;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  background: theme('colors.neutral.900');
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 1rem; }
+
+/* Respect the user's motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ─── Dark mode CSS variable overrides ──────────────────────────────────────
    When html.dark is set, we remap the visual meaning of Tailwind's utility
    classes using targeted overrides. This covers the entire app without
@@ -112,3 +175,25 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #334155; }
 
 /* ── Misc utilities ── */
 html.dark .backdrop-blur-sm { background-color: rgba(13,17,23,0.8) !important; }
+
+/* ── Dark-mode parity for semantic design tokens (success / warning / error) ── */
+html.dark .bg-success-50  { background-color: #052e16 !important; }
+html.dark .bg-success-100 { background-color: #0a3d1f !important; }
+html.dark .text-success-600,
+html.dark .text-success-700 { color: #86efac !important; }
+html.dark .border-success-100 { border-color: #14532d !important; }
+html.dark .bg-warning-50  { background-color: #2a2108 !important; }
+html.dark .bg-warning-100 { background-color: #3a2c08 !important; }
+html.dark .text-warning-600,
+html.dark .text-warning-700 { color: #fcd34d !important; }
+html.dark .border-warning-100 { border-color: #5c4510 !important; }
+html.dark .bg-error-50  { background-color: #2d0a0a !important; }
+html.dark .bg-error-100 { background-color: #3d1111 !important; }
+html.dark .text-error-600,
+html.dark .text-error-700 { color: #fca5a5 !important; }
+html.dark .border-error-100 { border-color: #7f1d1d !important; }
+html.dark .bg-primary-50,
+html.dark .bg-primary-100 { background-color: #10213f !important; }
+html.dark .text-primary-700,
+html.dark .text-primary-800,
+html.dark .text-primary-900 { color: #93c5fd !important; }

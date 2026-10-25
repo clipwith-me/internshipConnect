@@ -1,33 +1,10 @@
 # robots.txt for InternshipConnect
-# Microsoft-grade SEO configuration
-
-# Allow all search engines to crawl the site
 User-agent: *
 Allow: /
 
-# Disallow sensitive pages
+# Authenticated app areas and the API are not for indexing
 Disallow: /dashboard/
 Disallow: /auth/
 Disallow: /api/
-Disallow: /admin/
-Disallow: /settings/
 
-# Allow important public pages
-Allow: /showcase
-Allow: /pricing
-
-# Sitemap location
-Sitemap: https://internshipconnect.vercel.app/sitemap.xml
-
-# Crawl delay (polite crawling)
-Crawl-delay: 1
-
-# Google-specific directives
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 0
-
-# Bing-specific directives
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
+Sitemap: https://internship-connect-beta.vercel.app/sitemap.xml

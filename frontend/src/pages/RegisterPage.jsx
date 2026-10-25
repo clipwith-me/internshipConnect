@@ -1,16 +1,23 @@
 ﻿// frontend/src/pages/RegisterPage.jsx
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowRight, GraduationCap, Building2, School, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, GraduationCap, Building2, School } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Alert, Button, Input } from '../components';
 
 const INDUSTRIES = [
   'Technology', 'Finance', 'Healthcare', 'Education',
   'Retail', 'Manufacturing', 'Media & Creative', 'Agriculture', 'Other',
 ];
 
+const ROLES = [
+  { id: 'student', icon: GraduationCap, label: 'Student', sub: 'Find internships' },
+  { id: 'organization', icon: Building2, label: 'Employer', sub: 'Hire interns' },
+  { id: 'university', icon: School, label: 'University', sub: 'Track students' },
+];
+
 const getPasswordStrength = (password) => {
-  if (!password) return { score: 0, label: '', color: '' };
+  if (!password) return { score: 0, label: '', bar: '', text: '' };
   let score = 0;
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
@@ -18,180 +25,148 @@ const getPasswordStrength = (password) => {
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
-  if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500' };
-  if (score <= 4) return { score, label: 'Fair', color: 'bg-amber-400' };
-  if (score <= 5) return { score, label: 'Good', color: 'bg-emerald-400' };
-  return { score, label: 'Strong', color: 'bg-emerald-500' };
+  if (score <= 2) return { score, label: 'Weak', bar: 'bg-error-500', text: 'text-error-600' };
+  if (score <= 4) return { score, label: 'Fair', bar: 'bg-warning-500', text: 'text-warning-700' };
+  return { score, label: score <= 5 ? 'Good' : 'Strong', bar: 'bg-success-500', text: 'text-success-600' };
 };
+
+const fieldLabelClass = 'mb-1.5 block text-sm font-medium text-neutral-700';
+const selectClass =
+  'h-10 w-full rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-900 hover:border-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { register, error: authError } = useAuth();
 
-  const [role, setRole] = useState('student');
+  // Landing-page CTAs link here with ?role=organization|university|student
+  const [searchParams] = useSearchParams();
+  const requestedRole = searchParams.get('role');
+  const [role, setRole] = useState(
+    ROLES.some((r) => r.id === requestedRole) ? requestedRole : 'student'
+  );
+
   const [formData, setFormData] = useState({
     email: '', password: '', confirmPassword: '',
     firstName: '', lastName: '',
     companyName: '', industry: 'technology',
     universityName: '', state: '', coordinatorName: '',
   });
+  const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   const passwordStrength = getPasswordStrength(formData.password);
 
+  useEffect(() => {
+    document.title = 'Create your account | InternshipConnect';
+  }, []);
+
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-    if (errors[id]) setErrors(prev => ({ ...prev, [id]: null }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
   const validate = () => {
-    const newErrors = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) newErrors.password = 'Must contain uppercase, lowercase, and a number';
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    const next = {};
+    if (!formData.email.trim()) next.email = 'Enter your email address';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) next.email = 'Enter a valid email address';
+    if (!formData.password) next.password = 'Create a password';
+    else if (formData.password.length < 8) next.password = 'Use at least 8 characters';
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
+      next.password = 'Include an uppercase letter, a lowercase letter and a number';
+    if (!formData.confirmPassword) next.confirmPassword = 'Confirm your password';
+    else if (formData.password !== formData.confirmPassword) next.confirmPassword = 'Passwords do not match';
+
     if (role === 'student') {
-      if (!formData.firstName) newErrors.firstName = 'First name is required';
-      if (!formData.lastName) newErrors.lastName = 'Last name is required';
+      if (!formData.firstName.trim()) next.firstName = 'Enter your first name';
+      if (!formData.lastName.trim()) next.lastName = 'Enter your last name';
     } else if (role === 'university') {
-      if (!formData.universityName) newErrors.universityName = 'University name is required';
-    } else {
-      if (!formData.companyName) newErrors.companyName = 'Company name is required';
+      if (!formData.universityName.trim()) next.universityName = 'Enter your university name';
+    } else if (!formData.companyName.trim()) {
+      next.companyName = 'Enter your company name';
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!agreed) next.agreed = 'You need to accept the Terms and Privacy Policy to continue';
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (loading || !validate()) return;
     setLoading(true);
-    const registrationData = {
-      email: formData.email, password: formData.password, role,
-      ...(role === 'student' && { firstName: formData.firstName, lastName: formData.lastName }),
-      ...(role === 'organization' && { companyName: formData.companyName, industry: formData.industry.toLowerCase() }),
+    const payload = {
+      email: formData.email.trim(),
+      password: formData.password,
+      role,
+      ...(role === 'student' && { firstName: formData.firstName.trim(), lastName: formData.lastName.trim() }),
+      ...(role === 'organization' && { companyName: formData.companyName.trim(), industry: formData.industry.toLowerCase() }),
       ...(role === 'university' && {
-        universityName: formData.universityName,
-        state: formData.state,
-        coordinatorName: formData.coordinatorName,
+        universityName: formData.universityName.trim(),
+        state: formData.state.trim(),
+        coordinatorName: formData.coordinatorName.trim(),
       }),
     };
-    const result = await register(registrationData);
+    const result = await register(payload);
     setLoading(false);
     if (result.success) navigate('/dashboard', { replace: true });
   };
 
   return (
-    <div className="w-full animate-fadeIn">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-neutral-900 mb-1 tracking-tight">Create your account</h2>
-        <p className="text-sm text-neutral-500">
-          Already have an account?{' '}
-          <Link to="/auth/login" className="font-semibold text-primary-500 hover:text-primary-700 transition-colors">Sign in</Link>
-        </p>
-      </div>
+    <div className="w-full">
+      <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">Create your account</h1>
+      <p className="mt-2 text-sm text-neutral-600">
+        Already have an account?{' '}
+        <Link to="/auth/login" className="font-semibold text-primary-600 hover:text-primary-700">Sign in</Link>
+      </p>
 
-      {authError && (
-        <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-slideInTop">
-          <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={16} />
-          <p className="text-sm text-red-700">{authError}</p>
-        </div>
-      )}
+      {authError && <Alert variant="error" className="mt-6">{authError}</Alert>}
 
-      {/* Role selector */}
-      <div className="mb-6">
-        <p className="text-sm font-medium text-neutral-700 mb-3">I am joining as a…</p>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { id: 'student', icon: GraduationCap, label: 'Student', sub: 'Find internships' },
-            { id: 'organization', icon: Building2, label: 'Organization', sub: 'Hire interns' },
-            { id: 'university', icon: School, label: 'University', sub: 'Track students' },
-          ].map(({ id, icon: Icon, label, sub }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setRole(id)}
-              className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center transition-all duration-200 ${
-                role === id
-                  ? 'border-primary-500 bg-primary-50 shadow-sm'
-                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50'
-              }`}
-            >
-              {role === id && (
-                <span className="absolute top-2 right-2 w-4 h-4 bg-primary-500 rounded-full flex items-center justify-center">
-                  <Check size={10} className="text-white" strokeWidth={3} />
-                </span>
-              )}
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${role === id ? 'bg-primary-100 text-primary-600' : 'bg-neutral-100 text-neutral-500'}`}>
-                <Icon size={20} />
-              </div>
-              <div>
-                <p className={`text-sm font-semibold ${role === id ? 'text-primary-700' : 'text-neutral-700'}`}>{label}</p>
-                <p className="text-xs text-neutral-500">{sub}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Student name fields */}
-        {role === 'student' && (
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { id: 'firstName', label: 'First name', placeholder: 'Amara' },
-              { id: 'lastName', label: 'Last name', placeholder: 'Okafor' },
-            ].map(({ id, label, placeholder }) => (
-              <div key={id}>
-                <label htmlFor={id} className="block text-sm font-medium text-neutral-700 mb-1.5">{label}</label>
+      <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-5">
+        {/* Role: a real radio group, operable with arrow keys */}
+        <fieldset>
+          <legend className={fieldLabelClass}>I'm joining as</legend>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {ROLES.map(({ id, icon: Icon, label, sub }) => (
+              <label
+                key={id}
+                className={`relative flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border p-3 text-center transition-colors focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 ${
+                  role === id
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-neutral-300 bg-white hover:border-neutral-400'
+                }`}
+              >
                 <input
-                  id={id}
-                  type="text"
-                  placeholder={placeholder}
-                  value={formData[id]}
-                  onChange={handleChange}
-                  className={`w-full px-3.5 py-2.5 text-sm border rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all ${errors[id] ? 'border-red-400 bg-red-50' : 'border-neutral-200 hover:border-neutral-300'}`}
+                  type="radio"
+                  name="role"
+                  value={id}
+                  checked={role === id}
+                  onChange={() => { setRole(id); setErrors({}); }}
+                  className="sr-only"
                 />
-                {errors[id] && <p className="mt-1 text-xs text-red-600">{errors[id]}</p>}
-              </div>
+                <Icon size={20} className={role === id ? 'text-primary-600' : 'text-neutral-500'} aria-hidden="true" />
+                <span className={`text-sm font-semibold ${role === id ? 'text-primary-700' : 'text-neutral-800'}`}>{label}</span>
+                <span className="hidden text-xs text-neutral-500 sm:block">{sub}</span>
+              </label>
             ))}
+          </div>
+        </fieldset>
+
+        {role === 'student' && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="First name" name="firstName" autoComplete="given-name" required value={formData.firstName} onChange={handleChange} error={errors.firstName} />
+            <Input label="Last name" name="lastName" autoComplete="family-name" required value={formData.lastName} onChange={handleChange} error={errors.lastName} />
           </div>
         )}
 
-        {/* Org fields */}
         {role === 'organization' && (
           <div className="space-y-4">
+            <Input label="Company name" name="companyName" autoComplete="organization" required value={formData.companyName} onChange={handleChange} error={errors.companyName} />
             <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-neutral-700 mb-1.5">Company name</label>
-              <input
-                id="companyName"
-                type="text"
-                placeholder="Acme Corp"
-                value={formData.companyName}
-                onChange={handleChange}
-                className={`w-full px-3.5 py-2.5 text-sm border rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all ${errors.companyName ? 'border-red-400 bg-red-50' : 'border-neutral-200 hover:border-neutral-300'}`}
-              />
-              {errors.companyName && <p className="mt-1 text-xs text-red-600">{errors.companyName}</p>}
-            </div>
-            <div>
-              <label htmlFor="industry" className="block text-sm font-medium text-neutral-700 mb-1.5">Industry</label>
-              <select
-                id="industry"
-                value={formData.industry}
-                onChange={handleChange}
-                className="w-full px-3.5 py-2.5 text-sm border border-neutral-200 rounded-xl bg-neutral-50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all hover:border-neutral-300"
-              >
-                {INDUSTRIES.map(ind => (
-                  <option key={ind} value={ind.toLowerCase()}>{ind}</option>
-                ))}
+              <label htmlFor="industry" className={fieldLabelClass}>Industry</label>
+              <select id="industry" name="industry" value={formData.industry} onChange={handleChange} className={selectClass}>
+                {INDUSTRIES.map((ind) => <option key={ind} value={ind.toLowerCase()}>{ind}</option>)}
               </select>
             </div>
           </div>
@@ -199,149 +174,66 @@ const RegisterPage = () => {
 
         {role === 'university' && (
           <div className="space-y-4">
-            <div>
-              <label htmlFor="universityName" className="block text-sm font-medium text-neutral-700 mb-1.5">University name</label>
-              <input
-                id="universityName"
-                type="text"
-                placeholder="University of Lagos"
-                value={formData.universityName}
-                onChange={handleChange}
-                className={`w-full px-3.5 py-2.5 text-sm border rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all ${errors.universityName ? 'border-red-400 bg-red-50' : 'border-neutral-200 hover:border-neutral-300'}`}
-              />
-              {errors.universityName && <p className="mt-1 text-xs text-red-600">{errors.universityName}</p>}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="coordinatorName" className="block text-sm font-medium text-neutral-700 mb-1.5">Coordinator name <span className="text-neutral-400 font-normal">(optional)</span></label>
-                <input
-                  id="coordinatorName"
-                  type="text"
-                  placeholder="SIWES / Career Services"
-                  value={formData.coordinatorName}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2.5 text-sm border border-neutral-200 rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all hover:border-neutral-300"
-                />
-              </div>
-              <div>
-                <label htmlFor="state" className="block text-sm font-medium text-neutral-700 mb-1.5">State <span className="text-neutral-400 font-normal">(optional)</span></label>
-                <input
-                  id="state"
-                  type="text"
-                  placeholder="Lagos"
-                  value={formData.state}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2.5 text-sm border border-neutral-200 rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all hover:border-neutral-300"
-                />
-              </div>
+            <Input label="University name" name="universityName" required placeholder="e.g. University of Lagos" value={formData.universityName} onChange={handleChange} error={errors.universityName} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input label="Coordinator or office (optional)" name="coordinatorName" placeholder="SIWES / Career Services" value={formData.coordinatorName} onChange={handleChange} />
+              <Input label="State (optional)" name="state" placeholder="Lagos" value={formData.state} onChange={handleChange} />
             </div>
           </div>
         )}
 
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1.5">Email address</label>
-          <div className="relative">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"><Mail size={16} /></div>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              className={`w-full pl-10 pr-4 py-2.5 text-sm border rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all ${errors.email ? 'border-red-400 bg-red-50' : 'border-neutral-200 hover:border-neutral-300'}`}
-            />
-          </div>
-          {errors.email && <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} /> {errors.email}</p>}
-        </div>
+        <Input
+          label="Email address" name="email" type="email" autoComplete="email" inputMode="email"
+          icon={<Mail size={16} />} required value={formData.email} onChange={handleChange} error={errors.email}
+        />
 
-        {/* Password */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1.5">Password</label>
-          <div className="relative">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"><Lock size={16} /></div>
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="new-password"
-              placeholder="Create a strong password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`w-full pl-10 pr-11 py-2.5 text-sm border rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all ${errors.password ? 'border-red-400 bg-red-50' : 'border-neutral-200 hover:border-neutral-300'}`}
-            />
-            <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors">
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
+          <Input
+            label="Password" name="password" type="password" autoComplete="new-password"
+            icon={<Lock size={16} />} required value={formData.password} onChange={handleChange} error={errors.password}
+            helperText="At least 8 characters, with an uppercase letter, a lowercase letter and a number."
+          />
           {formData.password && (
-            <div className="mt-2 space-y-1">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= passwordStrength.score ? passwordStrength.color : 'bg-neutral-200'}`} />
+            <div className="mt-2" role="status" aria-live="polite">
+              <div className="flex gap-1" aria-hidden="true">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= passwordStrength.score ? passwordStrength.bar : 'bg-neutral-200'}`} />
                 ))}
               </div>
-              <p className={`text-xs font-medium ${passwordStrength.score <= 2 ? 'text-red-500' : passwordStrength.score <= 4 ? 'text-amber-500' : 'text-emerald-600'}`}>
-                {passwordStrength.label} password
-              </p>
+              <p className={`mt-1 text-xs font-medium ${passwordStrength.text}`}>{passwordStrength.label} password</p>
             </div>
           )}
-          {errors.password && <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} /> {errors.password}</p>}
         </div>
 
-        {/* Confirm password */}
+        <Input
+          label="Confirm password" name="confirmPassword" type="password" autoComplete="new-password"
+          icon={<Lock size={16} />} required value={formData.confirmPassword} onChange={handleChange}
+          error={errors.confirmPassword}
+          success={formData.confirmPassword && formData.password === formData.confirmPassword ? 'Passwords match' : undefined}
+        />
+
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-700 mb-1.5">Confirm password</label>
-          <div className="relative">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"><Lock size={16} /></div>
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-neutral-700">
             <input
-              id="confirmPassword"
-              type={showConfirm ? 'text' : 'password'}
-              autoComplete="new-password"
-              placeholder="Repeat your password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`w-full pl-10 pr-11 py-2.5 text-sm border rounded-xl bg-neutral-50 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-all ${errors.confirmPassword ? 'border-red-400 bg-red-50' : formData.confirmPassword && formData.password === formData.confirmPassword ? 'border-emerald-400 bg-emerald-50' : 'border-neutral-200 hover:border-neutral-300'}`}
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => { setAgreed(e.target.checked); if (errors.agreed) setErrors((p) => ({ ...p, agreed: null })); }}
+              aria-invalid={errors.agreed ? true : undefined}
+              aria-describedby={errors.agreed ? 'agreed-error' : undefined}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors">
-              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-          {errors.confirmPassword && <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} /> {errors.confirmPassword}</p>}
-          {!errors.confirmPassword && formData.confirmPassword && formData.password === formData.confirmPassword && (
-            <p className="mt-1.5 text-xs text-emerald-600 flex items-center gap-1"><Check size={12} strokeWidth={3} /> Passwords match</p>
-          )}
+            <span>
+              I agree to the{' '}
+              <Link to="/terms" className="font-medium text-primary-600 hover:text-primary-700">Terms of Service</Link> and{' '}
+              <Link to="/privacy" className="font-medium text-primary-600 hover:text-primary-700">Privacy Policy</Link>
+            </span>
+          </label>
+          {errors.agreed && <p id="agreed-error" role="alert" className="mt-1.5 text-sm text-error-600">{errors.agreed}</p>}
         </div>
 
-        {/* Terms */}
-        <label className="flex items-start gap-2.5 cursor-pointer select-none">
-          <input type="checkbox" required className="w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer mt-0.5 flex-shrink-0" />
-          <span className="text-sm text-neutral-600">
-            I agree to the{' '}
-            <Link to="/terms" className="font-medium text-primary-500 hover:text-primary-700">Terms of Service</Link>
-            {' '}and{' '}
-            <Link to="/privacy" className="font-medium text-primary-500 hover:text-primary-700">Privacy Policy</Link>
-          </span>
-        </label>
-
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-primary-500 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
-              Creating account...
-            </>
-          ) : (
-            <>Create account <ArrowRight size={16} /></>
-          )}
-        </button>
+        <Button type="submit" size="lg" fullWidth loading={loading}>
+          {loading ? 'Creating account…' : 'Create account'}
+        </Button>
       </form>
     </div>
   );

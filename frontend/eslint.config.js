@@ -23,7 +23,22 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Names starting with a capital are components used as <Icon /> in JSX, which
+      // this rule cannot see (applies to destructured parameters as well).
+      'no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^[A-Z_]', caughtErrors: 'none' },
+      ],
     },
+  },
+  // Build/tooling files run in Node, not the browser
+  {
+    files: ['vite.config.js', 'tailwind.config.js', 'postcss.config.js'],
+    languageOptions: { globals: globals.node },
+  },
+  // A context module legitimately exports both a provider component and its hook
+  {
+    files: ['src/context/**/*.{js,jsx}'],
+    rules: { 'react-refresh/only-export-components': 'off' },
   },
 ])

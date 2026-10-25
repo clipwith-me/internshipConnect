@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import { notificationService } from '../services/notification.service.js';
 import { sendApplicationStatusEmail, sendNewApplicationEmail } from '../services/resend-email.service.js';
 import { canTransitionApplication } from '../utils/requestSafety.js';
+import { validatePagination } from '../utils/security.js';
 
 /**
  * @desc    Submit application
@@ -495,9 +496,7 @@ export const getOrganizationApplications = async (req, res) => {
     }
 
     // Get pagination params
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = validatePagination(req.query.page, req.query.limit ?? 50, 100);
     const status = req.query.status;
 
     // Get all internship IDs for this organization in one query

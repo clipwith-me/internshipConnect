@@ -167,7 +167,7 @@ const InternshipDetailPage = () => {
                 <div className="flex items-center text-neutral-700 mb-2">
                   <Building2 className="w-5 h-5 mr-2" />
                   <span className="text-lg font-medium">
-                    {internship.organization?.companyInfo?.companyName || 'Company Name'}
+                    {internship.organization?.companyInfo?.name || 'Company Name'}
                   </span>
                 </div>
               </div>

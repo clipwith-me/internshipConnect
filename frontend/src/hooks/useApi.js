@@ -1,63 +1,65 @@
 // frontend/src/hooks/useApi.js
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+
+const isAbort = (error) =>
+  error?.name === 'AbortError' || error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED';
 
 /**
- * 🎓 MICROSOFT-GRADE OPTIMIZATION: Request Cancellation Hook
+ * Request-cancellation handle.
  *
- * Prevents memory leaks and duplicate API requests
+ * Returns a *stable* object (same identity on every render) whose `signal`
+ * getter is always defined, including during the very first render, and always
+ * belongs to a live controller. All requests started by the component are
+ * aborted when it unmounts.
  *
- * Features:
- * - Automatic request cancellation on component unmount
- * - Prevents race conditions
- * - Avoids memory leaks from pending requests
+ * (The previous implementation returned `ref.current`, which was `null` on the
+ * first render, so first requests silently had no signal and could never be
+ * cancelled; it was also not stable, which fed `exhaustive-deps` warnings.)
  *
  * Usage:
- * const abortController = useApi();
- *
- * const fetchData = async () => {
- *   try {
- *     const response = await api.get('/endpoint', {
- *       signal: abortController.signal
+ *   const abortController = useApi();
+ *   useEffect(() => {
+ *     api.get('/x', { signal: abortController.signal }).catch((e) => {
+ *       if (isAbortError(e)) return;
+ *       ...
  *     });
- *   } catch (error) {
- *     if (error.name === 'AbortError' || error.name === 'CanceledError') {
- *       console.log('Request was cancelled');
- *       return;
- *     }
- *     // Handle other errors
- *   }
- * };
+ *   }, [abortController]);
  */
 export const useApi = () => {
-  const abortControllerRef = useRef(null);
+  const controllerRef = useRef(null);
+  const handleRef = useRef(null);
+
+  if (handleRef.current === null) {
+    handleRef.current = {
+      get signal() {
+        // Recreate after an abort so StrictMode's mount -> unmount -> mount
+        // cycle (and any later re-mount) gets a working signal again.
+        if (controllerRef.current === null || controllerRef.current.signal.aborted) {
+          controllerRef.current = new AbortController();
+        }
+        return controllerRef.current.signal;
+      },
+    };
+  }
 
   useEffect(() => {
-    // Create new AbortController on mount
-    abortControllerRef.current = new AbortController();
-
-    // Cleanup: Cancel all pending requests on unmount
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      controllerRef.current?.abort();
     };
   }, []);
 
-  return abortControllerRef.current;
+  return handleRef.current;
 };
 
+/** True when an error is just a cancelled request and should be ignored. */
+export const isAbortError = isAbort;
+
 /**
- * 🎓 ADVANCED: Request Deduplication Hook
- *
- * Prevents duplicate API calls to the same endpoint
- * Useful for preventing multiple calls on rapid renders
+ * Request wrapper with loading/error/data state and de-duplication of
+ * concurrent calls.
  *
  * Usage:
- * const { loading, error, data, execute } = useApiCall(apiFunction);
- *
- * useEffect(() => {
- *   execute();
- * }, []);
+ *   const { loading, error, data, execute } = useApiCall(apiFunction);
  */
 export const useApiCall = (apiFunction) => {
   const [state, setState] = useState({
@@ -69,34 +71,30 @@ export const useApiCall = (apiFunction) => {
   const abortController = useApi();
   const pendingRequestRef = useRef(false);
 
-  const execute = async (...args) => {
-    // Skip if request already in progress
-    if (pendingRequestRef.current) {
-      console.log('Request already in progress, skipping...');
-      return;
-    }
+  const execute = useCallback(
+    async (...args) => {
+      // Skip if a request is already in flight
+      if (pendingRequestRef.current) return;
 
-    try {
-      pendingRequestRef.current = true;
-      setState({ loading: true, error: null, data: null });
+      try {
+        pendingRequestRef.current = true;
+        setState({ loading: true, error: null, data: null });
 
-      const result = await apiFunction(...args, {
-        signal: abortController.signal,
-      });
+        const result = await apiFunction(...args, { signal: abortController.signal });
 
-      setState({ loading: false, error: null, data: result.data });
-      return result.data;
-    } catch (error) {
-      if (error.name === 'AbortError' || error.name === 'CanceledError') {
-        // Request was cancelled, don't update state
-        return;
+        setState({ loading: false, error: null, data: result.data });
+        return result.data;
+      } catch (error) {
+        // Cancelled (e.g. unmounted): do not touch state.
+        if (isAbort(error)) return;
+        setState({ loading: false, error, data: null });
+        throw error;
+      } finally {
+        pendingRequestRef.current = false;
       }
-      setState({ loading: false, error, data: null });
-      throw error;
-    } finally {
-      pendingRequestRef.current = false;
-    }
-  };
+    },
+    [apiFunction, abortController]
+  );
 
   return { ...state, execute };
 };

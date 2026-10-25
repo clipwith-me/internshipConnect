@@ -1,91 +1,135 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const C = {
-  navy: '#0D1426', amber: '#E8A230', white: '#ffffff',
-  gray200: '#E5E7EB', gray600: '#4B5563',
-};
+import Button from './Button';
 
 const NAV_LINKS = [
-  { label: 'How it works', href: '/#how-it-works' },
-  { label: 'Career Tips', href: '/career-tips' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'About', href: '/about' },
+  { label: 'Browse internships', to: '/internships' },
+  { label: 'How it works', to: '/#how-it-works' },
+  { label: 'For employers', to: '/#for-employers' },
+  { label: 'Pricing', to: '/pricing' },
+  { label: 'About', to: '/about' },
 ];
 
+const linkBase =
+  'rounded-md px-2.5 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500';
+
+/**
+ * Public site navigation. Sticky, light, with a real mobile menu
+ * (disclosure pattern: aria-expanded/aria-controls, Escape closes, closes on navigation).
+ */
 export default function PublicNav() {
-  const navigate = useNavigate();
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+  const buttonRef = useRef(null);
+
+  // Close the mobile menu whenever the route changes
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname, location.hash]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
 
   return (
-    <nav style={{
-      background: C.navy,
-      padding: '0 24px',
-      height: 64,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      borderBottom: '1px solid rgba(255,255,255,0.07)',
-    }}>
-      {/* Logo */}
-      <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
-        <img
-          src="/logo-primary.png"
-          alt="InternshipConnect"
-          style={{ height: 36, objectFit: 'contain' }}
-          onError={e => { e.target.src = '/logo-icon.png'; }}
-        />
-      </a>
+    <header className="sticky top-0 z-sticky border-b border-neutral-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <nav aria-label="Main" className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="flex shrink-0 items-center rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500" aria-label="InternshipConnect home">
+          <img src="/logo-transparent.png" alt="" width="1028" height="265" className="h-8 w-auto sm:h-9" />
+        </Link>
 
-      {/* Nav links — hidden on mobile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 28 }} className="pub-nav-links">
-        {NAV_LINKS.map(({ label, href }) => (
-          <a
-            key={label}
-            href={href}
-            onClick={e => { e.preventDefault(); navigate(href); }}
-            style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}
+        {/* Desktop links */}
+        <ul className="hidden items-center gap-1 lg:flex">
+          {NAV_LINKS.map(({ label, to }) => (
+            <li key={label}>
+              <NavLink to={to} end className={`${linkBase} text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900`}>
+                {label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          {!loading &&
+            (isAuthenticated ? (
+              <Button as={Link} to="/dashboard" size="sm" className="hidden sm:inline-flex">
+                Go to dashboard
+              </Button>
+            ) : (
+              <>
+                <Link
+                  to="/auth/login"
+                  className={`${linkBase} hidden text-neutral-700 hover:bg-neutral-100 sm:inline-flex`}
+                >
+                  Sign in
+                </Link>
+                <Button as={Link} to="/auth/register" size="sm" className="hidden sm:inline-flex">
+                  Get started free
+                </Button>
+              </>
+            ))}
+
+          <button
+            ref={buttonRef}
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-neutral-700 hover:bg-neutral-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 lg:hidden"
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            aria-label={open ? 'Close menu' : 'Open menu'}
           >
-            {label}
-          </a>
-        ))}
-      </div>
+            {open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+          </button>
+        </div>
+      </nav>
 
-      {/* CTA */}
-      {!loading && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          {isAuthenticated ? (
-            <button
-              onClick={() => navigate('/dashboard')}
-              style={{ background: C.amber, color: C.navy, fontWeight: 700, fontSize: 14, padding: '9px 22px', borderRadius: 8, border: 'none', cursor: 'pointer' }}
-            >
-              Go to Dashboard
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => navigate('/auth/login')}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-              >
-                Sign in
-              </button>
-              <button
-                onClick={() => navigate('/auth/register')}
-                style={{ background: C.amber, color: C.navy, fontWeight: 700, fontSize: 14, padding: '9px 22px', borderRadius: 8, border: 'none', cursor: 'pointer' }}
-              >
-                Get Started Free
-              </button>
-            </>
+      {/* Mobile menu */}
+      {open && (
+        <div id="mobile-menu" className="border-t border-neutral-200 bg-white lg:hidden">
+          <ul className="mx-auto max-w-7xl space-y-1 px-4 py-3 sm:px-6">
+            {NAV_LINKS.map(({ label, to }) => (
+              <li key={label}>
+                <Link
+                  to={to}
+                  className="block rounded-md px-3 py-3 text-base font-medium text-neutral-800 hover:bg-neutral-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {!loading && (
+            <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-neutral-200 px-4 py-4 sm:flex-row sm:px-6">
+              {isAuthenticated ? (
+                <Button as={Link} to="/dashboard" fullWidth>
+                  Go to dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button as={Link} to="/auth/register" fullWidth>
+                    Get started free
+                  </Button>
+                  <Button as={Link} to="/auth/login" variant="secondary" fullWidth>
+                    Sign in
+                  </Button>
+                </>
+              )}
+            </div>
           )}
         </div>
       )}
-
-      <style>{`
-        @media (max-width: 640px) { .pub-nav-links { display: none !important; } }
-      `}</style>
-    </nav>
+    </header>
   );
 }

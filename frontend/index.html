@@ -1,89 +1,63 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- ESSENTIAL META TAGS -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- PRIMARY SEO TAGS -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <title>InternshipConnect - AI-Powered Internship Platform | Find Your Dream Internship</title>
-    <meta name="title" content="InternshipConnect - AI-Powered Internship Platform | Find Your Dream Internship" />
-    <meta name="description" content="Connect students with top internship opportunities using AI-powered matching, resume building, and application tracking. Join thousands of students who found their dream internships." />
-    <meta name="keywords" content="internships, student jobs, career opportunities, AI resume builder, internship matching, job search, career development, student employment" />
+    <!-- Primary SEO -->
+    <title>InternshipConnect | Find internships. Build your career.</title>
+    <meta name="description" content="InternshipConnect helps students find internships and apply in one place, and helps employers reach motivated early-career talent. Free for students." />
     <meta name="author" content="InternshipConnect" />
     <meta name="robots" content="index, follow" />
-    <meta name="language" content="English" />
-    <meta name="revisit-after" content="7 days" />
+    <link rel="canonical" href="https://internship-connect-beta.vercel.app/" />
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- OPEN GRAPH / FACEBOOK META TAGS -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://internshipconnect.vercel.app/" />
-    <meta property="og:title" content="InternshipConnect - AI-Powered Internship Platform" />
-    <meta property="og:description" content="Connect students with top internship opportunities using AI-powered matching, resume building, and application tracking." />
-    <meta property="og:image" content="https://internshipconnect.vercel.app/og-image.png" />
     <meta property="og:site_name" content="InternshipConnect" />
-    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://internship-connect-beta.vercel.app/" />
+    <meta property="og:title" content="InternshipConnect | Find internships. Build your career." />
+    <meta property="og:description" content="Students find internships and apply in one place. Employers reach motivated early-career talent." />
+    <meta property="og:image" content="https://internship-connect-beta.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="InternshipConnect: find your first internship, build your career" />
+    <meta property="og:locale" content="en_NG" />
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TWITTER CARD META TAGS -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://internshipconnect.vercel.app/" />
-    <meta name="twitter:title" content="InternshipConnect - AI-Powered Internship Platform" />
-    <meta name="twitter:description" content="Connect students with top internship opportunities using AI-powered matching, resume building, and application tracking." />
-    <meta name="twitter:image" content="https://internshipconnect.vercel.app/twitter-card.png" />
-    <meta name="twitter:creator" content="@internshipconnect" />
+    <meta name="twitter:title" content="InternshipConnect | Find internships. Build your career." />
+    <meta name="twitter:description" content="Students find internships and apply in one place. Employers reach motivated early-career talent." />
+    <meta name="twitter:image" content="https://internship-connect-beta.vercel.app/og-image.png" />
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- FAVICON AND APP ICONS -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <link rel="icon" type="image/png" href="/logo-icon.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/logo-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/logo-icon.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/logo-icon.png" />
+    <!-- Icons (square, purpose-built; see public/) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- THEME COLOR (MICROSOFT BLUE) -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
     <meta name="theme-color" content="#0D1426" />
-    <meta name="msapplication-TileColor" content="#0D1426" />
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- PRECONNECT FOR PERFORMANCE -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- CANONICAL URL -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <link rel="canonical" href="https://internshipconnect.vercel.app/" />
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- STRUCTURED DATA (JSON-LD for SEO) -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- Structured data (valid JSON; only facts that are true today) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "InternshipConnect",
-      "description": "AI-powered platform connecting students with internship opportunities",
-      "url": "https://internshipconnect.vercel.app",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://internship-connect-beta.vercel.app/#organization",
+          "name": "InternshipConnect",
+          "url": "https://internship-connect-beta.vercel.app/",
+          "logo": "https://internship-connect-beta.vercel.app/icon-512.png"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://internship-connect-beta.vercel.app/#website",
+          "url": "https://internship-connect-beta.vercel.app/",
+          "name": "InternshipConnect",
+          "description": "A platform connecting students with internships and employers with early-career talent.",
+          "publisher": { "@id": "https://internship-connect-beta.vercel.app/#organization" },
+          "inLanguage": "en"
+        }
+      ]
     }
     </script>
   </head>

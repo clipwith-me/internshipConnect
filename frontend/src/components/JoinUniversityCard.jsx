@@ -1,108 +1,159 @@
 // frontend/src/components/JoinUniversityCard.jsx
 import { useEffect, useState } from 'react';
-import { School, Check, X } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { universityAPI } from '../services/api';
+import { isAbortError } from '../hooks/useApi';
+import Alert from './Alert';
+import Button from './Button';
 
 /**
- * Lets a student link their account to a registered university, either by
- * picking it from the directory or entering the university's join code.
- * Self-dismisses once the student is already affiliated.
+ * Student-side university link.
+ *  - not linked: pick a university from the list, or enter its join code
+ *  - linked:     shows the university and lets the student unlink
+ * Linking lets that university's career office see the student's name, email
+ * and application/placement status (disclosed in the Privacy Policy).
  */
 const JoinUniversityCard = () => {
-  const [universities, setUniversities] = useState([]);
+  const [state, setState] = useState({ status: 'loading', linked: null, universities: [] });
+  const [mode, setMode] = useState('select'); // 'select' | 'code'
   const [selected, setSelected] = useState('');
   const [code, setCode] = useState('');
-  const [mode, setMode] = useState('select'); // 'select' | 'code'
-  const [joined, setJoined] = useState(null);
-  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [message, setMessage] = useState(null); // { variant, text }
 
   useEffect(() => {
-    universityAPI.list()
-      .then((res) => setUniversities(res.data.data || []))
-      .catch(() => {});
+    const controller = new AbortController();
+    const { signal } = controller;
+    Promise.all([universityAPI.getMine({ signal }), universityAPI.list(undefined, { signal })])
+      .then(([mine, list]) =>
+        setState({ status: 'ready', linked: mine.data.data, universities: list.data.data || [] })
+      )
+      .catch((err) => {
+        if (!isAbortError(err)) setState({ status: 'error', linked: null, universities: [] });
+      });
+    return () => controller.abort();
   }, []);
 
-  const submit = async () => {
-    setError('');
-    const payload = mode === 'code'
-      ? { joinCode: code.trim() }
-      : { universityId: selected };
-    if ((mode === 'code' && !code.trim()) || (mode === 'select' && !selected)) {
-      setError(mode === 'code' ? 'Enter your join code.' : 'Select your university.');
+  const link = async () => {
+    const payload = mode === 'code' ? { joinCode: code.trim() } : { universityId: selected };
+    if ((mode === 'code' && !payload.joinCode) || (mode === 'select' && !selected)) {
+      setMessage({ variant: 'error', text: mode === 'code' ? 'Enter your join code.' : 'Select your university.' });
       return;
     }
     setBusy(true);
+    setMessage(null);
     try {
-      const res = await universityAPI.join(payload);
-      setJoined(res.data.data?.name || 'your university');
+      await universityAPI.join(payload);
+      const mine = await universityAPI.getMine();
+      setState((s) => ({ ...s, linked: mine.data.data }));
+      setSelected('');
+      setCode('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not link your university.');
+      setMessage({ variant: 'error', text: err.response?.data?.message || 'We could not link your university. Please try again.' });
     } finally {
       setBusy(false);
     }
   };
 
-  if (dismissed) return null;
-
-  if (joined) {
-    return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-6 flex items-center gap-3">
-        <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center"><Check size={18} /></span>
-        <p className="text-sm text-emerald-800">You're now linked to <span className="font-semibold">{joined}</span>. Your career office can see your progress.</p>
-      </div>
-    );
-  }
+  const unlink = async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      await universityAPI.leave();
+      setState((s) => ({ ...s, linked: null }));
+      setMessage({ variant: 'success', text: 'You are no longer linked to a university.' });
+    } catch (err) {
+      setMessage({ variant: 'error', text: err.response?.data?.message || 'We could not unlink right now. Please try again.' });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <div className="bg-white border border-neutral-200 rounded-2xl p-5 mb-6">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center"><School size={20} /></span>
-          <div>
-            <h3 className="text-sm font-semibold text-neutral-900">Link your university</h3>
-            <p className="text-xs text-neutral-500">Connect to your school so your career office can support your search.</p>
-          </div>
+    <section className="rounded-xl border border-neutral-200 bg-white p-5" aria-labelledby="uni-link-heading">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+          <GraduationCap size={20} aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id="uni-link-heading" className="text-sm font-semibold text-neutral-900">
+            {state.linked ? 'Your university' : 'Link your university'}
+          </h2>
+
+          {state.linked ? (
+            <>
+              <p className="mt-1 text-sm text-neutral-600">
+                You're linked to <span className="font-medium text-neutral-900">{state.linked.name}</span>. Its career
+                office can see your name, email and the status of your applications.
+              </p>
+              <Button variant="secondary" size="sm" className="mt-3" onClick={unlink} loading={busy}>
+                Unlink
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-sm text-neutral-600">
+                Optional. Linking lets your university's career office follow your applications and placements.
+              </p>
+
+              <div className="mt-3 inline-flex rounded-md border border-neutral-300 p-0.5" role="group" aria-label="How to link">
+                {[['select', 'Choose from list'], ['code', 'Enter a code']].map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setMode(id)}
+                    aria-pressed={mode === id}
+                    className={`rounded px-3 py-1.5 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                      mode === id ? 'bg-primary-500 text-white' : 'text-neutral-600 hover:bg-neutral-100'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                {mode === 'select' ? (
+                  <>
+                    <label htmlFor="uni-select" className="sr-only">University</label>
+                    <select
+                      id="uni-select"
+                      value={selected}
+                      onChange={(e) => setSelected(e.target.value)}
+                      className="h-10 flex-1 rounded-md border border-neutral-300 bg-white px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
+                    >
+                      <option value="">
+                        {state.universities.length ? 'Select your university…' : 'No universities registered yet'}
+                      </option>
+                      {state.universities.map((u) => (
+                        <option key={u._id} value={u._id}>
+                          {u.name}{u.location?.state ? ` (${u.location.state})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="uni-code" className="sr-only">Join code</label>
+                    <input
+                      id="uni-code"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.toUpperCase())}
+                      placeholder="e.g. UOL-7K3Q"
+                      autoComplete="off"
+                      className="h-10 flex-1 rounded-md border border-neutral-300 bg-white px-3 font-mono text-sm placeholder:font-sans placeholder:text-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
+                    />
+                  </>
+                )}
+                <Button onClick={link} loading={busy}>Link</Button>
+              </div>
+            </>
+          )}
+
+          {message && <Alert variant={message.variant} className="mt-3">{message.text}</Alert>}
         </div>
-        <button onClick={() => setDismissed(true)} className="text-neutral-400 hover:text-neutral-600" aria-label="Dismiss"><X size={16} /></button>
       </div>
-
-      <div className="flex gap-2 mb-3">
-        <button onClick={() => setMode('select')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${mode === 'select' ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}>Choose from list</button>
-        <button onClick={() => setMode('code')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${mode === 'code' ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}>Enter a code</button>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-2">
-        {mode === 'select' ? (
-          <select
-            value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-            className="flex-1 px-3 py-2.5 text-sm border border-neutral-200 rounded-xl bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
-          >
-            <option value="">Select your university…</option>
-            {universities.map((u) => (
-              <option key={u._id} value={u._id}>{u.name}{u.location?.state ? ` — ${u.location.state}` : ''}</option>
-            ))}
-          </select>
-        ) : (
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="e.g. UOL-7K3Q"
-            className="flex-1 px-3 py-2.5 text-sm border border-neutral-200 rounded-xl bg-neutral-50 font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
-          />
-        )}
-        <button
-          onClick={submit}
-          disabled={busy}
-          className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors"
-        >
-          {busy ? 'Linking…' : 'Link'}
-        </button>
-      </div>
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-    </div>
+    </section>
   );
 };
 

@@ -151,19 +151,6 @@ const NotificationBell = () => {
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 
-  // Get notification icon color based on type
-  const getNotificationColor = (type) => {
-    const colors = {
-      application: 'text-blue-500',
-      interview: 'text-purple-500',
-      offer: 'text-green-500',
-      rejection: 'text-red-500',
-      system: 'text-gray-500',
-      message: 'text-primary-500',
-    };
-    return colors[type] || 'text-gray-500';
-  };
-
   return (
     <div className="relative">
       {/* Bell Button */}

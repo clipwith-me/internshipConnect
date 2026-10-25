@@ -66,6 +66,15 @@ export const authenticate = async (req, res, next) => {
         message: 'Account is deactivated'
       });
     }
+
+    // Sessions issued before a password change / "sign out everywhere" are revoked.
+    // Tokens minted before this field existed carry no version and count as 0.
+    if ((decoded.v ?? 0) !== (user.tokenVersion ?? 0)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired. Please sign in again.'
+      });
+    }
     
     // Attach user info to request
     req.user = {
@@ -233,7 +242,7 @@ export const optionalAuth = async (req, res, next) => {
 
     const user = await User.findById(decoded.userId);
 
-    if (user && user.isActive) {
+    if (user && user.isActive && (decoded.v ?? 0) === (user.tokenVersion ?? 0)) {
       req.user = {
         _id: user._id,
         userId: user._id, // kept for backward compatibility with older callers

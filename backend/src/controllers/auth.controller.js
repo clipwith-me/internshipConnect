@@ -23,9 +23,9 @@ import { sendStudentWelcomeEmail, sendCompanyWelcomeEmail, sendPasswordResetEmai
  * Generate JWT access token
  * Short-lived (15 minutes)
  */
-const generateAccessToken = (userId) => {
+const generateAccessToken = (userId, version = 0) => {
   return jwt.sign(
-    { userId, type: 'access' },
+    { userId, type: 'access', v: version },
     process.env.JWT_SECRET,
     { expiresIn: '15m' }
   );
@@ -35,9 +35,9 @@ const generateAccessToken = (userId) => {
  * Generate JWT refresh token
  * Long-lived (7 days)
  */
-const generateRefreshToken = (userId) => {
+const generateRefreshToken = (userId, version = 0) => {
   return jwt.sign(
-    { userId, type: 'refresh' },
+    { userId, type: 'refresh', v: version },
     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -46,10 +46,10 @@ const generateRefreshToken = (userId) => {
 /**
  * Generate both tokens
  */
-const generateTokens = (userId) => {
+const generateTokens = (userId, version = 0) => {
   return {
-    accessToken: generateAccessToken(userId),
-    refreshToken: generateRefreshToken(userId)
+    accessToken: generateAccessToken(userId, version),
+    refreshToken: generateRefreshToken(userId, version)
   };
 };
 
@@ -182,7 +182,7 @@ export const register = async (req, res) => {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
 
     // Generate referral code for all users
     let referralCode;
@@ -318,7 +318,7 @@ export const login = async (req, res) => {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
     
     // Update last login
     user.lastLogin = new Date();
@@ -418,8 +418,8 @@ export const refreshToken = async (req, res) => {
 
     // The account must still exist and be active, otherwise a deleted or
     // deactivated user could keep minting access tokens for up to 7 days.
-    const account = await User.findById(decoded.userId).select('isActive');
-    if (!account || !account.isActive) {
+    const account = await User.findById(decoded.userId).select('isActive tokenVersion');
+    if (!account || !account.isActive || (decoded.v ?? 0) !== (account.tokenVersion ?? 0)) {
       return res.status(401).json({
         success: false,
         message: 'Invalid or expired refresh token'
@@ -427,7 +427,7 @@ export const refreshToken = async (req, res) => {
     }
 
     // Generate new access token
-    const accessToken = generateAccessToken(decoded.userId);
+    const accessToken = generateAccessToken(decoded.userId, account.tokenVersion || 0);
 
     res.json({
       success: true,
@@ -627,6 +627,7 @@ export const resetPassword = async (req, res) => {
     
     // Update password (will be hashed by pre-save hook)
     user.password = password;
+    user.tokenVersion = (user.tokenVersion || 0) + 1; // a reset ends all existing sessions
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
@@ -694,11 +695,17 @@ export const changePassword = async (req, res) => {
 
     // Update password (will be hashed by pre-save hook)
     user.password = newPassword;
+    user.tokenVersion = (user.tokenVersion || 0) + 1; // other sessions must sign in again
     await user.save();
+
+    // Every other session is now revoked; give this device fresh tokens so the
+    // person who just changed their password stays signed in.
+    const tokens = generateTokens(user._id, user.tokenVersion);
 
     res.json({
       success: true,
-      message: 'Password changed successfully'
+      message: 'Password changed successfully',
+      data: { tokens }
     });
 
   } catch (error) {
@@ -766,5 +773,20 @@ export const deleteAccount = async (req, res) => {
   } catch (error) {
     console.error('Delete account error:', error);
     return res.status(500).json({ success: false, message: 'Failed to delete account. Please try again or contact support.' });
+  }
+};
+
+/**
+ * @route   POST /api/auth/logout-all
+ * @desc    Invalidate every session (all devices) for the authenticated user
+ * @access  Private
+ */
+export const logoutAll = async (req, res) => {
+  try {
+    await User.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
+    res.json({ success: true, message: 'Signed out of all devices' });
+  } catch (error) {
+    console.error('Logout-all error:', error);
+    res.status(500).json({ success: false, message: 'Failed to sign out of all devices' });
   }
 };

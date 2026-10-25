@@ -189,11 +189,20 @@ router.put('/change-password',
       .withMessage('Current password is required'),
     body('newPassword')
       .isLength({ min: 8 })
-      .withMessage('New password must be at least 8 characters'),
+      .withMessage('New password must be at least 8 characters')
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+      .withMessage('Password must contain uppercase, lowercase, and number'),
     validate
   ],
   authController.changePassword
 );
+
+/**
+ * @route   POST /api/auth/logout-all
+ * @desc    Sign the user out of every device (invalidates all tokens)
+ * @access  Private
+ */
+router.post('/logout-all', authenticate, authController.logoutAll);
 
 /**
  * @route   DELETE /api/auth/account

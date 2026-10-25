@@ -194,7 +194,7 @@ const StudentApplicationCard = ({ application, onView, onWithdraw }) => {
             {application.internship?.title || 'Internship Title'}
           </h3>
           <p className="text-neutral-600 text-sm">
-            {application.internship?.organization?.companyInfo?.companyName || 'Company Name'}
+            {application.internship?.organization?.companyInfo?.name || 'Company Name'}
           </p>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>

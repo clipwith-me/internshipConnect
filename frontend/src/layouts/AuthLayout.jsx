@@ -1,110 +1,67 @@
 ﻿// frontend/src/layouts/AuthLayout.jsx
 import { Outlet, Link } from 'react-router-dom';
+import { Check } from 'lucide-react';
+
+// Everything claimed here exists in the product today.
+const POINTS = [
+  { title: 'For students', body: 'Search internships, apply in a few clicks and track every application.' },
+  { title: 'For employers', body: 'Post internships and manage applicants from one dashboard.' },
+  { title: 'For universities', body: 'See how your students are applying and being placed.' },
+];
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 flex">
-      {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 lg:px-16 xl:px-20 py-10">
-        <div className="mx-auto w-full max-w-sm lg:w-[420px]">
-          {/* Logo */}
-          <div className="mb-8 text-center">
-            <Link to="/" className="inline-block group">
-              <img
-                src="/logo-primary.png"
-                alt="InternshipConnect"
-                className="h-12 w-auto object-contain mx-auto group-hover:opacity-90 transition-opacity duration-200"
-                onError={(e) => { e.target.src = '/logo-icon.png'; }}
-              />
-              <p className="text-xs text-neutral-500 mt-2 font-medium tracking-wide">Find internships across Africa</p>
-            </Link>
-          </div>
+    <div className="flex min-h-screen bg-white">
+      <a href="#auth-form" className="skip-link">Skip to form</a>
 
-          {/* Form Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-neutral-100 p-7 sm:p-8">
-            <Outlet />
-          </div>
+      {/* Form column */}
+      <div className="flex flex-1 flex-col px-4 py-8 sm:px-8 lg:px-16">
+        <Link
+          to="/"
+          className="mx-auto mb-8 inline-flex rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 lg:mx-0"
+          aria-label="InternshipConnect home"
+        >
+          <img src="/logo-transparent.png" alt="" width="1028" height="265" className="h-10 w-auto" />
+        </Link>
 
-          {/* Footer */}
-          <p className="mt-6 text-center text-xs text-neutral-400">
-            By continuing, you agree to our{' '}
-            <a href="/terms" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">Terms</a>
-            {' '}and{' '}
-            <a href="/privacy" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">Privacy Policy</a>
-          </p>
-        </div>
+        <main id="auth-form" tabIndex={-1} className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center outline-none lg:mx-0">
+          <Outlet />
+        </main>
+
+        <p className="mx-auto mt-8 max-w-md text-center text-xs text-neutral-500 lg:mx-0 lg:text-left">
+          By continuing, you agree to our{' '}
+          <Link to="/terms" className="font-medium text-primary-600 hover:text-primary-700">Terms</Link> and{' '}
+          <Link to="/privacy" className="font-medium text-primary-600 hover:text-primary-700">Privacy Policy</Link>.
+        </p>
       </div>
 
-      {/* Right Side - Branding (hidden on mobile) */}
-      <div className="hidden lg:flex lg:flex-1 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)' }}>
-        {/* Subtle grid */}
-        <div className="absolute inset-0 opacity-[0.04]">
-          <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+      {/* Brand column (desktop only) */}
+      <aside className="relative hidden flex-1 overflow-hidden bg-neutral-900 lg:flex" aria-label="About InternshipConnect">
+        <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-primary-500/20 blur-3xl" aria-hidden="true" />
+        <div className="absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-success-500/10 blur-3xl" aria-hidden="true" />
 
-        {/* Glowing orbs */}
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full opacity-20 animate-pulse" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}></div>
-        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full opacity-10 animate-pulse" style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 70%)', animationDelay: '1.5s' }}></div>
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-14 xl:px-16 text-white">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full mb-8 w-fit">
-            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
-            Now available across Africa
-          </div>
-
-          <h2 className="text-3xl xl:text-4xl font-bold mb-4 leading-tight text-white">
-            Your next career step<br />starts here
+        <div className="relative z-10 flex flex-col justify-center px-14 xl:px-20">
+          <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tight text-white xl:text-4xl">
+            Your first internship starts here.
           </h2>
-          <p className="text-base text-white/60 mb-10 leading-relaxed max-w-xs">
-            Connect with organizations across Africa offering real internship opportunities.
+          <p className="mt-4 max-w-md text-neutral-300">
+            One platform connecting students, employers and universities around early-career opportunities.
           </p>
-
-          {/* Features */}
-          <div className="space-y-4 mb-10">
-            {[
-              { icon: '🎯', title: 'Smart matching', desc: 'Opportunities matched to your skills and goals' },
-              { icon: '📄', title: 'AI resume builder', desc: 'Create standout resumes in minutes' },
-              { icon: '🚀', title: 'Direct applications', desc: 'Apply directly to verified organizations' },
-            ].map(({ icon, title, desc }) => (
-              <div key={title} className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-lg flex-shrink-0">
-                  {icon}
-                </div>
+          <ul className="mt-10 space-y-6">
+            {POINTS.map(({ title, body }) => (
+              <li key={title} className="flex gap-4">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-500/20 text-primary-300">
+                  <Check size={14} aria-hidden="true" />
+                </span>
                 <div>
-                  <p className="text-sm font-semibold text-white/90">{title}</p>
-                  <p className="text-xs text-white/50 mt-0.5">{desc}</p>
+                  <p className="font-medium text-white">{title}</p>
+                  <p className="mt-0.5 text-sm text-neutral-400">{body}</p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-white/10 mb-8"></div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { value: 'Free', label: 'For students' },
-              { value: 'Fast', label: 'Apply in minutes' },
-              { value: '🌍', label: 'Africa-focused' },
-            ].map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <div className="text-xl font-bold text-white">{value}</div>
-                <div className="text-xs text-white/50 mt-0.5">{label}</div>
-              </div>
-            ))}
-          </div>
+          </ul>
         </div>
-      </div>
+      </aside>
     </div>
   );
 };

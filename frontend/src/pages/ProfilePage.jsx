@@ -17,6 +17,7 @@
  */
 
 import { useState, useEffect, useCallback, memo } from 'react';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { studentAPI, organizationAPI } from '../services/api';
 import { useApi } from '../hooks/useApi';
@@ -31,9 +32,23 @@ import { apiCache } from '../utils/apiCache';
 
 const ProfilePage = () => {
   const { user } = useAuth();
-  const isStudent = user?.role === 'student';
+  const role = user?.role;
 
-  return isStudent ? <StudentProfile /> : <OrganizationProfile />;
+  if (role === 'student') return <StudentProfile />;
+  if (role === 'organization') return <OrganizationProfile />;
+  // Universities have their own institution profile.
+  if (role === 'university') return <Navigate to="/dashboard/university/profile" replace />;
+
+  // Admin accounts have no public profile; don't render (or create) one.
+  return (
+    <div className="mx-auto max-w-xl rounded-xl border border-neutral-200 bg-white p-8 text-center">
+      <h1 className="text-xl font-semibold text-neutral-900">No profile for this account</h1>
+      <p className="mt-2 text-sm text-neutral-600">Admin accounts don't have a public profile. You can manage your sign-in details in Settings.</p>
+      <Link to="/dashboard/settings" className="mt-5 inline-flex h-10 items-center rounded-md bg-primary-500 px-4 text-sm font-medium text-white hover:bg-primary-600">
+        Go to settings
+      </Link>
+    </div>
+  );
 };
 
 /**

@@ -1,97 +1,136 @@
-import PublicNav from '../components/PublicNav';
-
-const C = {
-  navy: '#0D1426', amber: '#E8A230', white: '#ffffff',
-  gray50: '#F9FAFB', gray200: '#E5E7EB', gray600: '#4B5563',
-};
-
-const Section = ({ title, children }) => (
-  <div style={{ marginBottom: 48 }}>
-    <h2 style={{ fontSize: 22, fontWeight: 800, color: C.navy, marginBottom: 16, paddingBottom: 12, borderBottom: `2px solid ${C.amber}` }}>{title}</h2>
-    <div style={{ color: C.gray600, fontSize: 16, lineHeight: 1.9 }}>{children}</div>
-  </div>
-);
+import { useEffect } from 'react';
+import LegalDocument, { LegalSection } from '../components/LegalDocument';
+import { CONTACT } from '../config/site';
 
 export default function PrivacyPolicyPage() {
+  useEffect(() => {
+    document.title = 'Privacy policy | InternshipConnect';
+  }, []);
+
+  const mail = CONTACT.privacy;
+
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: C.gray50, minHeight: '100vh' }}>
-      <PublicNav />
+    <LegalDocument title="Privacy Policy" updated="October 2026">
+      <LegalSection title="1. Introduction">
+        <p>
+          InternshipConnect ("we", "us", or "our") is committed to protecting your personal information. This
+          Privacy Policy explains what data we collect, how we use it, and your rights regarding that data when you
+          use our platform.
+        </p>
+        <p>By creating an account or using InternshipConnect, you agree to the practices described in this policy.</p>
+      </LegalSection>
 
-      <section style={{ background: C.navy, padding: '56px 24px 48px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: C.white, marginBottom: 12 }}>Privacy Policy</h1>
-        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15 }}>Last updated: June 2025</p>
-      </section>
+      <LegalSection title="2. Information we collect">
+        <p>
+          <strong>Account information:</strong> When you register, we collect your name, email address, password
+          (stored as a bcrypt hash; we never store plain-text passwords), and your account role (student,
+          organisation, or university).
+        </p>
+        <p>
+          <strong>Profile information:</strong> Students may optionally provide their university, graduation year,
+          skills, bio, and a resume/CV. Organisations may provide company name, description, and contact details.
+          Universities provide the institution's name and contact details.
+        </p>
+        <p>
+          <strong>Application data:</strong> When you apply for internships or post them, we store the relevant
+          content (cover messages, internship details, application status updates).
+        </p>
+        <p>
+          <strong>Usage data:</strong> We may collect basic analytics such as pages visited and actions taken, to
+          understand how to improve the platform. We do not sell this data.
+        </p>
+      </LegalSection>
 
-      <main style={{ maxWidth: 780, margin: '0 auto', padding: '64px 24px 80px' }}>
-        <div style={{ background: C.white, borderRadius: 20, padding: '48px 52px', boxShadow: '0 2px 20px rgba(0,0,0,0.06)' }}>
+      <LegalSection title="3. How we use your information and who can see it">
+        <ul>
+          <li>To operate and improve the InternshipConnect platform</li>
+          <li>To match students with relevant internship opportunities</li>
+          <li>To send transactional emails (e.g. application updates, account verification)</li>
+          <li>To enable communication between students and employers via the platform</li>
+          <li>To detect and prevent fraud or misuse</li>
+        </ul>
+        <p>
+          <strong>Employers.</strong> When you apply for an internship, the employer that posted it can see your
+          application, profile and resume. If your student profile is public, employers on the platform can also
+          find it through candidate search.
+        </p>
+        <p>
+          <strong>Universities.</strong> If you choose to link your account to a university, that university's
+          career office can see your name, email address, and the status of your applications and placements. You
+          can unlink at any time from your dashboard.
+        </p>
+        <p>We do not sell your personal data to third parties. We do not use your data for advertising purposes.</p>
+      </LegalSection>
 
-          <Section title="1. Introduction">
-            <p>InternshipConnect ("we", "us", or "our") is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights regarding that data when you use our platform.</p>
-            <p style={{ marginTop: 12 }}>By creating an account or using InternshipConnect, you agree to the practices described in this policy.</p>
-          </Section>
+      <LegalSection title="4. Data storage and security">
+        <p>
+          Your data is stored in a MongoDB Atlas cloud database. Our application servers are hosted on Render and
+          our web app on Vercel. Profile pictures and company logos are stored with Cloudinary, and resumes and
+          application documents are stored on our servers and database. We use industry-standard security practices
+          including encrypted connections (TLS), hashed passwords, and access controls.
+        </p>
+        <p>
+          Our service providers operate servers in several countries, including the United States, so your data may
+          be transferred and processed outside Nigeria. We retain your data for as long as your account is active.
+        </p>
+      </LegalSection>
 
-          <Section title="2. Information we collect">
-            <p><strong>Account information:</strong> When you register, we collect your name, email address, password (stored as a bcrypt hash — we never store plain-text passwords), and your account role (student or organisation).</p>
-            <p style={{ marginTop: 12 }}><strong>Profile information:</strong> Students may optionally provide their university, graduation year, skills, bio, and a resume/CV. Organisations may provide company name, description, and contact details.</p>
-            <p style={{ marginTop: 12 }}><strong>Application data:</strong> When you apply for internships or post them, we store the relevant content (cover messages, internship details, application status updates).</p>
-            <p style={{ marginTop: 12 }}><strong>Usage data:</strong> We may collect basic analytics such as pages visited and actions taken, to understand how to improve the platform. We do not sell this data.</p>
-          </Section>
+      <LegalSection title="5. Your rights">
+        <p>You have the right to:</p>
+        <ul>
+          <li><strong>Access</strong> the personal data we hold about you</li>
+          <li><strong>Correct</strong> inaccurate information via your profile settings</li>
+          <li>
+            <strong>Delete</strong> your account and associated personal data at any time from Settings. Deletion
+            removes your resumes and profile details and withdraws any open applications. Records that other users
+            rely on (such as an application in an employer's pipeline) are kept without your identity, and payment
+            records are kept as required for accounting.
+          </li>
+          <li><strong>Withdraw consent</strong> for optional data processing at any time</li>
+        </ul>
+        <p>
+          To exercise any of these rights, email us at <a href={`mailto:${mail}`}>{mail}</a>.
+        </p>
+      </LegalSection>
 
-          <Section title="3. How we use your information">
-            <ul style={{ listStyle: 'disc', paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <li>To operate and improve the InternshipConnect platform</li>
-              <li>To match students with relevant internship opportunities</li>
-              <li>To send transactional emails (e.g. application updates, account verification)</li>
-              <li>To enable communication between students and employers via the platform</li>
-              <li>To detect and prevent fraud or misuse</li>
-            </ul>
-            <p style={{ marginTop: 16 }}>We do not sell your personal data to third parties. We do not use your data for advertising purposes.</p>
-          </Section>
+      <LegalSection title="6. Cookies and browser storage">
+        <p>
+          We do not use third-party tracking cookies or advertising cookies. To keep you signed in, we store
+          authentication tokens in your browser's local storage, along with preferences such as your chosen theme.
+          Clearing your browser data or signing out removes them.
+        </p>
+      </LegalSection>
 
-          <Section title="4. Data storage and security">
-            <p>Your data is stored in a cloud database (Neon PostgreSQL) hosted on infrastructure in the US. We use industry-standard security practices including encrypted connections (TLS), hashed passwords, and access controls.</p>
-            <p style={{ marginTop: 12 }}>Uploaded files (such as resumes) are stored using Vercel Blob storage. We retain your data for as long as your account is active.</p>
-          </Section>
+      <LegalSection title="7. Third-party services">
+        <p>We use the following third-party services to operate the platform:</p>
+        <ul>
+          <li><strong>Vercel</strong>: hosting for the web app</li>
+          <li><strong>Render</strong>: hosting for our application servers</li>
+          <li><strong>MongoDB Atlas</strong>: database hosting</li>
+          <li><strong>Cloudinary</strong>: storage for profile pictures and logos</li>
+          <li><strong>Brevo</strong>: transactional email delivery</li>
+          <li><strong>Stripe</strong>: payment processing for paid plans (we do not store card details)</li>
+          <li>
+            <strong>An AI provider (OpenAI or Anthropic)</strong>: when AI-assisted resume generation is used, the
+            details you provide for the resume are sent to the provider solely to generate the result
+          </li>
+        </ul>
+        <p>Each of these services has its own privacy policy governing how it handles data.</p>
+      </LegalSection>
 
-          <Section title="5. Your rights">
-            <p>You have the right to:</p>
-            <ul style={{ listStyle: 'disc', paddingLeft: 24, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <li><strong>Access</strong> the personal data we hold about you</li>
-              <li><strong>Correct</strong> inaccurate information via your profile settings</li>
-              <li><strong>Delete</strong> your account and associated data by contacting us</li>
-              <li><strong>Withdraw consent</strong> for optional data processing at any time</li>
-            </ul>
-            <p style={{ marginTop: 16 }}>To exercise any of these rights, email us at <a href="mailto:privacy@internshipconnect.app" style={{ color: C.amber }}>privacy@internshipconnect.app</a>.</p>
-          </Section>
+      <LegalSection title="8. Changes to this policy">
+        <p>
+          We may update this Privacy Policy from time to time. When we do, we will update the "last updated" date at
+          the top of this page. Continued use of the platform after changes constitutes acceptance of the updated
+          policy.
+        </p>
+      </LegalSection>
 
-          <Section title="6. Cookies">
-            <p>We use a minimal set of cookies necessary for authentication (session tokens) and to remember your preferences. We do not use third-party tracking cookies or advertising cookies.</p>
-          </Section>
-
-          <Section title="7. Third-party services">
-            <p>We use the following third-party services to operate the platform:</p>
-            <ul style={{ listStyle: 'disc', paddingLeft: 24, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <li><strong>Vercel</strong> — hosting and file storage</li>
-              <li><strong>Neon</strong> — database hosting</li>
-              <li><strong>Resend</strong> — transactional email delivery</li>
-            </ul>
-            <p style={{ marginTop: 12 }}>Each of these services has their own privacy policies governing how they handle data.</p>
-          </Section>
-
-          <Section title="8. Changes to this policy">
-            <p>We may update this Privacy Policy from time to time. When we do, we will update the "last updated" date at the top of this page. Continued use of the platform after changes constitutes acceptance of the updated policy.</p>
-          </Section>
-
-          <Section title="9. Contact">
-            <p>If you have questions about this Privacy Policy, contact us at <a href="mailto:privacy@internshipconnect.app" style={{ color: C.amber }}>privacy@internshipconnect.app</a>.</p>
-          </Section>
-
-        </div>
-      </main>
-
-      <footer style={{ background: '#080E1C', padding: '28px 24px', textAlign: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>© {new Date().getFullYear()} InternshipConnect. All rights reserved.</p>
-      </footer>
-    </div>
+      <LegalSection title="9. Contact">
+        <p>
+          If you have questions about this Privacy Policy, contact us at <a href={`mailto:${mail}`}>{mail}</a>.
+        </p>
+      </LegalSection>
+    </LegalDocument>
   );
 }
