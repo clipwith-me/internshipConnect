@@ -71,7 +71,7 @@ export const createCheckoutSession = async (req, res) => {
     console.error('Create checkout session error:', error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to create checkout session'
+      error: 'Failed to create checkout session'
     });
   }
 };
@@ -139,7 +139,7 @@ export const handleStripeWebhook = async (req, res) => {
     console.error('Webhook error:', error);
     res.status(400).json({
       success: false,
-      error: error.message
+      error: 'Webhook processing failed'
     });
   }
 };
@@ -228,7 +228,7 @@ export const createPortalSession = async (req, res) => {
     console.error('Create portal session error:', error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to create portal session'
+      error: 'Failed to create portal session'
     });
   }
 };
@@ -264,7 +264,7 @@ export const cancelSubscription = async (req, res) => {
     console.error('Cancel subscription error:', error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to cancel subscription'
+      error: 'Failed to cancel subscription'
     });
   }
 };

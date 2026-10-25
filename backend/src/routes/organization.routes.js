@@ -2,13 +2,16 @@
 
 import express from 'express';
 import { getProfile, updateProfile, uploadLogo, uploadCoverImage, upload } from '../controllers/organization.controller.js';
-import { authenticate } from '../middleware/auth.middleware.js';
+import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { profileUpdateLimiter, uploadLimiter } from '../middleware/security.middleware.js';
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require an authenticated organization account (admins pass through
+// authorize). The handlers lazily create an OrganizationProfile, so this guard
+// stops other roles from generating stray organization records.
 router.use(authenticate);
+router.use(authorize('organization'));
 
 // Profile routes
 router.get('/profile', getProfile);

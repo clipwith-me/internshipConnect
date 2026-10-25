@@ -24,7 +24,7 @@ import { sendStudentWelcomeEmail, sendCompanyWelcomeEmail, sendPasswordResetEmai
  */
 const generateAccessToken = (userId) => {
   return jwt.sign(
-    { userId },
+    { userId, type: 'access' },
     process.env.JWT_SECRET,
     { expiresIn: '15m' }
   );
@@ -36,7 +36,7 @@ const generateAccessToken = (userId) => {
  */
 const generateRefreshToken = (userId) => {
   return jwt.sign(
-    { userId },
+    { userId, type: 'refresh' },
     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -312,8 +312,10 @@ export const login = async (req, res) => {
       profile = await StudentProfile.findOne({ user: user._id });
     } else if (user.role === 'organization') {
       profile = await OrganizationProfile.findOne({ user: user._id });
+    } else if (user.role === 'university') {
+      profile = await University.findOne({ user: user._id });
     }
-    
+
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
     
@@ -404,9 +406,28 @@ export const refreshToken = async (req, res) => {
       process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET
     );
     
+    // An access token must never be accepted as a refresh token. Tokens issued
+    // before the `type` claim existed have none and remain valid until expiry.
+    if (decoded.type === 'access') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired refresh token'
+      });
+    }
+
+    // The account must still exist and be active, otherwise a deleted or
+    // deactivated user could keep minting access tokens for up to 7 days.
+    const account = await User.findById(decoded.userId).select('isActive');
+    if (!account || !account.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired refresh token'
+      });
+    }
+
     // Generate new access token
     const accessToken = generateAccessToken(decoded.userId);
-    
+
     res.json({
       success: true,
       data: {
@@ -450,8 +471,10 @@ export const getMe = async (req, res) => {
       profile = await StudentProfile.findOne({ user: user._id });
     } else if (user.role === 'organization') {
       profile = await OrganizationProfile.findOne({ user: user._id });
+    } else if (user.role === 'university') {
+      profile = await University.findOne({ user: user._id });
     }
-    
+
     res.json({
       success: true,
       data: {
@@ -470,8 +493,7 @@ export const getMe = async (req, res) => {
     console.error('Get me error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch user data',
-      error: error.message
+      message: 'Failed to fetch user data'
     });
   }
 };
@@ -502,7 +524,6 @@ export const logout = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Logout failed',
-      error: error.message
     });
   }
 };
@@ -519,15 +540,18 @@ export const logout = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    
-    const user = await User.findByEmail(email);
-    
+
+    // Identical response whether or not the account exists, so this endpoint
+    // cannot be used to discover which emails are registered.
+    const GENERIC_RESPONSE = {
+      success: true,
+      message: 'If an account exists for that email, a password reset link has been sent.'
+    };
+
+    const user = typeof email === 'string' ? await User.findByEmail(email) : null;
+
     if (!user) {
-      // Don't reveal if email exists (security)
-      return res.json({
-        success: true,
-        message: 'If that email exists, a reset link has been sent'
-      });
+      return res.json(GENERIC_RESPONSE);
     }
     
     // Generate reset token
@@ -549,18 +573,16 @@ export const forgotPassword = async (req, res) => {
     }
 
     res.json({
-      success: true,
-      message: 'Password reset link sent to email',
-      // For development only - remove in production
+      ...GENERIC_RESPONSE,
+      // Local development only, so the flow can be tested without an inbox.
       ...(process.env.NODE_ENV === 'development' && { resetToken })
     });
-    
+
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to process request',
-      error: error.message
+      message: 'Failed to process request'
     });
   }
 };
@@ -618,7 +640,6 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to reset password',
-      error: error.message
     });
   }
 };
@@ -684,7 +705,6 @@ export const changePassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to change password',
-      error: error.message
     });
   }
 };

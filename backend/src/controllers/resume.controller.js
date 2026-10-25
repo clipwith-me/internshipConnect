@@ -8,6 +8,7 @@ import User from '../models/User.js';
 import { generateResume as generateAIResumeContent } from '../services/ai.service.js';
 import { generateResumePDF } from '../services/pdf.service.js';
 import path from 'path';
+import { canAccessResume } from '../utils/requestSafety.js';
 
 /**
  * @desc    Generate AI resume
@@ -181,7 +182,7 @@ export const getResumeById = async (req, res) => {
     const studentProfile = await StudentProfile.findOne({ user: req.user._id });
 
     // Verify ownership
-    if (resume.student._id.toString() !== studentProfile._id.toString()) {
+    if (resume.student._id.toString() !== studentProfile?._id?.toString()) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to access this resume'
@@ -220,7 +221,7 @@ export const deleteResume = async (req, res) => {
     const studentProfile = await StudentProfile.findOne({ user: req.user._id });
 
     // Verify ownership
-    if (resume.student.toString() !== studentProfile._id.toString()) {
+    if (resume.student.toString() !== studentProfile?._id?.toString()) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this resume'
@@ -258,10 +259,26 @@ export const downloadResume = async (req, res) => {
       });
     }
 
-    const studentProfile = await StudentProfile.findOne({ user: req.user._id });
+    // Authorization: owner student, admin, or an organization that has received
+    // an application from this student. Every other role (including a freshly
+    // registered organization with no relationship to the student) is refused.
+    let isOwner = false;
+    let hasApplicationToOrg = false;
 
-    // Verify ownership (student or organization viewing application)
-    if (req.user.role === 'student' && resume.student.toString() !== studentProfile._id.toString()) {
+    if (req.user.role === 'student') {
+      const studentProfile = await StudentProfile.findOne({ user: req.user._id }).select('_id');
+      isOwner = Boolean(studentProfile) && resume.student.toString() === studentProfile._id.toString();
+    } else if (req.user.role === 'organization') {
+      const orgProfile = await OrganizationProfile.findOne({ user: req.user._id }).select('_id');
+      if (orgProfile) {
+        const orgInternshipIds = await Internship.find({ organization: orgProfile._id }).distinct('_id');
+        hasApplicationToOrg = Boolean(
+          await Application.exists({ student: resume.student, internship: { $in: orgInternshipIds } })
+        );
+      }
+    }
+
+    if (!canAccessResume({ role: req.user.role, isOwner, hasApplicationToOrg })) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to download this resume'
@@ -269,15 +286,17 @@ export const downloadResume = async (req, res) => {
     }
 
     // Get file path
-    const fileName = resume.aiGenerated?.fileName || resume.uploadedFile?.fileName;
+    const rawFileName = resume.aiGenerated?.fileName || resume.uploadedFile?.fileName;
 
-    if (!fileName) {
+    if (!rawFileName) {
       return res.status(404).json({
         success: false,
         error: 'Resume file not found'
       });
     }
 
+    // Never trust a stored name to stay inside the uploads directory.
+    const fileName = path.basename(rawFileName);
     const filePath = path.join(process.cwd(), 'uploads', 'resumes', fileName);
 
     // Check if file exists

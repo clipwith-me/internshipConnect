@@ -5,6 +5,8 @@ import multer from 'multer';
 import path from 'path';
 import { uploadProfileImage, deleteFromCloudinary } from '../services/upload.service.js';
 import { isCloudinaryConfigured } from '../config/cloudinary.js';
+import { escapeRegex, validatePagination } from '../utils/security.js';
+import { toStringList } from '../utils/requestSafety.js';
 
 // Configure multer for file uploads - use memory storage for Cloudinary
 const storage = multer.memoryStorage(); // Store in memory buffer for Cloudinary upload
@@ -114,6 +116,10 @@ export const updateProfile = async (req, res) => {
       if (bio !== undefined) profile.bio = bio;
     }
     if (req.body.bio !== undefined) profile.bio = req.body.bio;
+    // Short professional headline shown on candidate cards (schema caps at 120).
+    if (typeof req.body.headline === 'string') profile.headline = req.body.headline.trim();
+    // Students control whether employers can find them in candidate search.
+    if (['public', 'private'].includes(req.body.visibility)) profile.visibility = req.body.visibility;
     if (req.body.socialLinks) profile.socialLinks = { ...profile.socialLinks, ...req.body.socialLinks };
     if (req.body.education) profile.education = req.body.education;
     if (req.body.skills) profile.skills = req.body.skills;
@@ -245,63 +251,74 @@ export const searchStudents = async (req, res) => {
       });
     }
 
-    const {
-      search,
-      skills,
-      education,
-      experience,
-      location,
-      page = 1,
-      limit = 20
-    } = req.query;
+    const { search, skills, education, experience, location } = req.query;
 
-    // Build query
+    // Pagination is clamped so a caller cannot request an unbounded page.
+    const { page, limit } = validatePagination(req.query.page, req.query.limit ?? 20, 50);
+
+    // Build query. Each text filter is escaped (no regex injection / ReDoS) and
+    // collected in $and so that search + location can be combined instead of
+    // one silently overwriting the other.
     const query = {
       status: 'active',
       visibility: 'public'
     };
+    const and = [];
 
     // Text search in name, bio, headline
-    if (search) {
-      query.$or = [
-        { 'personalInfo.firstName': { $regex: search, $options: 'i' } },
-        { 'personalInfo.lastName': { $regex: search, $options: 'i' } },
-        { bio: { $regex: search, $options: 'i' } },
-        { headline: { $regex: search, $options: 'i' } }
-      ];
+    if (typeof search === 'string' && search.trim()) {
+      const rx = new RegExp(escapeRegex(search.trim().slice(0, 100)), 'i');
+      and.push({
+        $or: [
+          { 'personalInfo.firstName': rx },
+          { 'personalInfo.lastName': rx },
+          { bio: rx },
+          { headline: rx }
+        ]
+      });
     }
 
-    // Filter by skills
-    if (skills) {
-      const skillsArray = skills.split(',').map(s => s.trim());
+    // Filter by skills (accepts "a,b" or repeated ?skills[]=a)
+    const skillsArray = toStringList(skills);
+    if (skillsArray.length) {
       query['skills.name'] = { $in: skillsArray };
     }
 
-    // Filter by education level
-    if (education) {
-      query['education.degree'] = education;
+    // Filter by education level (string only; objects are rejected)
+    if (typeof education === 'string' && education.trim()) {
+      query['education.degree'] = education.trim();
     }
 
-    // Filter by experience (number of experiences)
+    // Filter to students who have listed at least one experience entry
     if (experience) {
-      const expCount = parseInt(experience);
-      query['experience'] = { $exists: true, $not: { $size: 0 } };
+      query['experience.0'] = { $exists: true };
     }
 
     // Filter by location
-    if (location) {
-      query.$or = [
-        { 'personalInfo.location.city': { $regex: location, $options: 'i' } },
-        { 'personalInfo.location.country': { $regex: location, $options: 'i' } }
-      ];
+    if (typeof location === 'string' && location.trim()) {
+      const rx = new RegExp(escapeRegex(location.trim().slice(0, 100)), 'i');
+      and.push({
+        $or: [
+          { 'personalInfo.location.city': rx },
+          { 'personalInfo.location.country': rx }
+        ]
+      });
     }
+
+    if (and.length) query.$and = and;
 
     // Calculate pagination
     const skip = (page - 1) * limit;
 
-    // Execute query with featured profile prioritization
+    // Execute query with featured profile prioritization. Only fields needed to
+    // render a candidate card are returned: no email, phone, date of birth,
+    // street address or subscription/billing data is exposed to employers here.
     const students = await StudentProfile.find(query)
-      .populate('user', 'email subscription')
+      .select(
+        'personalInfo.firstName personalInfo.lastName personalInfo.profilePicture ' +
+        'personalInfo.location.city personalInfo.location.country ' +
+        'headline bio skills education featured profileCompleteness updatedAt'
+      )
       .sort({
         'featured.isFeatured': -1,     // Featured profiles first
         'featured.priority': -1,        // Higher priority first within featured
@@ -309,7 +326,7 @@ export const searchStudents = async (req, res) => {
         updatedAt: -1                   // Recent updates last
       })
       .skip(skip)
-      .limit(parseInt(limit))
+      .limit(limit)
       .lean();
 
     // Get total count for pagination
@@ -320,7 +337,7 @@ export const searchStudents = async (req, res) => {
       data: {
         students,
         pagination: {
-          current: parseInt(page),
+          current: page,
           total: Math.ceil(total / limit),
           count: students.length,
           totalStudents: total

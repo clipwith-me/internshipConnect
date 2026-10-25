@@ -8,6 +8,7 @@ import Application from '../models/Application.js';
 import Payment from '../models/Payment.js';
 import ReferralCode from '../models/ReferralCode.js';
 import { sendStudentCampaignEmail, sendOrganisationCampaignEmail } from '../services/resend-email.service.js';
+import { escapeRegex } from '../utils/security.js';
 
 /**
  * @desc    Get dashboard statistics
@@ -98,8 +99,8 @@ export const getUsers = async (req, res) => {
     // Build filter
     const filter = {};
 
-    if (search) {
-      filter.email = { $regex: search, $options: 'i' };
+    if (typeof search === 'string' && search.trim()) {
+      filter.email = { $regex: escapeRegex(search.trim().slice(0, 100)), $options: 'i' };
     }
 
     if (role && role !== 'all') {

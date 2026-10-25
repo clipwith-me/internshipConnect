@@ -178,10 +178,10 @@ app.use('/api/payments', paymentRoutes);
  * Without this: req.body = "[object Object]" (useless)
  * With this: req.body = { email: 'test@test.com' } (useful!)
  */
-app.use(express.json({ limit: '10mb' })); // Allow up to 10MB JSON payloads
+app.use(express.json({ limit: '1mb' })); // File uploads use multipart (multer), so JSON bodies stay small
 
 // 8. URL ENCODED - Parse form data
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // 9. STATIC FILES - Serve uploaded files
 /**
@@ -288,14 +288,9 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    services: {
-      database: config.database.isConfigured,
-      smtp: config.smtp.isConfigured,
-      stripe: config.stripe.isConfigured,
-      cloudinary: config.cloudinary.isConfigured,
-      ai: config.ai.isConfigured
-    }
+    uptime: process.uptime()
+    // Which third-party services are configured is deliberately not published
+    // on this unauthenticated endpoint.
   });
 });
 

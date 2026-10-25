@@ -40,7 +40,16 @@ export const authenticate = async (req, res, next) => {
     
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
+    // A long-lived refresh token must not be usable as an access token (this
+    // matters when both are signed with the same secret).
+    if (decoded.type === 'refresh') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
     // Check if user exists
     const user = await User.findById(decoded.userId);
     
@@ -216,12 +225,18 @@ export const optionalAuth = async (req, res, next) => {
     
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
+    if (decoded.type === 'refresh') {
+      req.user = null;
+      return next();
+    }
+
     const user = await User.findById(decoded.userId);
-    
+
     if (user && user.isActive) {
       req.user = {
-        userId: user._id,
+        _id: user._id,
+        userId: user._id, // kept for backward compatibility with older callers
         email: user.email,
         role: user.role,
         subscription: user.subscription

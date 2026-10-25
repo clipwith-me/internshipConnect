@@ -316,7 +316,7 @@ function calculateReadabilityScore(content) {
   else if (avgWordsPerSentence > 25) score -= 10;
 
   // Check for bullet points (good for readability)
-  const bulletPoints = (content.match(/[•\-\*]/g) || []).length;
+  const bulletPoints = (content.match(/[•*-]/g) || []).length;
   score += Math.min(bulletPoints, 10);
 
   return Math.min(Math.round(score), 100);
@@ -331,7 +331,7 @@ function identifyStrengths(content, keywords) {
   if (content.length > 1500) strengths.push('Comprehensive and detailed');
   if (keywords.length > 10) strengths.push('Strong technical vocabulary');
   if (/\d+%|\d+ (years?|months?)/.test(content)) strengths.push('Quantifiable achievements');
-  if ((content.match(/[•\-]/g) || []).length > 5) strengths.push('Well-organized with bullet points');
+  if ((content.match(/[•-]/g) || []).length > 5) strengths.push('Well-organized with bullet points');
 
   return strengths.length > 0 ? strengths : ['Clear presentation of qualifications'];
 }
@@ -359,7 +359,7 @@ function generateImprovements(content) {
   if (!content.includes('SUMMARY') && !content.includes('Summary')) {
     improvements.push('Add a professional summary at the top');
   }
-  if ((content.match(/[•\-]/g) || []).length < 5) {
+  if ((content.match(/[•-]/g) || []).length < 5) {
     improvements.push('Use more bullet points to highlight achievements');
   }
   if (!/\d+ (years?|months?)/.test(content)) {

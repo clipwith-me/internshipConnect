@@ -61,7 +61,7 @@ export const getOrganizationAnalytics = async (organizationId, timeRange = '30d'
   };
 
   applications.forEach(app => {
-    if (statusBreakdown.hasOwnProperty(app.status)) {
+    if (Object.prototype.hasOwnProperty.call(statusBreakdown, app.status)) {
       statusBreakdown[app.status]++;
     }
   });
