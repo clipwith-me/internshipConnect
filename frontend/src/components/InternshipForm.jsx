@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Alert from './Alert';
 import Button from './Button';
+import FlyerPicker from './FlyerPicker';
 import { OPPORTUNITY_TYPES } from '../utils/opportunity';
 import { toFormValues, toPayload, validateValues } from '../utils/internshipForm';
 
@@ -40,6 +41,8 @@ export default function InternshipForm({ initial, onSubmit, onCancel, isEdit = f
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [flyerFile, setFlyerFile] = useState(null);
+  const [flyerRemoved, setFlyerRemoved] = useState(false);
 
   const set = (k) => (e) => setV((s) => ({ ...s, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const props = (id, k = id) => ({
@@ -64,7 +67,7 @@ export default function InternshipForm({ initial, onSubmit, onCancel, isEdit = f
     }
     setBusy(true);
     try {
-      await onSubmit(toPayload(v));
+      await onSubmit(toPayload(v), { flyerFile, removeFlyer: flyerRemoved && !flyerFile });
     } catch (err) {
       const list = err.response?.data?.errors;
       if (Array.isArray(list) && list.length) {
@@ -152,6 +155,17 @@ export default function InternshipForm({ initial, onSubmit, onCancel, isEdit = f
             </>
           )}
         </div>
+      </Group>
+
+      <Group title="Flyer">
+        <FlyerPicker
+          existingUrl={initial?.flyer?.url}
+          file={flyerFile}
+          removed={flyerRemoved}
+          onPick={(f) => { setFlyerFile(f); setFlyerRemoved(false); }}
+          onRemove={() => { setFlyerFile(null); setFlyerRemoved(true); }}
+          onUndoRemove={() => setFlyerRemoved(false)}
+        />
       </Group>
 
       <Group title="Dates">

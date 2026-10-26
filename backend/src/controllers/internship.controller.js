@@ -19,6 +19,8 @@
 import Internship from '../models/Internship.js';
 import OrganizationProfile from '../models/OrganizationProfile.js';
 import { escapeRegex, validatePagination } from '../utils/security.js';
+import { uploadFlyer, deleteFromCloudinary, sniffImageType } from '../services/upload.service.js';
+import { isCloudinaryConfigured } from '../config/cloudinary.js';
 
 // Fields an employer may set on their own listing. Everything else (featured,
 // statistics, aiMetadata, positions.filled, organization, ...) is system-managed.
@@ -552,3 +554,83 @@ export const publishInternship = async (req, res) => {
  * We export each function individually for better tree-shaking
  * and easier testing. This is a best practice in modern JavaScript.
  */
+
+
+/**
+ * Load a listing and make sure the signed-in organisation owns it.
+ * Sends the error response itself and returns null when access is refused.
+ */
+const loadOwnedListing = async (req, res) => {
+  const internship = await Internship.findById(req.params.id).populate('organization', 'user');
+  if (!internship) {
+    res.status(404).json({ success: false, error: 'Listing not found' });
+    return null;
+  }
+  if (internship.organization?.user?.toString() !== req.user._id.toString()) {
+    res.status(403).json({ success: false, error: 'Not authorized to change this listing' });
+    return null;
+  }
+  return internship;
+};
+
+/**
+ * @desc    Upload or replace a listing's flyer
+ * @route   PUT /api/internships/:id/flyer
+ * @access  Private (owning organisation only)
+ */
+export const uploadInternshipFlyer = async (req, res) => {
+  try {
+    const internship = await loadOwnedListing(req, res);
+    if (!internship) return;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Choose a JPG, PNG or WebP image to upload.' });
+    }
+    // Trust the file's bytes, not the client-supplied content type.
+    const realType = sniffImageType(req.file.buffer);
+    if (!realType) {
+      return res.status(400).json({ success: false, error: 'That file is not a valid JPG, PNG or WebP image.' });
+    }
+    if (!isCloudinaryConfigured()) {
+      return res.status(503).json({ success: false, error: 'Image uploads are not set up on this server yet.' });
+    }
+
+    const result = await uploadFlyer(req.file.buffer, internship._id.toString());
+    const previous = internship.flyer?.publicId;
+
+    await Internship.updateOne(
+      { _id: internship._id },
+      { $set: { flyer: { url: result.url, publicId: result.publicId, mimeType: realType, bytes: result.bytes, uploadedAt: new Date() } } }
+    );
+    if (previous) {
+      deleteFromCloudinary(previous).catch((e) => console.error('Old flyer cleanup failed:', e.message));
+    }
+
+    return res.json({ success: true, message: 'Flyer uploaded', data: { flyer: { url: result.url } } });
+  } catch (error) {
+    console.error('Upload flyer error:', error);
+    return res.status(500).json({ success: false, error: 'We could not upload the flyer. Please try again.' });
+  }
+};
+
+/**
+ * @desc    Remove a listing's flyer
+ * @route   DELETE /api/internships/:id/flyer
+ * @access  Private (owning organisation only)
+ */
+export const deleteInternshipFlyer = async (req, res) => {
+  try {
+    const internship = await loadOwnedListing(req, res);
+    if (!internship) return;
+
+    const publicId = internship.flyer?.publicId;
+    await Internship.updateOne({ _id: internship._id }, { $unset: { flyer: 1 } });
+    if (publicId) {
+      deleteFromCloudinary(publicId).catch((e) => console.error('Flyer cleanup failed:', e.message));
+    }
+    return res.json({ success: true, message: 'Flyer removed' });
+  } catch (error) {
+    console.error('Delete flyer error:', error);
+    return res.status(500).json({ success: false, error: 'We could not remove the flyer.' });
+  }
+};

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { internshipAPI } from '../services/api';
 import { isAbortError } from '../hooks/useApi';
-import { Button, EmptyState } from '../components';
+import { Alert, Button, EmptyState } from '../components';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
 import InternshipForm from '../components/InternshipForm';
@@ -10,6 +10,7 @@ import InternshipForm from '../components/InternshipForm';
 export default function EditInternshipPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [state, setState] = useState({ status: 'loading', data: null });
 
   useEffect(() => {
@@ -44,9 +45,19 @@ export default function EditInternshipPage() {
   // closed and filled listings keep their status when edited.
   const toggleable = ['draft', 'active'].includes(current.status);
 
-  const save = async (payload) => {
+  const save = async (payload, { flyerFile, removeFlyer }) => {
     const { publish, ...rest } = payload;
     await internshipAPI.update(id, toggleable ? { ...rest, status: publish ? 'active' : 'draft' } : rest);
+    try {
+      if (flyerFile) await internshipAPI.uploadFlyer(id, flyerFile);
+      else if (removeFlyer) await internshipAPI.deleteFlyer(id);
+    } catch (err) {
+      const msg = err.response?.data?.error || 'please try again.';
+      // Surface through the form's error banner; the listing changes are already saved.
+      throw Object.assign(new Error(msg), {
+        response: { data: { error: `Your changes were saved, but the flyer didn't update: ${msg}` } },
+      });
+    }
     navigate('/dashboard/my-internships');
   };
 
@@ -58,6 +69,7 @@ export default function EditInternshipPage() {
         title="Edit listing"
         description={<StatusBadge kind="internship" status={current.status} />}
       />
+      {location.state?.notice && <Alert variant="warning" className="mb-5">{location.state.notice}</Alert>}
       <InternshipForm
         isEdit
         initial={current}

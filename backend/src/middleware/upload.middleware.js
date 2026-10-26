@@ -68,6 +68,24 @@ export const uploadCompanyLogo = multer({
 }).single('logo');
 
 /**
+ * Listing flyer upload middleware (JPG, PNG or WebP, max 5MB).
+ * Wrapped so multer errors become clean 400 responses instead of 500s.
+ */
+const flyerMulter = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: createFileFilter(['image/jpeg', 'image/png', 'image/webp']),
+}).single('flyer');
+
+export const uploadFlyerFile = (req, res, next) => {
+  flyerMulter(req, res, (err) => {
+    if (!err) return next();
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'The flyer is too large. The maximum is 5 MB.' : 'Upload a JPG, PNG or WebP image.';
+    return res.status(400).json({ success: false, error: message });
+  });
+};
+
+/**
  * Multiple documents upload middleware
  */
 export const uploadDocuments = multer({

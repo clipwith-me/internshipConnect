@@ -249,6 +249,12 @@ export const internshipAPI = {
   update: (id, data) => api.put(`/internships/${id}`, data),
   delete: (id) => api.delete(`/internships/${id}`),
   publish: (id) => api.patch(`/internships/${id}/publish`),
+  uploadFlyer: (id, file) => {
+    const form = new FormData();
+    form.append('flyer', file);
+    return api.put(`/internships/${id}/flyer`, form);
+  },
+  deleteFlyer: (id) => api.delete(`/internships/${id}/flyer`),
   // ✅ FIX: Accept config for signal (AbortController)
   getMyInternships: (config) => api.get('/internships/my-internships', config),
 };

@@ -11,8 +11,19 @@ export default function CreateInternshipPage() {
     document.title = 'Post an opportunity | InternshipConnect';
   }, []);
 
-  const create = async (payload) => {
-    await internshipAPI.create(payload);
+  const create = async (payload, { flyerFile }) => {
+    const res = await internshipAPI.create(payload);
+    if (flyerFile) {
+      try {
+        await internshipAPI.uploadFlyer(res.data?.data?._id, flyerFile);
+      } catch (err) {
+        // The listing exists; send them to edit so they can retry the flyer.
+        navigate(`/dashboard/internships/${res.data?.data?._id}/edit`, {
+          state: { notice: `Your listing was saved, but the flyer didn't upload: ${err.response?.data?.error || 'please try again.'}` },
+        });
+        return;
+      }
+    }
     navigate('/dashboard/my-internships');
   };
 

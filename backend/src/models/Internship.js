@@ -281,6 +281,16 @@ const internshipSchema = new mongoose.Schema({
     index: true
   },
 
+  // Optional promotional flyer (an image the employer uploads). Stored in
+  // Cloudinary; publicId lets us replace/delete it.
+  flyer: {
+    url: String,
+    publicId: String,
+    mimeType: String,
+    bytes: Number,
+    uploadedAt: Date
+  },
+
   visibility: {
     type: String,
     enum: ['public', 'unlisted', 'private'],

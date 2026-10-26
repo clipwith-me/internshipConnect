@@ -174,6 +174,14 @@ export default function InternshipDetailPage() {
             <p className="mt-3 whitespace-pre-line leading-relaxed text-neutral-700">{i.description}</p>
           </section>
 
+          {i.flyer?.url && (
+            <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+              <a href={i.flyer.url} target="_blank" rel="noopener noreferrer" className="block focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/40" aria-label="Open the flyer in a new tab">
+                <img src={i.flyer.url} alt={`Flyer for ${i.title}`} className="mx-auto max-h-[36rem] w-full object-contain" loading="lazy" />
+              </a>
+            </section>
+          )}
+
           {(i.requirements?.description || skills.length > 0) && (
             <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
               <h2 className="text-lg font-semibold text-neutral-900">Requirements</h2>

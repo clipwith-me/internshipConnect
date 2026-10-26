@@ -28,10 +28,13 @@ import {
   updateInternship,
   deleteInternship,
   getMyInternships,
-  publishInternship
+  publishInternship,
+  uploadInternshipFlyer,
+  deleteInternshipFlyer
 } from '../controllers/internship.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/validation.middleware.js';
+import { uploadFlyerFile } from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
@@ -138,6 +141,8 @@ router.post('/', authorize('organization'), internshipValidation, createInternsh
 // Dynamic routes (must be after specific routes to avoid conflicts)
 router.get('/:id', getInternshipById); // GET /api/internships/:id
 router.put('/:id', authorize('organization'), internshipValidation, updateInternship); // PUT /api/internships/:id
+router.put('/:id/flyer', authorize('organization'), uploadFlyerFile, uploadInternshipFlyer); // PUT /api/internships/:id/flyer
+router.delete('/:id/flyer', authorize('organization'), deleteInternshipFlyer); // DELETE /api/internships/:id/flyer
 router.patch('/:id/publish', authorize('organization'), publishInternship); // PATCH /api/internships/:id/publish
 router.delete('/:id', authorize('organization'), deleteInternship); // DELETE /api/internships/:id
 

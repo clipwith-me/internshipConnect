@@ -109,6 +109,13 @@ async function eraseOrganization(user) {
   );
   await CompanyVerification.deleteMany({ organization: org._id });
 
+  // Their flyers should not outlive the account.
+  const flyered = await Internship.find({ organization: org._id, 'flyer.publicId': { $exists: true } }).select('flyer.publicId');
+  for (const l of flyered) {
+    await bestEffort('cloudinary flyer', () => deleteFromCloudinary(l.flyer.publicId));
+  }
+  await Internship.updateMany({ organization: org._id }, { $unset: { flyer: 1 } });
+
   if (org.companyInfo?.logo?.publicId) {
     await bestEffort('cloudinary logo', () => deleteFromCloudinary(org.companyInfo.logo.publicId));
   }

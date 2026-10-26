@@ -95,6 +95,34 @@ export const uploadCompanyLogo = async (fileBuffer, organizationId) => {
 };
 
 /**
+ * Work out the real image type from the file's first bytes. The mimetype a
+ * client sends is not trustworthy, so a renamed .exe/.html can't pass as a flyer.
+ * Returns 'image/jpeg' | 'image/png' | 'image/webp' | null.
+ */
+export const sniffImageType = (buf) => {
+  if (!buf || buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+  if (buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
+  if (buf.subarray(0, 4).toString('ascii') === 'RIFF' && buf.subarray(8, 12).toString('ascii') === 'WEBP') return 'image/webp';
+  return null;
+};
+
+/**
+ * Upload a listing flyer (resized to at most 1600px wide, optimised).
+ */
+export const uploadFlyer = async (fileBuffer, internshipId) => {
+  return await uploadToCloudinary(fileBuffer, {
+    folder: 'internship-connect/flyers',
+    publicId: `${internshipId}_${Date.now()}`,
+    resourceType: 'image',
+    transformation: [
+      { width: 1600, crop: 'limit' },
+      { quality: 'auto', fetch_format: 'auto' },
+    ],
+  });
+};
+
+/**
  * Delete file from Cloudinary
  */
 export const deleteFromCloudinary = async (publicId, resourceType = 'image') => {
