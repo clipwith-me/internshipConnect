@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, CheckCircle2, FileText, Laptop, MapPin, Upload, Users, Wallet, X } from 'lucide-react';
-import { applicationAPI, internshipAPI } from '../services/api';
+import { Bookmark, BookmarkCheck, Calendar, CheckCircle2, FileText, Laptop, MapPin, Upload, Users, Wallet, X } from 'lucide-react';
+import { applicationAPI, internshipAPI, savedInternshipsAPI } from '../services/api';
 import { isAbortError } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { Alert, Button, EmptyState, Modal, PageHeader } from '../components';
 import StatusBadge from '../components/StatusBadge';
+import VerifiedBadge from '../components/VerifiedBadge';
 import { opportunityLabel } from '../utils/opportunity';
 import {
   formatCompensation,
@@ -13,6 +14,7 @@ import {
   getArrangement,
   getDeadline,
   getOrgName,
+  isVerifiedOrg,
 } from '../utils/internship';
 
 const ALLOWED_TYPES = [
@@ -44,6 +46,8 @@ export default function InternshipDetailPage() {
 
   const [state, setState] = useState({ status: 'loading', data: null });
   const [existing, setExisting] = useState(null); // this student's application, if any
+  const [saved, setSaved] = useState(false);
+  const [savingBusy, setSavingBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [letter, setLetter] = useState('');
   const [file, setFile] = useState(null);
@@ -80,6 +84,29 @@ export default function InternshipDetailPage() {
       .catch(() => {});
     return () => controller.abort();
   }, [id, isStudent]);
+
+  // Is this listing already in the student's saved list?
+  useEffect(() => {
+    if (!isStudent) return;
+    savedInternshipsAPI
+      .getAll()
+      .then((res) => setSaved((res.data?.data || []).some((s) => s.internship?._id === id)))
+      .catch(() => {});
+  }, [id, isStudent]);
+
+  const toggleSave = async () => {
+    setSavingBusy(true);
+    try {
+      if (saved) await savedInternshipsAPI.unsave(id);
+      else await savedInternshipsAPI.save(id);
+      setSaved(!saved);
+    } catch (err) {
+      // 409 means it was already saved; reflect that instead of showing an error.
+      if (err.response?.status === 409) setSaved(true);
+    } finally {
+      setSavingBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (state.data?.title) document.title = `${state.data.title} | InternshipConnect`;
@@ -158,7 +185,12 @@ export default function InternshipDetailPage() {
         backTo="/dashboard/internships"
         backLabel="All opportunities"
         title={i.title}
-        description={[opportunityLabel(i), org].filter(Boolean).join(' · ')}
+        description={
+          <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>{[opportunityLabel(i), org].filter(Boolean).join(' · ')}</span>
+            {isVerifiedOrg(i) && <VerifiedBadge />}
+          </span>
+        }
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -244,6 +276,19 @@ export default function InternshipDetailPage() {
               {isStudent && !existing && (
                 <Button fullWidth size="lg" disabled={!isOpen} onClick={() => setOpen(true)}>
                   {isOpen ? 'Apply now' : 'Applications closed'}
+                </Button>
+              )}
+              {isStudent && (
+                <Button
+                  fullWidth
+                  variant="secondary"
+                  className="mt-3"
+                  onClick={toggleSave}
+                  loading={savingBusy}
+                  aria-pressed={saved}
+                  icon={saved ? <BookmarkCheck size={16} aria-hidden="true" /> : <Bookmark size={16} aria-hidden="true" />}
+                >
+                  {saved ? 'Saved' : 'Save for later'}
                 </Button>
               )}
               {!isStudent && (

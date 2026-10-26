@@ -72,3 +72,6 @@ export const initials = (name = '') =>
     .slice(0, 2)
     .map((w) => w[0].toUpperCase())
     .join('') || '?';
+
+/** True only when an admin has approved the employer verification. */
+export const isVerifiedOrg = (internship) => internship?.organization?.verification?.status === 'verified';

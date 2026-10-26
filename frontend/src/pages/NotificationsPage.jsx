@@ -1,348 +1,160 @@
-// frontend/src/pages/NotificationsPage.jsx
-
-import { useState, useEffect } from 'react';
-import {
-  Bell,
-  Check,
-  CheckCheck,
-  Trash2,
-  Filter,
-  RefreshCw,
-  AlertCircle
-} from 'lucide-react';
-import { notificationAPI } from '../services/api';
-import { Badge, Button, Card } from '../components';
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Bell, Check, CheckCheck, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { notificationAPI } from '../services/api';
+import { Alert, Button, EmptyState, PageHeader } from '../components';
 
-/**
- * 🎓 FULL NOTIFICATIONS PAGE
- *
- * Features:
- * - Complete notification history
- * - Filter by read/unread status
- * - Filter by notification type
- * - Mark as read/unread
- * - Delete notifications
- * - Pagination
- * - Create test notifications (development)
- */
+// The API stores specific types (e.g. "application_shortlisted"); the filter groups them.
+const GROUPS = [
+  { value: 'all', label: 'All types', match: () => true },
+  { value: 'application', label: 'Applications', match: (t) => t.startsWith('application_') },
+  { value: 'interview', label: 'Interviews', match: (t) => t === 'interview_scheduled' },
+  { value: 'offer', label: 'Offers', match: (t) => t.startsWith('offer_') },
+  { value: 'message', label: 'Messages', match: (t) => t === 'message_received' },
+  { value: 'system', label: 'System', match: (t) => ['system', 'new_internship', 'internship_expiring', 'profile_incomplete'].includes(t) },
+];
 
-const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all'); // all, unread, read
-  const [typeFilter, setTypeFilter] = useState('all'); // all, application, interview, etc.
-  const [unreadCount, setUnreadCount] = useState(0);
+const typeLabel = (t = '') => t.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+// Stored as `read`; older code looked for `isRead`.
+const isRead = (n) => Boolean(n.read ?? n.isRead);
 
-  const notificationTypes = [
-    { value: 'all', label: 'All Types' },
-    { value: 'application', label: 'Applications' },
-    { value: 'interview', label: 'Interviews' },
-    { value: 'offer', label: 'Offers' },
-    { value: 'rejection', label: 'Rejections' },
-    { value: 'system', label: 'System' },
-    { value: 'message', label: 'Messages' },
-  ];
+export default function NotificationsPage() {
+  const [state, setState] = useState({ status: 'loading', items: [], unread: 0 });
+  const [readFilter, setReadFilter] = useState('all');
+  const [group, setGroup] = useState('all');
+  const [notice, setNotice] = useState('');
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await notificationAPI.getAll({
-        limit: 50,
-        unreadOnly: filter === 'unread'
-      });
-
-      if (response.data.success) {
-        let notifs = response.data.data.notifications;
-
-        // Filter by type
-        if (typeFilter !== 'all') {
-          notifs = notifs.filter(n => n.type === typeFilter);
-        }
-
-        // Filter by read status
-        if (filter === 'read') {
-          notifs = notifs.filter(n => n.isRead);
-        }
-
-        setNotifications(notifs);
-        setUnreadCount(response.data.data.unreadCount);
-      }
-    } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-      setError('Failed to load notifications. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const load = useCallback(() => {
+    setState((s) => ({ ...s, status: 'loading' }));
+    return notificationAPI
+      .getAll({ limit: 50 })
+      .then((res) => {
+        const d = res.data?.data;
+        setState({ status: 'ready', items: d?.notifications || [], unread: d?.unreadCount || 0 });
+      })
+      .catch(() => setState({ status: 'error', items: [], unread: 0 }));
+  }, []);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [filter, typeFilter]);
+    document.title = 'Notifications | InternshipConnect';
+    load();
+  }, [load]);
 
-  // Mark as read
-  const handleMarkAsRead = async (id) => {
+  const markRead = async (id) => {
     try {
       await notificationAPI.markAsRead(id);
-      setNotifications(prev =>
-        prev.map(n => (n._id === id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Failed to mark as read:', err);
+      setState((s) => ({ ...s, items: s.items.map((n) => (n._id === id ? { ...n, read: true } : n)), unread: Math.max(0, s.unread - 1) }));
+    } catch {
+      setNotice('We could not update that notification.');
     }
   };
 
-  // Mark all as read
-  const handleMarkAllAsRead = async () => {
+  const markAll = async () => {
     try {
       await notificationAPI.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
+      setState((s) => ({ ...s, items: s.items.map((n) => ({ ...n, read: true })), unread: 0 }));
+    } catch {
+      setNotice('We could not mark everything as read.');
     }
   };
 
-  // Delete notification
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this notification?')) return;
-
+  const remove = async (id) => {
     try {
       await notificationAPI.delete(id);
-      setNotifications(prev => prev.filter(n => n._id !== id));
-    } catch (err) {
-      console.error('Failed to delete notification:', err);
+      setState((s) => {
+        const gone = s.items.find((n) => n._id === id);
+        return { ...s, items: s.items.filter((n) => n._id !== id), unread: gone && !isRead(gone) ? Math.max(0, s.unread - 1) : s.unread };
+      });
+    } catch {
+      setNotice('We could not delete that notification.');
     }
   };
 
-  // Create test notification (development only)
-  const handleCreateTest = async () => {
-    try {
-      await notificationAPI.createTest();
-      fetchNotifications();
-      alert('Test notification created! Check your notifications.');
-    } catch (err) {
-      console.error('Failed to create test notification:', err);
-      alert('Failed to create test notification. Make sure you are in development mode.');
-    }
-  };
-
-  // Get notification type badge variant
-  const getTypeBadgeVariant = (type) => {
-    const variants = {
-      application: 'primary',
-      interview: 'warning',
-      offer: 'success',
-      rejection: 'danger',
-      system: 'neutral',
-      message: 'info',
-    };
-    return variants[type] || 'neutral';
-  };
+  const matcher = GROUPS.find((g) => g.value === group).match;
+  const shown = state.items.filter(
+    (n) => matcher(n.type || '') && (readFilter === 'all' || (readFilter === 'unread' ? !isRead(n) : isRead(n)))
+  );
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-          Notifications
-        </h1>
-        <p className="text-neutral-600">
-          Stay updated with your applications and messages
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        title="Notifications"
+        description="Updates about your applications and messages."
+        actions={state.unread > 0 ? <Button variant="secondary" onClick={markAll} icon={<CheckCheck size={16} aria-hidden="true" />}>Mark all read</Button> : undefined}
+      />
 
-      {/* Actions Bar */}
-      <Card className="mb-6 p-3 sm:p-4">
-        <div className="flex flex-col gap-3">
-          {/* Row 1: Read/Unread filter + type select */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-1">
-              {['all', 'unread', 'read'].map(f => (
-                <Button
-                  key={f}
-                  size="sm"
-                  variant={filter === f ? 'primary' : 'outline'}
-                  onClick={() => setFilter(f)}
-                >
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
-                  {f === 'unread' && unreadCount > 0 && (
-                    <Badge variant="danger" size="sm" className="ml-1.5">
-                      {unreadCount}
-                    </Badge>
-                  )}
-                </Button>
-              ))}
-            </div>
+      {notice && <Alert variant="error" onDismiss={() => setNotice('')} className="mb-4">{notice}</Alert>}
 
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-300 rounded-md bg-white text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="Filter by read status" className="inline-flex rounded-md border border-neutral-300 bg-white p-0.5">
+          {['all', 'unread', 'read'].map((f) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={readFilter === f}
+              onClick={() => setReadFilter(f)}
+              className={`rounded px-3 py-1.5 text-sm font-medium capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${readFilter === f ? 'bg-primary-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}
             >
-              {notificationTypes.map(type => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Row 2: Action buttons */}
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={fetchNotifications} disabled={loading}>
-              <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-
-            {unreadCount > 0 && (
-              <Button size="sm" variant="outline" onClick={handleMarkAllAsRead}>
-                <CheckCheck className="w-4 h-4 mr-1.5" />
-                Mark All Read
-              </Button>
-            )}
-
-            {import.meta.env.DEV && (
-              <Button size="sm" variant="secondary" onClick={handleCreateTest}>
-                <Bell className="w-4 h-4 mr-1.5" />
-                Test
-              </Button>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* Notifications List */}
-      {loading ? (
-        // Loading State
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-        </div>
-      ) : error ? (
-        // Error State
-        <Card className="p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={fetchNotifications}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
-          </Button>
-        </Card>
-      ) : notifications.length === 0 ? (
-        // Empty State
-        <Card className="p-12 text-center">
-          <Bell className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-            No notifications
-          </h3>
-          <p className="text-neutral-600 mb-6">
-            {filter === 'unread'
-              ? "You're all caught up! No unread notifications."
-              : filter === 'read'
-              ? "No read notifications yet."
-              : typeFilter !== 'all'
-              ? `No ${typeFilter} notifications.`
-              : "You don't have any notifications yet."}
-          </p>
-          {import.meta.env.DEV && (
-            <Button onClick={handleCreateTest}>
-              <Bell className="w-4 h-4 mr-2" />
-              Create Test Notification
-            </Button>
-          )}
-        </Card>
-      ) : (
-        // Notifications List
-        <div className="space-y-3">
-          {notifications.map((notification) => (
-            <Card
-              key={notification._id}
-              className={`p-5 hover:shadow-md transition-shadow ${
-                !notification.isRead ? 'border-l-4 border-l-primary-500 bg-blue-50' : ''
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <Badge
-                      variant={getTypeBadgeVariant(notification.type)}
-                      size="sm"
-                    >
-                      {notification.type}
-                    </Badge>
-
-                    {!notification.isRead && (
-                      <span className="flex items-center text-xs text-primary-600 font-medium">
-                        <span className="w-2 h-2 bg-primary-500 rounded-full mr-1"></span>
-                        Unread
-                      </span>
-                    )}
-
-                    <span className="text-xs text-neutral-400">
-                      {formatDistanceToNow(new Date(notification.createdAt), {
-                        addSuffix: true
-                      })}
-                    </span>
-                  </div>
-
-                  <h4 className="text-base font-semibold text-neutral-900 mb-1">
-                    {notification.title}
-                  </h4>
-
-                  <p className="text-sm text-neutral-600 mb-3">
-                    {notification.message}
-                  </p>
-
-                  {notification.actionUrl && (
-                    <a
-                      href={notification.actionUrl}
-                      className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      View Details →
-                    </a>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 ml-4">
-                  {!notification.isRead && (
-                    <button
-                      onClick={() => handleMarkAsRead(notification._id)}
-                      className="p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
-                      title="Mark as read"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => handleDelete(notification._id)}
-                    className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </Card>
+              {f}{f === 'unread' && state.unread > 0 ? ` (${state.unread})` : ''}
+            </button>
           ))}
         </div>
+        <div>
+          <label htmlFor="n-type" className="sr-only">Notification type</label>
+          <select id="n-type" value={group} onChange={(e) => setGroup(e.target.value)} className="h-10 rounded-md border border-neutral-300 bg-white px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30">
+            {GROUPS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {state.status === 'loading' && (
+        <div className="space-y-3" aria-busy="true">{[0, 1, 2].map((n) => <div key={n} className="h-24 animate-pulse rounded-xl border border-neutral-200 bg-white" />)}</div>
       )}
 
-      {/* Footer Info */}
-      {!loading && notifications.length > 0 && (
-        <div className="mt-6 text-center text-sm text-neutral-500">
-          Showing {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
-          {unreadCount > 0 && ` • ${unreadCount} unread`}
-        </div>
+      {state.status === 'error' && (
+        <EmptyState title="We couldn't load notifications" description="Please check your connection and try again." action={<Button variant="secondary" onClick={load}>Try again</Button>} />
+      )}
+
+      {state.status === 'ready' && shown.length === 0 && (
+        <EmptyState
+          icon={Bell}
+          title={readFilter === 'unread' ? "You're all caught up" : 'No notifications'}
+          description={readFilter === 'unread' ? 'There is nothing unread.' : 'Updates will appear here as things happen.'}
+        />
+      )}
+
+      {state.status === 'ready' && shown.length > 0 && (
+        <ul className="space-y-3">
+          {shown.map((n) => {
+            const read = isRead(n);
+            return (
+              <li key={n._id} className={`rounded-xl border bg-white p-4 shadow-sm sm:p-5 ${read ? 'border-neutral-200' : 'border-primary-200 bg-primary-50/40'}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 text-xs text-neutral-600">
+                      <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-medium text-neutral-700">{typeLabel(n.type)}</span>
+                      {!read && <span className="inline-flex items-center gap-1 font-medium text-primary-700"><span className="h-2 w-2 rounded-full bg-primary-600" aria-hidden="true" />Unread</span>}
+                      <span>{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</span>
+                    </p>
+                    <h2 className="mt-2 text-base font-semibold text-neutral-900">{n.title}</h2>
+                    <p className="mt-1 text-sm text-neutral-700">{n.message}</p>
+                    {n.actionUrl?.startsWith('/') && (
+                      <Link to={n.actionUrl} onClick={() => !read && markRead(n._id)} className="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-700">View details</Link>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    {!read && (
+                      <button type="button" onClick={() => markRead(n._id)} aria-label="Mark as read" className="rounded-md p-2 text-neutral-600 hover:bg-neutral-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"><Check size={18} aria-hidden="true" /></button>
+                    )}
+                    <button type="button" onClick={() => remove(n._id)} aria-label="Delete notification" className="rounded-md p-2 text-neutral-600 hover:bg-neutral-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"><Trash2 size={18} aria-hidden="true" /></button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
-};
-
-export default NotificationsPage;
+}

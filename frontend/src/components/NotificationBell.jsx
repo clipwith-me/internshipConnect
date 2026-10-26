@@ -78,7 +78,7 @@ const NotificationBell = () => {
       setNotifications(prev =>
         prev.map(notif =>
           notif._id === notificationId
-            ? { ...notif, isRead: true }
+            ? { ...notif, read: true }
             : notif
         )
       );
@@ -95,7 +95,7 @@ const NotificationBell = () => {
 
       // Update local state
       setNotifications(prev =>
-        prev.map(notif => ({ ...notif, isRead: true }))
+        prev.map(notif => ({ ...notif, read: true }))
       );
       setUnreadCount(0);
     } catch (err) {
@@ -225,10 +225,10 @@ const NotificationBell = () => {
                   <div
                     key={notification._id}
                     className={`p-3 sm:p-4 hover:bg-neutral-50 cursor-pointer transition-colors ${
-                      !notification.isRead ? 'bg-blue-50' : ''
+                      !(notification.read ?? notification.isRead) ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => {
-                      if (!notification.isRead) {
+                      if (!(notification.read ?? notification.isRead)) {
                         handleMarkAsRead(notification._id);
                       }
                       if (notification.actionUrl) {
@@ -240,12 +240,12 @@ const NotificationBell = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center mb-1">
                           <Badge
-                            variant={notification.isRead ? 'neutral' : 'primary'}
+                            variant={(notification.read ?? notification.isRead) ? 'neutral' : 'primary'}
                             size="sm"
                           >
                             {notification.type}
                           </Badge>
-                          {!notification.isRead && (
+                          {!(notification.read ?? notification.isRead) && (
                             <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full"></span>
                           )}
                         </div>
@@ -260,7 +260,7 @@ const NotificationBell = () => {
                         </p>
                       </div>
 
-                      {!notification.isRead && (
+                      {!(notification.read ?? notification.isRead) && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

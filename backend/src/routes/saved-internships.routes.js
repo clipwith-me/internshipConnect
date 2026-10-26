@@ -1,17 +1,17 @@
 import express from 'express';
-import { authenticate } from '../middleware/auth.middleware.js';
+import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import SavedInternship from '../models/SavedInternship.js';
 import Internship from '../models/Internship.js';
 
 const router = express.Router();
 
 // GET /api/saved-internships — get all saved internships for student
-router.get('/', authenticate, async (req, res) => {
+router.get('/', authenticate, authorize('student'), async (req, res) => {
   try {
     const saved = await SavedInternship.find({ student: req.user._id })
       .populate({
         path: 'internship',
-        populate: { path: 'organization', select: 'companyInfo.name companyInfo.logo verified' }
+        populate: { path: 'organization', select: 'companyInfo.name companyInfo.logo verification.status' }
       })
       .sort({ savedAt: -1 });
 
@@ -22,7 +22,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // POST /api/saved-internships — save an internship
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, authorize('student'), async (req, res) => {
   try {
     const { internshipId } = req.body;
     if (!internshipId) {
@@ -30,7 +30,8 @@ router.post('/', authenticate, async (req, res) => {
     }
 
     const internship = await Internship.findById(internshipId);
-    if (!internship) {
+    // Drafts and private listings are not visible to students, so they can't be saved.
+    if (!internship || internship.status === 'draft' || internship.visibility === 'private') {
       return res.status(404).json({ error: 'Internship not found' });
     }
 
@@ -45,7 +46,7 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // DELETE /api/saved-internships/:internshipId — unsave
-router.delete('/:internshipId', authenticate, async (req, res) => {
+router.delete('/:internshipId', authenticate, authorize('student'), async (req, res) => {
   try {
     const result = await SavedInternship.findOneAndDelete({
       student: req.user._id,

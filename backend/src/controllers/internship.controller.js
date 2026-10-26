@@ -142,7 +142,7 @@ export const getInternships = async (req, res) => {
 
     // Execute query with pagination
     const internships = await Internship.find(query)
-      .populate('organization', 'companyInfo.name companyInfo.logo companyInfo.industry')
+      .populate('organization', 'companyInfo.name companyInfo.logo companyInfo.industry verification.status')
       .sort({ createdAt: -1 }) // Newest first
       .skip(skip)
       .limit(limit);
@@ -181,7 +181,7 @@ export const getInternships = async (req, res) => {
 export const getInternshipById = async (req, res) => {
   try {
     const internship = await Internship.findById(req.params.id)
-      .populate('organization', 'companyInfo user');
+      .populate('organization', 'companyInfo user verification.status');
 
     if (!internship) {
       return res.status(404).json({

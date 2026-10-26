@@ -10,7 +10,9 @@ import {
   getOrgLogo,
   getOrgName,
   initials,
+  isVerifiedOrg,
 } from '../utils/internship';
+import VerifiedBadge from './VerifiedBadge';
 
 /**
  * One internship in a list. Shows only fields that exist on the record.
@@ -54,7 +56,9 @@ export default function InternshipCard({ internship, to, className = '' }) {
         </span>
       </div>
 
-      <h3 className="mt-4 text-lg font-semibold leading-snug text-neutral-900">
+      {isVerifiedOrg(internship) && <VerifiedBadge className="mt-2" />}
+
+      <h3 className="mt-3 text-lg font-semibold leading-snug text-neutral-900">
         {/* The whole card is the click target; the link sits on the title for a11y */}
         <Link
           to={href}

@@ -1,150 +1,59 @@
-// frontend/src/components/MessageInput.jsx
 import { useState } from 'react';
-import { Send, Paperclip, X } from 'lucide-react';
+import { Send } from 'lucide-react';
+
+const MAX_LENGTH = 2000;
 
 /**
- * MessageInput Component
- * Input field for sending messages with attachment support
+ * Text message composer. Attachments were removed: files were never uploaded,
+ * so recipients received links that only worked in the sender's browser.
  */
-const MessageInput = ({ onSend, disabled = false, placeholder = 'Type a message...' }) => {
+const MessageInput = ({ onSend, disabled = false, placeholder = 'Write a message' }) => {
   const [message, setMessage] = useState('');
-  const [attachments, setAttachments] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-
-    if (!message.trim() && attachments.length === 0) return;
-
-    const messageData = {
-      content: message.trim(),
-      attachments: attachments
-    };
-
+    const content = message.trim();
+    if (!content || disabled) return;
     try {
-      await onSend(messageData);
+      await onSend({ content, attachments: [] });
       setMessage('');
-      setAttachments([]);
-    } catch (error) {
-      console.error('Failed to send message:', error);
+    } catch {
+      // The page shows the error; keep the draft so nothing is lost.
     }
   };
 
-  const handleKeyPress = (e) => {
-    // Send on Ctrl+Enter or Cmd+Enter
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      handleSubmit(e);
-    }
-  };
-
-  const handleAttachment = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    setIsUploading(true);
-
-    try {
-      // In a real implementation, upload files to Cloudinary/S3
-      // For now, just store file metadata
-      const newAttachments = files.map(file => ({
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        fileUrl: URL.createObjectURL(file) // Temporary URL
-      }));
-
-      setAttachments([...attachments, ...newAttachments]);
-    } catch (error) {
-      console.error('Failed to upload attachment:', error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const removeAttachment = (index) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(e);
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4">
-      {/* Attachments Preview */}
-      {attachments.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-2">
-          {attachments.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
-            >
-              <Paperclip className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-700">{file.fileName}</span>
-              <button
-                onClick={() => removeAttachment(index)}
-                className="text-gray-400 hover:text-gray-600"
-                type="button"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
-        {/* Attachment Button */}
-        <label
-          className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white transition-colors hover:bg-gray-50 ${
-            disabled || isUploading ? 'cursor-not-allowed opacity-50' : ''
-          }`}
-        >
-          <Paperclip className="h-5 w-5 text-gray-500" />
-          <input
-            type="file"
-            multiple
-            onChange={handleAttachment}
-            disabled={disabled || isUploading}
-            className="hidden"
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-          />
-        </label>
-
-        {/* Message Input */}
+    <form onSubmit={submit} className="border-t border-neutral-200 bg-white p-3 sm:p-4">
+      <div className="flex items-end gap-2">
         <div className="flex-1">
+          <label htmlFor="message-text" className="sr-only">Message</label>
           <textarea
+            id="message-text"
             value={message}
+            maxLength={MAX_LENGTH}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyPress}
+            onKeyDown={onKeyDown}
             placeholder={placeholder}
             disabled={disabled}
-            rows={1}
-            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
-            style={{
-              minHeight: '40px',
-              maxHeight: '120px',
-              height: 'auto'
-            }}
-            onInput={(e) => {
-              e.target.style.height = 'auto';
-              e.target.style.height = e.target.scrollHeight + 'px';
-            }}
+            rows={2}
+            className="max-h-40 w-full resize-none rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-500 hover:border-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30 disabled:bg-neutral-50"
           />
         </div>
-
-        {/* Send Button */}
         <button
           type="submit"
-          disabled={disabled || (!message.trim() && attachments.length === 0) || isUploading}
-          className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          disabled={disabled || !message.trim()}
+          aria-label="Send message"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/40 disabled:cursor-not-allowed disabled:bg-neutral-300"
         >
-          <Send className="h-5 w-5" />
+          <Send size={18} aria-hidden="true" />
         </button>
-      </form>
-
-      {/* Keyboard Hint */}
-      <p className="mt-2 text-xs text-gray-500">
-        Press <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">Ctrl+Enter</kbd> to send
-      </p>
-    </div>
+      </div>
+      <p className="mt-1.5 text-xs text-neutral-600">Press Ctrl+Enter to send</p>
+    </form>
   );
 };
 

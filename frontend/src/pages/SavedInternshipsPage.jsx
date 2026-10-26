@@ -1,212 +1,113 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Bookmark, Trash2 } from 'lucide-react';
 import { savedInternshipsAPI } from '../services/api';
-import { Bookmark, MapPin, Clock, DollarSign, Building2, ArrowRight, Calendar, Trash2 } from 'lucide-react';
+import { Alert, Button, EmptyState, PageHeader } from '../components';
+import StatusBadge from '../components/StatusBadge';
+import VerifiedBadge from '../components/VerifiedBadge';
+import { opportunityLabel } from '../utils/opportunity';
+import {
+  formatCompensation,
+  formatPlace,
+  getArrangement,
+  getDeadline,
+  getOrgName,
+  isVerifiedOrg,
+} from '../utils/internship';
 
-const SavedInternshipsPage = () => {
-  const navigate = useNavigate();
-  const [saved, setSaved] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+export default function SavedInternshipsPage() {
+  const [state, setState] = useState({ status: 'loading', items: [] });
   const [removing, setRemoving] = useState(null);
+  const [notice, setNotice] = useState(null);
 
   useEffect(() => {
-    fetchSaved();
+    document.title = 'Saved | InternshipConnect';
+    savedInternshipsAPI
+      .getAll()
+      .then((res) => setState({ status: 'ready', items: res.data?.data || [] }))
+      .catch(() => setState({ status: 'error', items: [] }));
   }, []);
 
-  const fetchSaved = async () => {
+  const remove = async (id) => {
+    setRemoving(id);
+    setNotice(null);
     try {
-      setLoading(true);
-      const res = await savedInternshipsAPI.getAll();
-      setSaved(res.data.data || []);
+      await savedInternshipsAPI.unsave(id);
+      setState((s) => ({ ...s, items: s.items.filter((x) => x.internship?._id !== id) }));
     } catch {
-      setError('Failed to load saved internships');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUnsave = async (internshipId, e) => {
-    e.stopPropagation();
-    setRemoving(internshipId);
-    try {
-      await savedInternshipsAPI.unsave(internshipId);
-      setSaved(prev => prev.filter(s => s.internship?._id !== internshipId));
-    } catch {
-      // silently fail
+      setNotice('We could not remove that listing. Please try again.');
     } finally {
       setRemoving(null);
     }
   };
 
-  const getDaysUntilDeadline = (deadline) => {
-    if (!deadline) return null;
-    const days = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
-    return days;
-  };
-
-  const getDeadlineBadge = (deadline) => {
-    const days = getDaysUntilDeadline(deadline);
-    if (days === null) return null;
-    if (days < 0) return <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Closed</span>;
-    if (days <= 7) return <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-medium">Closes in {days}d</span>;
-    return <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">{days} days left</span>;
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen p-4 md:p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-6" />
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-xl p-5 mb-4 animate-pulse">
-              <div className="h-5 w-2/3 bg-gray-200 rounded mb-3" />
-              <div className="h-4 w-1/3 bg-gray-100 rounded" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Bookmark className="w-6 h-6 text-amber-500 fill-amber-500" />
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Saved Internships</h1>
-          {saved.length > 0 && (
-            <span className="ml-2 text-sm bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full font-medium">
-              {saved.length}
-            </span>
-          )}
+    <div className="mx-auto max-w-4xl">
+      <PageHeader title="Saved" description="Listings you've bookmarked to come back to." />
+
+      {notice && <Alert variant="error" onDismiss={() => setNotice(null)} className="mb-5">{notice}</Alert>}
+
+      {state.status === 'loading' && (
+        <div className="space-y-4" aria-busy="true">
+          {[0, 1, 2].map((n) => <div key={n} className="h-28 animate-pulse rounded-xl border border-neutral-200 bg-white" />)}
         </div>
+      )}
 
-        {error && (
-          <div className="bg-red-50 text-red-600 rounded-xl p-4 mb-6 text-sm">{error}</div>
-        )}
+      {state.status === 'error' && (
+        <EmptyState title="We couldn't load your saved listings" description="Please check your connection and try again." action={<Button variant="secondary" onClick={() => window.location.reload()}>Reload</Button>} />
+      )}
 
-        {saved.length === 0 && !loading && (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔖</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No saved internships yet</h3>
-            <p className="text-gray-500 mb-6 text-sm">Bookmark internships you're interested in and come back to apply later.</p>
-            <button
-              onClick={() => navigate('/internships')}
-              className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-            >
-              Browse Opportunities <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+      {state.status === 'ready' && state.items.length === 0 && (
+        <EmptyState
+          icon={Bookmark}
+          title="Nothing saved yet"
+          description="Use “Save” on a listing to keep it here."
+          action={<Button as={Link} to="/dashboard/internships">Browse opportunities</Button>}
+        />
+      )}
 
-        <div className="space-y-4">
-          {saved.map(({ internship, savedAt }) => {
+      {state.status === 'ready' && state.items.length > 0 && (
+        <ul className="space-y-4">
+          {state.items.map(({ _id, internship, savedAt }) => {
             if (!internship) return null;
-            const deadline = internship.applicationDeadline || internship.deadline;
-            const org = internship.organization;
-            const orgName = org?.companyInfo?.name || 'Unknown Company';
-            const logo = org?.companyInfo?.logo;
-
+            const org = getOrgName(internship);
+            const where = [formatPlace(internship), getArrangement(internship)].filter(Boolean).join(' · ');
+            const pay = formatCompensation(internship);
+            const deadline = getDeadline(internship);
+            const open = internship.status === 'active' && !deadline?.passed;
             return (
-              <div
-                key={internship._id}
-                onClick={() => navigate(`/internships/${internship._id}`)}
-                className="bg-white rounded-xl border border-gray-100 p-5 cursor-pointer hover:border-amber-300 hover:shadow-md transition-all group"
-              >
-                <div className="flex items-start gap-4">
-                  {/* Company logo */}
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
-                    {logo ? (
-                      <img src={logo} alt={orgName} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-lg font-bold text-gray-400">{orgName.charAt(0)}</span>
-                    )}
+              <li key={_id || internship._id} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-neutral-900">{internship.title}</h2>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-sm text-neutral-600">
+                      <span>{org || 'Employer'}</span>
+                      {isVerifiedOrg(internship) && <VerifiedBadge />}
+                    </p>
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 group-hover:text-amber-600 transition-colors line-clamp-1">
-                          {internship.title}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-0.5">{orgName}</p>
-                      </div>
-                      <button
-                        onClick={(e) => handleUnsave(internship._id, e)}
-                        disabled={removing === internship._id}
-                        className="flex-shrink-0 p-1.5 rounded-lg text-amber-500 hover:bg-red-50 hover:text-red-500 transition-colors"
-                        title="Remove from saved"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500">
-                      {internship.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> {internship.location.city || internship.location}
-                        </span>
-                      )}
-                      {internship.type && (
-                        <span className="flex items-center gap-1">
-                          <Briefcase className="w-3 h-3" />
-                          <span className="capitalize">{internship.type}</span>
-                        </span>
-                      )}
-                      {internship.duration && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {internship.duration}
-                        </span>
-                      )}
-                      {internship.compensation?.amount ? (
-                        <span className="flex items-center gap-1 text-green-600">
-                          <DollarSign className="w-3 h-3" />
-                          {internship.compensation.currency || '₦'}{internship.compensation.amount.toLocaleString()}/mo
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">Unpaid</span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-2">
-                        {deadline && getDeadlineBadge(deadline)}
-                        {deadline && (
-                          <span className="text-xs text-gray-400 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Deadline: {new Date(deadline).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-400">
-                        Saved {new Date(savedAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
-                  </div>
+                  <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-700">{opportunityLabel(internship)}</span>
                 </div>
 
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); navigate(`/internships/${internship._id}`); }}
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
-                  >
-                    Apply Now
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); navigate(`/internships/${internship._id}`); }}
-                    className="px-4 py-2.5 border border-gray-200 hover:border-gray-300 text-gray-600 text-sm rounded-lg transition-colors"
-                  >
-                    View Details
-                  </button>
+                <p className="mt-3 text-sm text-neutral-600">{[where, pay].filter(Boolean).join('  ·  ')}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-600">
+                  {!open && <StatusBadge kind="internship" status={internship.status === 'active' ? 'closed' : internship.status} />}
+                  {deadline && <span>{deadline.label}</span>}
+                  {savedAt && <span>· Saved {fmt(savedAt)}</span>}
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button as={Link} size="sm" to={`/dashboard/internships/${internship._id}`}>{open ? 'View and apply' : 'View'}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => remove(internship._id)} loading={removing === internship._id} icon={<Trash2 size={15} aria-hidden="true" />}>
+                    Remove
+                  </Button>
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
-      </div>
+        </ul>
+      )}
     </div>
   );
-};
-
-export default SavedInternshipsPage;
+}
