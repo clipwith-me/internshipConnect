@@ -66,8 +66,8 @@ const InterviewPrepGuide = ({ internshipId }) => {
   if (error || !guide) {
     return (
       <Card className="p-6">
-        <AlertCircle className="w-5 h-5 text-red-500" />
-        <p className="text-red-600">{error}</p>
+        <AlertCircle className="w-5 h-5 text-error-500" />
+        <p className="text-error-600">{error}</p>
       </Card>
     );
   }
@@ -233,7 +233,7 @@ const InterviewPrepGuide = ({ internshipId }) => {
       )}
 
       {/* Footer CTA */}
-      <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50 text-center">
+      <Card className="p-6 bg-gradient-to-r from-success-50 to-primary-50 text-center">
         <h4 className="font-semibold text-neutral-900 mb-2">Ready to Ace Your Interview?</h4>
         <p className="text-sm text-neutral-600 mb-4">
           Follow this guide step-by-step and you'll be well-prepared!

@@ -16,14 +16,14 @@ const MetricsCard = ({
 }) => {
   const colorClasses = {
     blue: {
-      bg: 'bg-blue-50',
-      icon: 'text-blue-600',
-      iconBg: 'bg-blue-100'
+      bg: 'bg-primary-50',
+      icon: 'text-primary-600',
+      iconBg: 'bg-primary-100'
     },
     green: {
-      bg: 'bg-green-50',
-      icon: 'text-green-600',
-      iconBg: 'bg-green-100'
+      bg: 'bg-success-50',
+      icon: 'text-success-600',
+      iconBg: 'bg-success-100'
     },
     purple: {
       bg: 'bg-purple-50',
@@ -36,27 +36,27 @@ const MetricsCard = ({
       iconBg: 'bg-orange-100'
     },
     gray: {
-      bg: 'bg-gray-50',
-      icon: 'text-gray-600',
-      iconBg: 'bg-gray-100'
+      bg: 'bg-neutral-50',
+      icon: 'text-neutral-600',
+      iconBg: 'bg-neutral-100'
     }
   };
 
   const trendConfig = {
     up: {
       icon: TrendingUp,
-      color: 'text-green-600',
-      bg: 'bg-green-50'
+      color: 'text-success-600',
+      bg: 'bg-success-50'
     },
     down: {
       icon: TrendingDown,
-      color: 'text-red-600',
-      bg: 'bg-red-50'
+      color: 'text-error-600',
+      bg: 'bg-error-50'
     },
     neutral: {
       icon: Minus,
-      color: 'text-gray-600',
-      bg: 'bg-gray-50'
+      color: 'text-neutral-600',
+      bg: 'bg-neutral-50'
     }
   };
 
@@ -64,11 +64,11 @@ const MetricsCard = ({
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="rounded-lg border border-neutral-200 bg-white p-6">
         <div className="animate-pulse">
-          <div className="mb-4 h-12 w-12 rounded-lg bg-gray-200"></div>
-          <div className="mb-2 h-8 w-24 bg-gray-200"></div>
-          <div className="h-4 w-32 bg-gray-200"></div>
+          <div className="mb-4 h-12 w-12 rounded-lg bg-neutral-200"></div>
+          <div className="mb-2 h-8 w-24 bg-neutral-200"></div>
+          <div className="h-4 w-32 bg-neutral-200"></div>
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ const MetricsCard = ({
   const trendBg = trend?.direction ? trendConfig[trend.direction].bg : '';
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md">
+    <div className="rounded-lg border border-neutral-200 bg-white p-6 transition-shadow hover:shadow-md">
       {/* Icon */}
       {Icon && (
         <div className={`mb-4 inline-flex rounded-lg p-3 ${colors.iconBg}`}>
@@ -88,12 +88,12 @@ const MetricsCard = ({
       )}
 
       {/* Value */}
-      <div className="mb-1 text-3xl font-bold text-gray-900">
+      <div className="mb-1 text-3xl font-bold text-neutral-900">
         {value}
       </div>
 
       {/* Label */}
-      <div className="mb-2 text-sm font-medium text-gray-600">
+      <div className="mb-2 text-sm font-medium text-neutral-600">
         {label}
       </div>
 
@@ -105,13 +105,13 @@ const MetricsCard = ({
             {trend.value}
           </span>
           {trend.label && (
-            <span className="text-xs text-gray-500">{trend.label}</span>
+            <span className="text-xs text-neutral-500">{trend.label}</span>
           )}
         </div>
       )}
 
       {subtitle && !trend && (
-        <div className="text-xs text-gray-500">{subtitle}</div>
+        <div className="text-xs text-neutral-500">{subtitle}</div>
       )}
     </div>
   );

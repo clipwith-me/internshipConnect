@@ -165,7 +165,7 @@ const NotificationBell = () => {
 
         {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-error-500 rounded-full">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -204,7 +204,7 @@ const NotificationBell = () => {
             ) : error ? (
               // Error State
               <div className="flex flex-col items-center justify-center py-12 px-4">
-                <p className="text-red-500 text-sm mb-2">{error}</p>
+                <p className="text-error-500 text-sm mb-2">{error}</p>
                 <button
                   onClick={fetchNotifications}
                   className="text-primary-600 hover:text-primary-700 text-sm font-medium"
@@ -225,7 +225,7 @@ const NotificationBell = () => {
                   <div
                     key={notification._id}
                     className={`p-3 sm:p-4 hover:bg-neutral-50 cursor-pointer transition-colors ${
-                      !(notification.read ?? notification.isRead) ? 'bg-blue-50' : ''
+                      !(notification.read ?? notification.isRead) ? 'bg-primary-50' : ''
                     }`}
                     onClick={() => {
                       if (!(notification.read ?? notification.isRead)) {
@@ -246,7 +246,7 @@ const NotificationBell = () => {
                             {notification.type}
                           </Badge>
                           {!(notification.read ?? notification.isRead) && (
-                            <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="ml-2 w-2 h-2 bg-primary-500 rounded-full"></span>
                           )}
                         </div>
                         <p className="text-sm font-medium text-neutral-900 mb-1">

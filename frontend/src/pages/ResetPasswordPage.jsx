@@ -1,85 +1,44 @@
-// frontend/src/pages/ResetPasswordPage.jsx
-
-import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Lock, CheckCircle, AlertCircle } from 'lucide-react';
-import { Input, Button } from '../components';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Lock } from 'lucide-react';
+import { Alert, Button, Input } from '../components';
 import { authAPI } from '../services/api';
 
-/**
- * 🔐 Reset Password Page
- *
- * Allows users to reset their password using a token from email
- */
+const RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const ResetPasswordPage = () => {
   const { token } = useParams();
-  const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
-    password: '',
-    confirmPassword: ''
-  });
+  const [form, setForm] = useState({ password: '', confirmPassword: '' });
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [done, setDone] = useState(false);
 
-  const handleChange = (e) => {
+  useEffect(() => {
+    document.title = 'Choose a new password | InternshipConnect';
+  }, []);
+
+  const change = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError(''); // Clear error on input change
+    setForm((f) => ({ ...f, [name]: value }));
+    setErrors((er) => ({ ...er, [name]: null }));
+    setApiError('');
   };
 
-  const validateForm = () => {
-    const { password, confirmPassword } = formData;
-
-    if (!password || !confirmPassword) {
-      setError('Please fill in all fields');
-      return false;
-    }
-
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    if (!validateForm()) {
-      return;
-    }
+    const next = {};
+    if (!RULE.test(form.password)) next.password = 'Use at least 8 characters with an uppercase letter, a lowercase letter and a number.';
+    if (form.password !== form.confirmPassword) next.confirmPassword = 'Passwords do not match.';
+    setErrors(next);
+    if (Object.keys(next).length) return;
 
     setLoading(true);
-
     try {
-      const response = await authAPI.resetPassword({
-        token,
-        password: formData.password
-      });
-
-      if (response.data.success) {
-        setSuccess(true);
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate('/auth/login');
-        }, 3000);
-      }
+      const res = await authAPI.resetPassword({ token, password: form.password });
+      if (res.data.success) setDone(true);
     } catch (err) {
-      console.error('Reset password error:', err);
-      setError(
-        err.response?.data?.message ||
-        'Failed to reset password. The link may have expired. Please request a new one.'
-      );
+      setApiError(err.response?.data?.message || 'This link may have expired. Please request a new one.');
     } finally {
       setLoading(false);
     }
@@ -87,126 +46,42 @@ const ResetPasswordPage = () => {
 
   if (!token) {
     return (
-      <div className="text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <AlertCircle className="w-10 h-10 text-red-600" />
-        </div>
-
-        <h1 className="text-2xl font-bold text-neutral-900 mb-3">
-          Invalid Reset Link
-        </h1>
-
-        <p className="text-neutral-600 mb-6">
-          This password reset link is invalid or has expired.
-        </p>
-
-        <Link
-          to="/auth/forgot-password"
-          className="inline-block px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-colors"
-        >
-          Request New Link
-        </Link>
+      <div className="w-full">
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">This link isn't valid</h1>
+        <p className="mt-3 text-sm text-neutral-600">The reset link is missing or has expired.</p>
+        <Button as={Link} to="/auth/forgot-password" className="mt-6" fullWidth>Request a new link</Button>
       </div>
     );
   }
 
-  if (success) {
+  if (done) {
     return (
-      <div className="text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="w-10 h-10 text-green-600" />
-        </div>
-
-        <h1 className="text-2xl font-bold text-neutral-900 mb-3">
-          Password Reset Successful!
-        </h1>
-
-        <p className="text-neutral-600 mb-6">
-          Your password has been successfully reset.
-          <br />
-          Redirecting you to login...
-        </p>
-
-        <div className="flex items-center justify-center gap-2 text-primary-600">
-          <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-medium">Redirecting...</span>
-        </div>
+      <div className="w-full">
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">Password updated</h1>
+        <p className="mt-3 text-sm text-neutral-700" role="status">Your password has been changed. You've been signed out everywhere, so sign in again with the new one.</p>
+        <Button as={Link} to="/auth/login" className="mt-6" size="lg" fullWidth>Sign in</Button>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-          Reset Your Password
-        </h1>
-        <p className="text-neutral-600">
-          Enter your new password below
-        </p>
-      </div>
+    <div className="w-full">
+      <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">Choose a new password</h1>
+      <p className="mt-2 text-sm text-neutral-600">Use at least 8 characters with an uppercase letter, a lowercase letter and a number.</p>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-800">{error}</p>
-        </div>
+      {apiError && (
+        <Alert variant="error" className="mt-6">
+          {apiError} <Link to="/auth/forgot-password" className="font-semibold underline">Request a new link</Link>
+        </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Input
-          label="New Password"
-          type="password"
-          name="password"
-          placeholder="Enter new password"
-          value={formData.password}
-          onChange={handleChange}
-          icon={<Lock size={18} />}
-          required
-          autoFocus
-          helperText="Must be at least 8 characters"
-        />
-
-        <Input
-          label="Confirm Password"
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm new password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          icon={<Lock size={18} />}
-          required
-        />
-
-        <Button
-          type="submit"
-          variant="primary"
-          fullWidth
-          loading={loading}
-          disabled={loading}
-        >
-          {loading ? 'Resetting Password...' : 'Reset Password'}
-        </Button>
+      <form onSubmit={submit} noValidate className="mt-6 space-y-5">
+        <Input label="New password" name="password" type="password" autoComplete="new-password" icon={<Lock size={16} />} value={form.password} onChange={change} error={errors.password} />
+        <Input label="Confirm new password" name="confirmPassword" type="password" autoComplete="new-password" icon={<Lock size={16} />} value={form.confirmPassword} onChange={change} error={errors.confirmPassword} />
+        <Button type="submit" size="lg" fullWidth loading={loading}>{loading ? 'Saving…' : 'Update password'}</Button>
       </form>
 
-      <div className="mt-6 text-center">
-        <Link
-          to="/auth/login"
-          className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
-        >
-          Back to Login
-        </Link>
-      </div>
-
-      <div className="mt-8 p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
-        <p className="text-xs text-neutral-600 text-center">
-          <strong>Password Requirements:</strong>
-          <br />
-          • At least 8 characters long
-          <br />
-          • Mix of uppercase, lowercase, numbers, and symbols recommended
-        </p>
-      </div>
+      <Link to="/auth/login" className="mt-6 inline-block text-sm font-medium text-primary-600 hover:text-primary-700">Back to sign in</Link>
     </div>
   );
 };

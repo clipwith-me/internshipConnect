@@ -74,7 +74,7 @@ const AdminDashboard = () => {
             value={stats.totalUsers}
             subtitle={`${stats.totalStudents} students, ${stats.totalOrganizations} orgs`}
             icon={Users}
-            color="bg-blue-500"
+            color="bg-primary-500"
             trend="+12.5%"
           />
           <StatCard
@@ -82,7 +82,7 @@ const AdminDashboard = () => {
             value={stats.activeInternships}
             subtitle={`${stats.totalInternships} total posted`}
             icon={Briefcase}
-            color="bg-green-500"
+            color="bg-success-500"
             trend="+8.2%"
           />
           <StatCard
@@ -98,19 +98,19 @@ const AdminDashboard = () => {
             value={`$${stats.revenueThisMonth.toLocaleString()}`}
             subtitle="This month"
             icon={TrendingUp}
-            color="bg-amber-500"
+            color="bg-warning-500"
             trend="+22.1%"
           />
         </div>
 
         {/* Alerts */}
         {stats.pendingVerifications > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600" />
+          <div className="bg-warning-50 border border-amber-200 rounded-xl p-4 mb-8 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-warning-600" />
             <p className="text-amber-900">
               <strong>{stats.pendingVerifications}</strong> organizations pending verification
             </p>
-            <button className="ml-auto px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors">
+            <button className="ml-auto px-4 py-2 bg-warning-600 hover:bg-warning-700 text-white rounded-lg text-sm font-medium transition-colors">
               Review Now
             </button>
           </div>
@@ -128,17 +128,17 @@ const AdminDashboard = () => {
               {recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-neutral-100 last:border-0 last:pb-0">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    activity.type === 'user' ? 'bg-blue-100' :
-                    activity.type === 'internship' ? 'bg-green-100' :
+                    activity.type === 'user' ? 'bg-primary-100' :
+                    activity.type === 'internship' ? 'bg-success-100' :
                     activity.type === 'application' ? 'bg-purple-100' :
-                    activity.type === 'verification' ? 'bg-amber-100' :
+                    activity.type === 'verification' ? 'bg-warning-100' :
                     'bg-neutral-100'
                   }`}>
-                    {activity.type === 'user' && <Users className="w-5 h-5 text-blue-600" />}
-                    {activity.type === 'internship' && <Briefcase className="w-5 h-5 text-green-600" />}
+                    {activity.type === 'user' && <Users className="w-5 h-5 text-primary-600" />}
+                    {activity.type === 'internship' && <Briefcase className="w-5 h-5 text-success-600" />}
                     {activity.type === 'application' && <FileText className="w-5 h-5 text-purple-600" />}
-                    {activity.type === 'verification' && <CheckCircle className="w-5 h-5 text-amber-600" />}
-                    {activity.type === 'payment' && <TrendingUp className="w-5 h-5 text-green-600" />}
+                    {activity.type === 'verification' && <CheckCircle className="w-5 h-5 text-warning-600" />}
+                    {activity.type === 'payment' && <TrendingUp className="w-5 h-5 text-success-600" />}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-neutral-900 font-medium">{activity.action}</p>
@@ -156,7 +156,7 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-neutral-900">Platform Health</h2>
-              <Activity className="w-5 h-5 text-green-500" />
+              <Activity className="w-5 h-5 text-success-500" />
             </div>
 
             <div className="space-y-4">
@@ -206,7 +206,7 @@ const StatCard = ({ title, value, subtitle, icon: Icon, color, trend }) => {
           <Icon className="w-6 h-6 text-white" />
         </div>
         {trend && (
-          <span className="text-sm font-medium text-green-600">{trend}</span>
+          <span className="text-sm font-medium text-success-600">{trend}</span>
         )}
       </div>
       <div className="text-3xl font-bold text-neutral-900 mb-1">{value}</div>
@@ -220,9 +220,9 @@ const StatCard = ({ title, value, subtitle, icon: Icon, color, trend }) => {
 
 const HealthMetric = ({ label, value, status, description }) => {
   const statusColors = {
-    good: 'text-green-600 bg-green-100',
-    warning: 'text-amber-600 bg-amber-100',
-    error: 'text-red-600 bg-red-100'
+    good: 'text-success-600 bg-success-100',
+    warning: 'text-warning-600 bg-warning-100',
+    error: 'text-error-600 bg-error-100'
   };
 
   const StatusIcon = status === 'good' ? CheckCircle : status === 'warning' ? AlertCircle : XCircle;
@@ -231,7 +231,7 @@ const HealthMetric = ({ label, value, status, description }) => {
     <div className="flex items-start justify-between">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
-          <StatusIcon className={`w-4 h-4 ${status === 'good' ? 'text-green-600' : status === 'warning' ? 'text-amber-600' : 'text-red-600'}`} />
+          <StatusIcon className={`w-4 h-4 ${status === 'good' ? 'text-success-600' : status === 'warning' ? 'text-warning-600' : 'text-error-600'}`} />
           <span className="font-medium text-neutral-900">{label}</span>
         </div>
         <p className="text-xs text-neutral-600">{description}</p>

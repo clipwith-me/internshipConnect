@@ -60,8 +60,8 @@ export default function ContactPage() {
             ))}
           </ul>
           <p className="mt-8 rounded-lg bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-600">
-            <strong className="text-neutral-800">Response time:</strong> we typically respond within 1–2 business days.
-            For urgent issues, include "URGENT" in your subject line.
+            <strong className="text-neutral-800">Please note:</strong> we reply as soon as we can. For urgent
+            issues, include "URGENT" in your subject line.
           </p>
         </div>
 

@@ -45,13 +45,13 @@ const AdminDashboardPage = () => {
   // Access denied screen
   if (error === 'Access denied. Admin role required.') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-          <Lock className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <Lock className="w-16 h-16 text-error-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-neutral-900 mb-2">
             Access Denied
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-neutral-600 mb-6">
             You do not have permission to access the admin dashboard.
             Admin role is required.
           </p>
@@ -68,10 +68,10 @@ const AdminDashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin statistics...</p>
+          <p className="text-neutral-600">Loading admin statistics...</p>
         </div>
       </div>
     );
@@ -79,11 +79,11 @@ const AdminDashboardPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Data</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="text-error-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-neutral-900 mb-2">Error Loading Data</h2>
+          <p className="text-neutral-600 mb-6">{error}</p>
           <button
             onClick={loadStats}
             className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
@@ -96,17 +96,17 @@ const AdminDashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neutral-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="bg-white shadow-sm border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-neutral-900 flex items-center gap-3">
                 <Lock className="w-8 h-8 text-primary-600" />
                 Admin Dashboard
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-neutral-600 mt-1">
                 Platform statistics and user management (Admin Only)
               </p>
             </div>
@@ -160,40 +160,40 @@ const AdminDashboardPage = () => {
 
         {/* Internships & Applications */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-4">
               Internships
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Internships:</span>
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-neutral-600">Total Internships:</span>
+                <span className="text-2xl font-bold text-neutral-900">
                   {stats?.totalInternships || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Active Internships:</span>
-                <span className="text-2xl font-bold text-green-600">
+                <span className="text-neutral-600">Active Internships:</span>
+                <span className="text-2xl font-bold text-success-600">
                   {stats?.activeInternships || 0}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-4">
               Applications
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Applications:</span>
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-neutral-600">Total Applications:</span>
+                <span className="text-2xl font-bold text-neutral-900">
                   {stats?.totalApplications || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Avg per Internship:</span>
-                <span className="text-2xl font-bold text-blue-600">
+                <span className="text-neutral-600">Avg per Internship:</span>
+                <span className="text-2xl font-bold text-primary-600">
                   {stats?.activeInternships > 0
                     ? Math.round(stats?.totalApplications / stats?.activeInternships)
                     : 0}
@@ -206,31 +206,31 @@ const AdminDashboardPage = () => {
         {/* Recent Activity */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Monthly Growth */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <div className="flex items-center gap-3 mb-4">
               <Calendar className="w-6 h-6 text-primary-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-neutral-900">
                 Monthly Growth
               </h3>
             </div>
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                <span className="text-gray-700">This Month:</span>
-                <span className="text-lg font-bold text-blue-600">
+              <div className="flex justify-between items-center p-3 bg-primary-50 rounded-lg">
+                <span className="text-neutral-700">This Month:</span>
+                <span className="text-lg font-bold text-primary-600">
                   {stats?.usersThisMonth || 0} new users
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-gray-700">Last Month:</span>
-                <span className="text-lg font-bold text-gray-600">
+              <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg">
+                <span className="text-neutral-700">Last Month:</span>
+                <span className="text-lg font-bold text-neutral-600">
                   {stats?.usersLastMonth || 0} users
                 </span>
               </div>
-              <div className="pt-3 border-t border-gray-200">
+              <div className="pt-3 border-t border-neutral-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Growth Rate:</span>
+                  <span className="text-neutral-700">Growth Rate:</span>
                   <span className={`text-lg font-bold ${
-                    parseFloat(stats?.userGrowth) > 0 ? 'text-green-600' : 'text-gray-600'
+                    parseFloat(stats?.userGrowth) > 0 ? 'text-success-600' : 'text-neutral-600'
                   }`}>
                     {stats?.userGrowth}
                   </span>
@@ -240,19 +240,19 @@ const AdminDashboardPage = () => {
           </div>
 
           {/* Revenue (if applicable) */}
-          <div className="bg-gradient-to-br from-primary-600 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-primary-600 to-primary-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center gap-3 mb-4">
               <Activity className="w-6 h-6" />
               <h3 className="text-lg font-semibold">Platform Revenue</h3>
             </div>
             <div className="space-y-3">
               <div>
-                <p className="text-blue-100 text-sm mb-1">This Month</p>
+                <p className="text-primary-100 text-sm mb-1">This Month</p>
                 <p className="text-3xl font-bold">
                   ${(stats?.revenueThisMonth / 100 || 0).toFixed(2)}
                 </p>
               </div>
-              <p className="text-blue-100 text-sm">
+              <p className="text-primary-100 text-sm">
                 From subscriptions and premium features
               </p>
             </div>
@@ -260,9 +260,9 @@ const AdminDashboardPage = () => {
         </div>
 
         {/* Security Notice */}
-        <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
+        <div className="mt-8 bg-warning-50 border border-amber-200 rounded-xl p-6">
           <div className="flex items-start gap-3">
-            <Lock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+            <Lock className="w-6 h-6 text-warning-600 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold text-amber-900 mb-2">
                 Admin Access - Security Notice
@@ -287,15 +287,15 @@ const AdminDashboardPage = () => {
 const StatCard = ({ icon: Icon, label, value, color, badge }) => {
   const colorClasses = {
     blue: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      icon: 'text-blue-600',
-      text: 'text-blue-900'
+      bg: 'bg-primary-50',
+      border: 'border-primary-200',
+      icon: 'text-primary-600',
+      text: 'text-primary-900'
     },
     green: {
-      bg: 'bg-green-50',
+      bg: 'bg-success-50',
       border: 'border-green-200',
-      icon: 'text-green-600',
+      icon: 'text-success-600',
       text: 'text-green-900'
     },
     purple: {
@@ -305,9 +305,9 @@ const StatCard = ({ icon: Icon, label, value, color, badge }) => {
       text: 'text-purple-900'
     },
     amber: {
-      bg: 'bg-amber-50',
+      bg: 'bg-warning-50',
       border: 'border-amber-200',
-      icon: 'text-amber-600',
+      icon: 'text-warning-600',
       text: 'text-amber-900'
     }
   };
@@ -319,12 +319,12 @@ const StatCard = ({ icon: Icon, label, value, color, badge }) => {
       <div className="flex items-center justify-between mb-4">
         <Icon className={`w-8 h-8 ${colors.icon}`} />
         {badge && (
-          <span className="px-2 py-1 bg-white rounded-full text-xs font-medium text-gray-700">
+          <span className="px-2 py-1 bg-white rounded-full text-xs font-medium text-neutral-700">
             {badge}
           </span>
         )}
       </div>
-      <div className="text-3xl font-bold text-gray-900 mb-1">{value}</div>
+      <div className="text-3xl font-bold text-neutral-900 mb-1">{value}</div>
       <div className={`text-sm font-medium ${colors.text}`}>{label}</div>
     </div>
   );

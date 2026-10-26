@@ -1,6 +1,6 @@
 // frontend/src/App.jsx - OPTIMIZED WITH CODE SPLITTING
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute, { GuestRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -34,7 +34,6 @@ const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const AnalyticsDashboardPage = lazy(() => import('./pages/AnalyticsDashboardPage'));
 const StudentSearchPage = lazy(() => import('./pages/StudentSearchPage'));
 const ContactSalesPage = lazy(() => import('./pages/ContactSalesPage'));
-const DemoPage = lazy(() => import('./pages/DemoPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const UniversityDashboardPage = lazy(() => import('./pages/UniversityDashboardPage'));
 const UniversityStudentsPage = lazy(() => import('./pages/UniversityStudentsPage'));
@@ -82,7 +81,7 @@ function App() {
 
               {/* Standalone public pages with their own layouts */}
               <Route path="/contact-sales" element={<ContactSalesPage />} />
-              <Route path="/demo" element={<DemoPage />} />
+              <Route path="/demo" element={<Navigate to="/" replace />} />
 
               {/* Internal component gallery: development builds only */}
               {import.meta.env.DEV && <Route path="/showcase" element={<ComponentShowcase />} />}

@@ -1,279 +1,150 @@
-// frontend/src/pages/AnalyticsDashboardPage.jsx
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { Briefcase, Download, Eye, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { analyticsAPI } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { Alert, Button, PageHeader } from '../components';
 import MetricsCard from '../components/MetricsCard';
 import ApplicationTrendChart from '../components/ApplicationTrendChart';
 import DemographicsCharts from '../components/DemographicsCharts';
-import {
-  Briefcase,
-  Users,
-  Eye,
-  TrendingUp,
-  Download,
-  RefreshCw,
-  Calendar
-} from 'lucide-react';
 
-/**
- * AnalyticsDashboardPage Component
- * Comprehensive analytics dashboard for organizations
- */
-const AnalyticsDashboardPage = () => {
+const RANGES = [
+  { value: '7d', label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '90d', label: 'Last 90 days' },
+  { value: '1y', label: 'Last year' },
+];
+
+const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+export default function AnalyticsDashboardPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [range, setRange] = useState('30d');
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const [timeRange, setTimeRange] = useState('30d');
+  const [error, setError] = useState('');
+  const [fetchedAt, setFetchedAt] = useState(null);
 
-  // Redirect non-organizations
-  useEffect(() => {
-    if (user && user.role !== 'organization') {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
+  const isOrg = user?.role === 'organization';
 
-  // Load analytics data
-  const loadAnalytics = async (showRefreshing = false) => {
-    try {
-      if (showRefreshing) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
+  const load = useCallback(
+    async (refresh = false) => {
+      refresh ? setRefreshing(true) : setLoading(true);
+      setError('');
+      try {
+        const res = await analyticsAPI.getOverview(range);
+        setAnalytics(res.data?.data);
+        setFetchedAt(new Date());
+      } catch {
+        setError('We could not load your analytics. Please try again.');
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      const response = await analyticsAPI.getOverview(timeRange);
-      setAnalytics(response.data.data);
-      setError(null);
-    } catch (error) {
-      console.error('Failed to load analytics:', error);
-      setError('Failed to load analytics data. Please try again.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+    },
+    [range]
+  );
 
   useEffect(() => {
-    if (user?.role === 'organization') {
-      loadAnalytics();
-    }
-  }, [timeRange, user]);
+    document.title = 'Analytics | InternshipConnect';
+  }, []);
 
-  // Handle time range change
-  const handleTimeRangeChange = (range) => {
-    setTimeRange(range);
+  useEffect(() => {
+    if (isOrg) load();
+  }, [isOrg, load]);
+
+  if (user && !isOrg) return <Navigate to="/dashboard" replace />;
+
+  const exportCsv = () => {
+    const rows = analytics?.topInternships || [];
+    const lines = [
+      ['Title', 'Applications', 'Views', 'Conversion'].map(csvCell).join(','),
+      ...rows.map((r) => [r.title, r.applications, r.views, r.conversionRate].map(csvCell).join(',')),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `listing-performance-${range}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
-  // Handle refresh
-  const handleRefresh = () => {
-    loadAnalytics(true);
-  };
-
-  // Handle export (placeholder)
-  const handleExport = () => {
-    // In a real implementation, generate and download CSV/PDF
-    alert('Export functionality coming soon!');
-  };
-
-  // Time range options
-  const timeRangeOptions = [
-    { value: '7d', label: 'Last 7 days' },
-    { value: '30d', label: 'Last 30 days' },
-    { value: '90d', label: '90 days' },
-    { value: '1y', label: '1 year' }
-  ];
-
-  if (user?.role !== 'organization') {
-    return null; // Will redirect
-  }
+  const o = analytics?.overview;
+  const top = analytics?.topInternships || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="mt-1 text-gray-600">
-              Track your internship performance and applicant insights
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Time Range Selector */}
-            <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white p-1">
-              <Calendar className="ml-2 h-4 w-4 text-gray-500" />
-              <select
-                value={timeRange}
-                onChange={(e) => handleTimeRangeChange(e.target.value)}
-                className="border-none bg-transparent pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-0"
-                disabled={loading}
-              >
-                {timeRangeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="Analytics"
+        description="How your listings are performing."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <div>
+              <label htmlFor="range" className="sr-only">Time range</label>
+              <select id="range" value={range} onChange={(e) => setRange(e.target.value)} disabled={loading} className="h-10 rounded-md border border-neutral-300 bg-white px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30">
+                {RANGES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </div>
-
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
-
-            {/* Export Button */}
-            <button
-              onClick={handleExport}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Download className="h-4 w-4" />
-              Export
-            </button>
+            <Button variant="secondary" onClick={() => load(true)} loading={refreshing} icon={<RefreshCw size={16} aria-hidden="true" />}>Refresh</Button>
+            <Button variant="secondary" onClick={exportCsv} disabled={loading || top.length === 0} icon={<Download size={16} aria-hidden="true" />}>Export CSV</Button>
           </div>
-        </div>
+        }
+      />
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="text-red-800">{error}</p>
-            <button
-              onClick={() => loadAnalytics()}
-              className="mt-2 text-sm font-medium text-red-600 hover:text-red-700"
-            >
-              Try again
-            </button>
-          </div>
-        )}
+      {error && (
+        <Alert variant="error" className="mb-5">
+          {error}{' '}
+          <button type="button" onClick={() => load()} className="font-semibold underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">Try again</button>
+        </Alert>
+      )}
 
-        {/* Overview Metrics */}
-        <div className="mb-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricsCard
-            label="Total Internships"
-            value={analytics?.overview?.totalInternships || 0}
-            icon={Briefcase}
-            color="blue"
-            subtitle={`${analytics?.overview?.activeInternships || 0} active`}
-            loading={loading}
-          />
-          <MetricsCard
-            label="Total Applications"
-            value={analytics?.overview?.totalApplications || 0}
-            icon={Users}
-            color="green"
-            loading={loading}
-          />
-          <MetricsCard
-            label="Total Views"
-            value={analytics?.overview?.totalViews || 0}
-            icon={Eye}
-            color="purple"
-            loading={loading}
-          />
-          <MetricsCard
-            label="Conversion Rate"
-            value={analytics?.overview?.conversionRate || '0%'}
-            icon={TrendingUp}
-            color="orange"
-            subtitle="Applications / Views"
-            loading={loading}
-          />
-        </div>
-
-        {/* Secondary Metrics */}
-        <div className="mb-6 grid gap-6 sm:grid-cols-2">
-          <MetricsCard
-            label="Offer Acceptance Rate"
-            value={analytics?.overview?.offerAcceptanceRate || '0%'}
-            icon={TrendingUp}
-            color="green"
-            subtitle="Accepted / Offered"
-            loading={loading}
-          />
-          <MetricsCard
-            label="Active Internships"
-            value={analytics?.overview?.activeInternships || 0}
-            icon={Briefcase}
-            color="blue"
-            subtitle="Currently accepting applications"
-            loading={loading}
-          />
-        </div>
-
-        {/* Application Trend Chart */}
-        <div className="mb-6">
-          <ApplicationTrendChart
-            data={analytics?.trends || []}
-            loading={loading}
-          />
-        </div>
-
-        {/* Top Performing Internships */}
-        {analytics?.topInternships && analytics.topInternships.length > 0 && (
-          <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">Top Performing Internships</h3>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b border-gray-200">
-                  <tr>
-                    <th className="pb-3 text-left text-sm font-semibold text-gray-700">Internship Title</th>
-                    <th className="pb-3 text-right text-sm font-semibold text-gray-700">Applications</th>
-                    <th className="pb-3 text-right text-sm font-semibold text-gray-700">Views</th>
-                    <th className="pb-3 text-right text-sm font-semibold text-gray-700">Conversion</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {analytics.topInternships.map((internship, index) => (
-                    <tr key={internship.id || index} className="hover:bg-gray-50">
-                      <td className="py-3 text-sm text-gray-900">
-                        <div className="font-medium">{internship.title}</div>
-                      </td>
-                      <td className="py-3 text-right text-sm font-medium text-gray-900">
-                        {internship.applications}
-                      </td>
-                      <td className="py-3 text-right text-sm text-gray-600">
-                        {internship.views}
-                      </td>
-                      <td className="py-3 text-right text-sm font-semibold text-blue-600">
-                        {internship.conversionRate}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Demographics Charts */}
-        <DemographicsCharts
-          demographics={{
-            ...analytics?.demographics,
-            statusBreakdown: analytics?.statusBreakdown
-          }}
-          loading={loading}
-        />
-
-        {/* Last Updated */}
-        {analytics && (
-          <div className="mt-6 text-center text-sm text-gray-500">
-            Last updated: {new Date().toLocaleString()}
-          </div>
-        )}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricsCard label="Listings" value={o?.totalInternships || 0} icon={Briefcase} color="blue" subtitle={`${o?.activeInternships || 0} open`} loading={loading} />
+        <MetricsCard label="Applications" value={o?.totalApplications || 0} icon={Users} color="green" loading={loading} />
+        <MetricsCard label="Views" value={o?.totalViews || 0} icon={Eye} color="purple" loading={loading} />
+        <MetricsCard label="Applications per view" value={o?.conversionRate || '0%'} icon={TrendingUp} color="orange" subtitle="Applications / views" loading={loading} />
       </div>
+
+      <div className="mb-6">
+        <ApplicationTrendChart data={analytics?.trends || []} loading={loading} />
+      </div>
+
+      {top.length > 0 && (
+        <section className="mb-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-neutral-900">Top listings</h2>
+          <div className="mt-4 overflow-x-auto" tabIndex={0} role="region" aria-label="Top listings table, scrolls sideways on small screens">
+            <table className="w-full min-w-[28rem] text-sm">
+              <caption className="sr-only">Listings ranked by applications</caption>
+              <thead className="border-b border-neutral-200 text-left text-neutral-600">
+                <tr>
+                  <th scope="col" className="pb-3 font-semibold">Listing</th>
+                  <th scope="col" className="pb-3 text-right font-semibold">Applications</th>
+                  <th scope="col" className="pb-3 text-right font-semibold">Views</th>
+                  <th scope="col" className="pb-3 text-right font-semibold">Conversion</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-200">
+                {top.map((t, i) => (
+                  <tr key={t.id || i}>
+                    <th scope="row" className="py-3 text-left font-medium text-neutral-900">{t.title}</th>
+                    <td className="py-3 text-right tabular text-neutral-900">{t.applications}</td>
+                    <td className="py-3 text-right tabular text-neutral-700">{t.views}</td>
+                    <td className="py-3 text-right tabular font-medium text-primary-700">{t.conversionRate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      <DemographicsCharts demographics={{ ...analytics?.demographics, statusBreakdown: analytics?.statusBreakdown }} loading={loading} />
+
+      {fetchedAt && <p className="mt-6 text-center text-sm text-neutral-600">Updated {fetchedAt.toLocaleTimeString('en-GB')}</p>}
     </div>
   );
-};
-
-export default AnalyticsDashboardPage;
+}

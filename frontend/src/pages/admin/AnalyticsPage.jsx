@@ -89,7 +89,7 @@ const AnalyticsPage = () => {
               {chartData.users.map((value, idx) => (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                   <div
-                    className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer"
+                    className="w-full bg-primary-500 rounded-t hover:bg-primary-600 transition-colors cursor-pointer"
                     style={{ height: `${(value / Math.max(...chartData.users)) * 100}%` }}
                     title={`${value} users`}
                   />
@@ -108,7 +108,7 @@ const AnalyticsPage = () => {
               {chartData.applications.map((value, idx) => (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                   <div
-                    className="w-full bg-green-500 rounded-t hover:bg-green-600 transition-colors cursor-pointer"
+                    className="w-full bg-success-500 rounded-t hover:bg-success-600 transition-colors cursor-pointer"
                     style={{ height: `${(value / Math.max(...chartData.applications)) * 100}%` }}
                     title={`${value} applications`}
                   />
@@ -199,10 +199,10 @@ const AnalyticsPage = () => {
 
 const MetricCard = ({ title, value, change, trend, icon: Icon, color }) => {
   const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
+    blue: 'bg-primary-500',
+    green: 'bg-success-500',
     purple: 'bg-purple-500',
-    amber: 'bg-amber-500'
+    amber: 'bg-warning-500'
   };
 
   return (
@@ -211,7 +211,7 @@ const MetricCard = ({ title, value, change, trend, icon: Icon, color }) => {
         <div className={`w-12 h-12 ${colorClasses[color]} rounded-lg flex items-center justify-center`}>
           <Icon className="w-6 h-6 text-white" />
         </div>
-        <span className={`text-sm font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`text-sm font-medium ${trend === 'up' ? 'text-success-600' : 'text-error-600'}`}>
           {change}
         </span>
       </div>

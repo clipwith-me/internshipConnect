@@ -77,6 +77,7 @@ export default function MessagesPage() {
     return (
       <div className="mx-auto max-w-xl">
         <EmptyState
+          asPage
           title="Direct messaging is a Pro feature"
           description="Upgrade to message employers directly about your applications."
           action={<Button as={Link} to="/dashboard/pricing">See plans</Button>}

@@ -491,7 +491,7 @@ const StudentProfile = memo(() => {
           <div className="flex gap-2 flex-shrink-0">
             {editing ? (
               <>
-                <button
+                <button aria-label="Cancel"
                   onClick={handleCancel}
                   disabled={saving}
                   className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
@@ -500,6 +500,7 @@ const StudentProfile = memo(() => {
                 </button>
                 <button
                   onClick={handleSave}
+                  aria-label="Save changes"
                   disabled={saving}
                   className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
                 >
@@ -509,6 +510,7 @@ const StudentProfile = memo(() => {
             ) : (
               <button
                 onClick={() => setEditing(true)}
+                aria-label="Edit profile"
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm sm:text-base"
               >
                 <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Edit Profile</span>
@@ -518,13 +520,13 @@ const StudentProfile = memo(() => {
         </div>
 
         {errors.general && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-error-50 border border-red-200 rounded-lg text-error-700">
             {errors.general}
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center gap-2">
+          <div className="mb-6 p-4 bg-success-50 border border-green-200 rounded-lg text-success-700 flex items-center gap-2">
             <CheckCircle size={20} />
             {successMessage}
           </div>
@@ -559,9 +561,9 @@ const StudentProfile = memo(() => {
                 {profile?.personalInfo?.firstName} {profile?.personalInfo?.lastName}
               </p>
               <p className="text-sm text-neutral-500 truncate">{user?.email}</p>
-              <p className="text-xs text-neutral-400 mt-1">Click the + button to update your photo</p>
+              <p className="text-xs text-neutral-500 mt-1">Click the + button to update your photo</p>
               {uploadingAvatar && <p className="text-sm text-primary-600 mt-1">Uploading...</p>}
-              {avatarError && <p className="text-sm text-red-600 mt-1">{avatarError}</p>}
+              {avatarError && <p className="text-sm text-error-600 mt-1">{avatarError}</p>}
             </div>
           </div>
         </div>
@@ -658,10 +660,10 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">
-          First Name <span className="text-red-500">*</span>
+          First Name <span className="text-error-500">*</span>
         </label>
         {editing ? (
-          <input
+          <input aria-label="Enter first name"
             type="text"
             value={formData.personalInfo?.firstName || ''}
             onChange={(e) => setFormData(prev => ({
@@ -678,10 +680,10 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
 
       <div>
         <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">
-          Last Name <span className="text-red-500">*</span>
+          Last Name <span className="text-error-500">*</span>
         </label>
         {editing ? (
-          <input
+          <input aria-label="Enter last name"
             type="text"
             value={formData.personalInfo?.lastName || ''}
             onChange={(e) => setFormData(prev => ({
@@ -701,7 +703,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
           <Phone className="w-4 h-4" /> Phone
         </label>
         {editing ? (
-          <input
+          <input aria-label="+1 (555) 123-4567"
             type="tel"
             value={formData.personalInfo?.phone || ''}
             onChange={(e) => setFormData(prev => ({
@@ -723,6 +725,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
         {editing ? (
           <input
             type="date"
+            aria-label="Date of birth"
             value={formData.personalInfo?.dateOfBirth ? new Date(formData.personalInfo.dateOfBirth).toISOString().split('T')[0] : ''}
             onChange={(e) => setFormData(prev => ({
               ...prev,
@@ -745,7 +748,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
         </label>
         {editing ? (
           <div className="grid grid-cols-3 gap-2">
-            <input
+            <input aria-label="City"
               type="text"
               value={formData.personalInfo?.location?.city || ''}
               onChange={(e) => setFormData(prev => ({
@@ -758,7 +761,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
               className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="City"
             />
-            <input
+            <input aria-label="State"
               type="text"
               value={formData.personalInfo?.location?.state || ''}
               onChange={(e) => setFormData(prev => ({
@@ -771,7 +774,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
               className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="State"
             />
-            <input
+            <input aria-label="Country"
               type="text"
               value={formData.personalInfo?.location?.country || ''}
               onChange={(e) => setFormData(prev => ({
@@ -796,7 +799,7 @@ const PersonalInfoSection = memo(({ profile, formData, setFormData, editing, onS
       <div className="md:col-span-2">
         <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Bio</label>
         {editing ? (
-          <textarea
+          <textarea aria-label="Tell us about yourself..."
             value={formData.personalInfo?.bio || ''}
             onChange={(e) => setFormData(prev => ({
               ...prev,
@@ -852,7 +855,7 @@ const SocialLinksSection = memo(({ profile, formData, setFormData, editing, onSa
           <Linkedin className="w-4 h-4" /> LinkedIn
         </label>
         {editing ? (
-          <input
+          <input aria-label="https://linkedin.com/in/username"
             type="url"
             value={formData.socialLinks?.linkedin || ''}
             onChange={(e) => setFormData(prev => ({
@@ -874,7 +877,7 @@ const SocialLinksSection = memo(({ profile, formData, setFormData, editing, onSa
           <Github className="w-4 h-4" /> GitHub
         </label>
         {editing ? (
-          <input
+          <input aria-label="https://github.com/username"
             type="url"
             value={formData.socialLinks?.github || ''}
             onChange={(e) => setFormData(prev => ({
@@ -896,7 +899,7 @@ const SocialLinksSection = memo(({ profile, formData, setFormData, editing, onSa
           <Globe className="w-4 h-4" /> Portfolio
         </label>
         {editing ? (
-          <input
+          <input aria-label="https://yourportfolio.com"
             type="url"
             value={formData.socialLinks?.portfolio || ''}
             onChange={(e) => setFormData(prev => ({
@@ -918,7 +921,7 @@ const SocialLinksSection = memo(({ profile, formData, setFormData, editing, onSa
           <Globe className="w-4 h-4" /> Website
         </label>
         {editing ? (
-          <input
+          <input aria-label="https://yourwebsite.com"
             type="url"
             value={formData.socialLinks?.website || ''}
             onChange={(e) => setFormData(prev => ({
@@ -952,13 +955,13 @@ const EducationSection = memo(({ formData, editing, addEducation, removeEducatio
       </div>
       {editing && (
         <div className="flex items-center gap-2">
-          <button
+          <button aria-label="Add Education"
             onClick={addEducation}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
           >
             <Plus size={16} /> <span className="hidden sm:inline">Add Education</span>
           </button>
-          <button
+          <button aria-label="Save Section"
             onClick={onSave}
             disabled={saving}
             className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
@@ -985,14 +988,14 @@ const EducationSection = memo(({ formData, editing, addEducation, removeEducatio
             {editing && (
               <button
                 onClick={() => removeEducation(idx)}
-                className="absolute top-0 right-0 text-red-600 hover:text-red-700"
+                className="absolute top-0 right-0 text-error-600 hover:text-error-700"
               >
                 <Trash2 size={16} />
               </button>
             )}
             {editing ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
-                <input
+                <input aria-label="Institution"
                   type="text"
                   value={edu.institution || ''}
                   onChange={(e) => updateEducation(idx, 'institution', e.target.value)}
@@ -1010,21 +1013,21 @@ const EducationSection = memo(({ formData, editing, addEducation, removeEducatio
                   <option value="master">Master's</option>
                   <option value="phd">PhD</option>
                 </select>
-                <input
+                <input aria-label="Major/Field of Study"
                   type="text"
                   value={edu.major || ''}
                   onChange={(e) => updateEducation(idx, 'major', e.target.value)}
                   className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="Major/Field of Study"
                 />
-                <input
+                <input aria-label="Graduation Year"
                   type="number"
                   value={edu.graduationYear || ''}
                   onChange={(e) => updateEducation(idx, 'graduationYear', parseInt(e.target.value))}
                   className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="Graduation Year"
                 />
-                <input
+                <input aria-label="GPA (optional)"
                   type="number"
                   step="0.01"
                   value={edu.gpa || ''}
@@ -1066,13 +1069,13 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
       </div>
       {editing && (
         <div className="flex items-center gap-2">
-          <button
+          <button aria-label="Add Skill"
             onClick={addSkill}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
           >
             <Plus size={16} /> <span className="hidden sm:inline">Add Skill</span>
           </button>
-          <button
+          <button aria-label="Save Section"
             onClick={onSave}
             disabled={saving}
             className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
@@ -1097,7 +1100,7 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
         <div className="space-y-3">
           {formData.skills.map((skill, idx) => (
             <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2 items-center border border-neutral-100 rounded-lg p-2 sm:p-0 sm:border-0">
-              <input
+              <input aria-label="Skill name"
                 type="text"
                 value={skill.name || ''}
                 onChange={(e) => updateSkill(idx, 'name', e.target.value)}
@@ -1126,7 +1129,7 @@ const SkillsSection = memo(({ formData, editing, addSkill, removeSkill, updateSk
               </select>
               <button
                 onClick={() => removeSkill(idx)}
-                className="justify-self-end text-red-600 hover:text-red-700 p-1"
+                className="justify-self-end text-error-600 hover:text-error-700 p-1"
               >
                 <Trash2 size={16} />
               </button>
@@ -1166,13 +1169,13 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
       </div>
       {editing && (
         <div className="flex items-center gap-2">
-          <button
+          <button aria-label="Add Experience"
             onClick={addExperience}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
           >
             <Plus size={16} /> <span className="hidden sm:inline">Add Experience</span>
           </button>
-          <button
+          <button aria-label="Save Section"
             onClick={onSave}
             disabled={saving}
             className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
@@ -1201,20 +1204,20 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
                 <div className="flex justify-end mb-2">
                   <button
                     onClick={() => removeExperience(idx)}
-                    className="text-red-600 hover:text-red-700 p-1"
+                    className="text-error-600 hover:text-error-700 p-1"
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
+                <input aria-label="Job Title"
                   type="text"
                   value={exp.title || ''}
                   onChange={(e) => updateExperience(idx, 'title', e.target.value)}
                   className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="Job Title"
                 />
-                <input
+                <input aria-label="Company"
                   type="text"
                   value={exp.company || ''}
                   onChange={(e) => updateExperience(idx, 'company', e.target.value)}
@@ -1241,7 +1244,7 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
                   />
                   <label className="text-sm">Current Position</label>
                 </div>
-                <input
+                <input aria-label="Start Date"
                   type="date"
                   value={exp.startDate ? new Date(exp.startDate).toISOString().split('T')[0] : ''}
                   onChange={(e) => updateExperience(idx, 'startDate', e.target.value)}
@@ -1249,7 +1252,7 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
                   placeholder="Start Date"
                 />
                 {!exp.current && (
-                  <input
+                  <input aria-label="End Date"
                     type="date"
                     value={exp.endDate ? new Date(exp.endDate).toISOString().split('T')[0] : ''}
                     onChange={(e) => updateExperience(idx, 'endDate', e.target.value)}
@@ -1257,7 +1260,7 @@ const ExperienceSection = memo(({ formData, editing, addExperience, removeExperi
                     placeholder="End Date"
                   />
                 )}
-                <textarea
+                <textarea aria-label="Description"
                   value={exp.description || ''}
                   onChange={(e) => updateExperience(idx, 'description', e.target.value)}
                   className="sm:col-span-2 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -1498,7 +1501,7 @@ const OrganizationProfile = memo(() => {
           <div className="flex gap-2 flex-shrink-0">
             {editing ? (
               <>
-                <button
+                <button aria-label="Cancel"
                   onClick={handleCancel}
                   disabled={saving}
                   className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
@@ -1507,6 +1510,7 @@ const OrganizationProfile = memo(() => {
                 </button>
                 <button
                   onClick={handleSave}
+                  aria-label="Save changes"
                   disabled={saving}
                   className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
                 >
@@ -1516,6 +1520,7 @@ const OrganizationProfile = memo(() => {
             ) : (
               <button
                 onClick={() => setEditing(true)}
+                aria-label="Edit profile"
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm sm:text-base"
               >
                 <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Edit Profile</span>
@@ -1525,13 +1530,13 @@ const OrganizationProfile = memo(() => {
         </div>
 
         {errors.general && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-error-50 border border-red-200 rounded-lg text-error-700">
             {errors.general}
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center gap-2">
+          <div className="mb-6 p-4 bg-success-50 border border-green-200 rounded-lg text-success-700 flex items-center gap-2">
             <CheckCircle size={20} />
             {successMessage}
           </div>
@@ -1602,7 +1607,7 @@ const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSa
       <div className="flex-1">
         {editing ? (
           <div className="space-y-4">
-            <input
+            <input aria-label="Company Name"
               type="text"
               value={formData.companyInfo?.name || ''}
               onChange={(e) => setFormData(prev => ({
@@ -1663,7 +1668,7 @@ const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSa
         <MapPin size={18} />
         {editing ? (
           <div className="flex-1 grid grid-cols-3 gap-2">
-            <input
+            <input aria-label="City"
               type="text"
               value={formData.companyInfo?.headquarters?.city || ''}
               onChange={(e) => setFormData(prev => ({
@@ -1676,7 +1681,7 @@ const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSa
               className="px-2 py-1 border border-neutral-300 rounded text-sm"
               placeholder="City"
             />
-            <input
+            <input aria-label="State"
               type="text"
               value={formData.companyInfo?.headquarters?.state || ''}
               onChange={(e) => setFormData(prev => ({
@@ -1689,7 +1694,7 @@ const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSa
               className="px-2 py-1 border border-neutral-300 rounded text-sm"
               placeholder="State"
             />
-            <input
+            <input aria-label="Country"
               type="text"
               value={formData.companyInfo?.headquarters?.country || ''}
               onChange={(e) => setFormData(prev => ({
@@ -1713,7 +1718,7 @@ const CompanyInfoSection = memo(({ profile, formData, setFormData, editing, onSa
       <div className="flex items-center gap-2 text-neutral-600">
         <Globe size={18} />
         {editing ? (
-          <input
+          <input aria-label="https://company.com"
             type="url"
             value={formData.companyInfo?.website || ''}
             onChange={(e) => setFormData(prev => ({
@@ -1760,8 +1765,8 @@ const DescriptionSection = memo(({ profile, formData, setFormData, editing, onSa
     {editing ? (
       <div className="space-y-3">
         <div>
-          <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Short Description</label>
-          <input
+          <label htmlFor="pf-short-description-1" className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Short Description</label>
+          <input id="pf-short-description-1"
             type="text"
             value={formData.description?.short || ''}
             onChange={(e) => setFormData(prev => ({
@@ -1773,8 +1778,8 @@ const DescriptionSection = memo(({ profile, formData, setFormData, editing, onSa
           />
         </div>
         <div>
-          <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Full Description</label>
-          <textarea
+          <label htmlFor="pf-full-description-2" className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1">Full Description</label>
+          <textarea id="pf-full-description-2"
             value={formData.description?.full || ''}
             onChange={(e) => setFormData(prev => ({
               ...prev,
@@ -1830,7 +1835,7 @@ const ContactInfoSection = memo(({ formData, setFormData, editing, onSave, savin
           <Mail size={16} /> Primary Email
         </label>
         {editing ? (
-          <input
+          <input aria-label="contact@company.com"
             type="email"
             value={formData.contactInfo?.primaryEmail || ''}
             onChange={(e) => setFormData(prev => ({
@@ -1849,7 +1854,7 @@ const ContactInfoSection = memo(({ formData, setFormData, editing, onSave, savin
           <Phone size={16} /> Phone
         </label>
         {editing ? (
-          <input
+          <input aria-label="+1 (555) 123-4567"
             type="tel"
             value={formData.contactInfo?.phone || ''}
             onChange={(e) => setFormData(prev => ({
@@ -1868,7 +1873,7 @@ const ContactInfoSection = memo(({ formData, setFormData, editing, onSave, savin
           <Mail size={16} /> HR Email
         </label>
         {editing ? (
-          <input
+          <input aria-label="hr@company.com"
             type="email"
             value={formData.contactInfo?.hrEmail || ''}
             onChange={(e) => setFormData(prev => ({

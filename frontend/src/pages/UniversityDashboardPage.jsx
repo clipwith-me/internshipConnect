@@ -48,7 +48,7 @@ const UniversityDashboardPage = () => {
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center text-red-700">{error}</div>
+        <div className="bg-error-50 border border-red-200 rounded-xl p-6 text-center text-error-700">{error}</div>
       </div>
     );
   }
@@ -92,8 +92,8 @@ const UniversityDashboardPage = () => {
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard icon={Users} label="Students on platform" value={k.totalStudents} tint="bg-primary-100 text-primary-600" />
-        <StatCard icon={Activity} label="Active (applied ≥1)" value={k.activeStudents} tint="bg-blue-100 text-blue-600" />
-        <StatCard icon={FileText} label="Applications submitted" value={k.applicationsSubmitted} tint="bg-amber-100 text-amber-600" />
+        <StatCard icon={Activity} label="Active (applied ≥1)" value={k.activeStudents} tint="bg-primary-100 text-primary-600" />
+        <StatCard icon={FileText} label="Applications submitted" value={k.applicationsSubmitted} tint="bg-warning-100 text-warning-600" />
         <StatCard icon={CheckCircle2} label="Placements secured" value={k.placements} tint="bg-emerald-100 text-emerald-600" />
       </div>
 

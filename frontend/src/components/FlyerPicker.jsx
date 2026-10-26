@@ -44,7 +44,7 @@ export default function FlyerPicker({ existingUrl, file, removed, onPick, onRemo
 
   return (
     <div>
-      <input ref={inputRef} id="flyer" type="file" accept="image/jpeg,image/png,image/webp" onChange={choose} className="sr-only" aria-describedby="flyer-hint" />
+      <input ref={inputRef} id="flyer" aria-label="Choose a flyer image" tabIndex={-1} type="file" accept="image/jpeg,image/png,image/webp" onChange={choose} className="sr-only" aria-describedby="flyer-hint" />
       {shown ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <img src={shown} alt="Flyer preview" className="max-h-72 w-full rounded-lg border border-neutral-200 object-contain sm:w-56" />

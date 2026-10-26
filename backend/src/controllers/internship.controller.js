@@ -21,6 +21,7 @@ import OrganizationProfile from '../models/OrganizationProfile.js';
 import { escapeRegex, validatePagination } from '../utils/security.js';
 import { uploadFlyer, deleteFromCloudinary, sniffImageType } from '../services/upload.service.js';
 import { isCloudinaryConfigured } from '../config/cloudinary.js';
+import { withPublicVerification } from '../utils/orgVerification.js';
 
 // Fields an employer may set on their own listing. Everything else (featured,
 // statistics, aiMetadata, positions.filled, organization, ...) is system-managed.
@@ -142,7 +143,7 @@ export const getInternships = async (req, res) => {
 
     // Execute query with pagination
     const internships = await Internship.find(query)
-      .populate('organization', 'companyInfo.name companyInfo.logo companyInfo.industry verification.status')
+      .populate('organization', 'companyInfo.name companyInfo.logo companyInfo.industry verification.status verification.verifiedBy')
       .sort({ createdAt: -1 }) // Newest first
       .skip(skip)
       .limit(limit);
@@ -153,7 +154,7 @@ export const getInternships = async (req, res) => {
     res.json({
       success: true,
       data: {
-        internships,
+        internships: internships.map(withPublicVerification),
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(total / limit),
@@ -181,7 +182,7 @@ export const getInternships = async (req, res) => {
 export const getInternshipById = async (req, res) => {
   try {
     const internship = await Internship.findById(req.params.id)
-      .populate('organization', 'companyInfo user verification.status');
+      .populate('organization', 'companyInfo user verification.status verification.verifiedBy');
 
     if (!internship) {
       return res.status(404).json({
@@ -214,7 +215,7 @@ export const getInternshipById = async (req, res) => {
 
     res.json({
       success: true,
-      data: internship
+      data: withPublicVerification(internship)
     });
   } catch (error) {
     console.error('Get internship error:', error);

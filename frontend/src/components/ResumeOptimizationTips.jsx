@@ -53,9 +53,9 @@ const ResumeOptimizationTips = ({ resumeId }) => {
 
   const getImpactIcon = (impact) => {
     const icons = {
-      high: <AlertCircle className="w-5 h-5 text-red-500" />,
+      high: <AlertCircle className="w-5 h-5 text-error-500" />,
       medium: <Info className="w-5 h-5 text-yellow-500" />,
-      low: <Lightbulb className="w-5 h-5 text-blue-500" />
+      low: <Lightbulb className="w-5 h-5 text-primary-500" />
     };
     return icons[impact] || icons.low;
   };
@@ -94,9 +94,9 @@ const ResumeOptimizationTips = ({ resumeId }) => {
     return (
       <Card className="p-6 border-l-4 border-l-red-500">
         <div className="flex items-start">
-          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 mr-3" />
+          <AlertCircle className="w-5 h-5 text-error-500 mt-0.5 mr-3" />
           <div>
-            <p className="text-red-600 font-medium">{error}</p>
+            <p className="text-error-600 font-medium">{error}</p>
             <Button
               size="sm"
               variant="outline"
@@ -123,7 +123,7 @@ const ResumeOptimizationTips = ({ resumeId }) => {
   return (
     <div className="space-y-6">
       {/* Overall Score */}
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50">
+      <Card className="p-6 bg-gradient-to-r from-primary-50 to-purple-50">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900 mb-1">
@@ -133,9 +133,9 @@ const ResumeOptimizationTips = ({ resumeId }) => {
           </div>
           <div className="text-center">
             <div className={`text-4xl font-bold ${
-              overallScore >= 85 ? 'text-green-600' :
+              overallScore >= 85 ? 'text-success-600' :
               overallScore >= 70 ? 'text-yellow-600' :
-              'text-red-600'
+              'text-error-600'
             }`}>
               {overallScore}
             </div>
@@ -147,9 +147,9 @@ const ResumeOptimizationTips = ({ resumeId }) => {
         <div className="mt-4 w-full bg-neutral-200 rounded-full h-3">
           <div
             className={`h-3 rounded-full transition-all duration-500 ${
-              overallScore >= 85 ? 'bg-green-500' :
+              overallScore >= 85 ? 'bg-success-500' :
               overallScore >= 70 ? 'bg-yellow-500' :
-              'bg-red-500'
+              'bg-error-500'
             }`}
             style={{ width: `${overallScore}%` }}
           ></div>
@@ -160,7 +160,7 @@ const ResumeOptimizationTips = ({ resumeId }) => {
       {tipCategories.strengths.length > 0 && (
         <Card className="p-6 border-l-4 border-l-green-500">
           <div className="flex items-start mb-4">
-            <CheckCircle className="w-6 h-6 text-green-500 mt-0.5 mr-3" />
+            <CheckCircle className="w-6 h-6 text-success-500 mt-0.5 mr-3" />
             <div>
               <h4 className="text-lg font-semibold text-neutral-900 mb-2">
                 Strengths
@@ -168,7 +168,7 @@ const ResumeOptimizationTips = ({ resumeId }) => {
               <ul className="space-y-2">
                 {tipCategories.strengths.map((strength, index) => (
                   <li key={index} className="flex items-center text-neutral-700">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    <span className="w-2 h-2 bg-success-500 rounded-full mr-2"></span>
                     {strength}
                   </li>
                 ))}
@@ -189,9 +189,9 @@ const ResumeOptimizationTips = ({ resumeId }) => {
               <Card
                 key={index}
                 className={`p-5 border-l-4 ${
-                  tip.priority <= 2 ? 'border-l-red-500 bg-red-50' :
+                  tip.priority <= 2 ? 'border-l-red-500 bg-error-50' :
                   tip.priority <= 4 ? 'border-l-yellow-500 bg-yellow-50' :
-                  'border-l-blue-500 bg-blue-50'
+                  'border-l-blue-500 bg-primary-50'
                 }`}
               >
                 <div className="flex items-start">
@@ -225,8 +225,8 @@ const ResumeOptimizationTips = ({ resumeId }) => {
           </div>
         </div>
       ) : (
-        <Card className="p-8 text-center bg-green-50">
-          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+        <Card className="p-8 text-center bg-success-50">
+          <CheckCircle className="w-12 h-12 text-success-500 mx-auto mb-3" />
           <h4 className="text-lg font-semibold text-neutral-900 mb-2">
             Excellent Work!
           </h4>

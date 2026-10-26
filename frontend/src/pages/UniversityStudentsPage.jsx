@@ -54,7 +54,7 @@ const UniversityStudentsPage = () => {
           <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center text-red-700">{error}</div>
+        <div className="bg-error-50 border border-red-200 rounded-xl p-6 text-center text-error-700">{error}</div>
       ) : students.length === 0 ? (
         <div className="bg-white border border-neutral-200 rounded-2xl p-12 text-center">
           <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 flex items-center justify-center mx-auto mb-4"><Users size={22} /></div>
@@ -63,7 +63,7 @@ const UniversityStudentsPage = () => {
         </div>
       ) : (
         <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Students table, scrolls sideways on small screens">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs font-semibold text-neutral-500 uppercase tracking-wide border-b border-neutral-100">
@@ -86,7 +86,7 @@ const UniversityStudentsPage = () => {
                       {s.placed ? (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Placed</span>
                       ) : s.applications > 0 ? (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Applying</span>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-warning-50 text-warning-700">Applying</span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-500">Not started</span>
                       )}

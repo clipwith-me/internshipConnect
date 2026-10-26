@@ -1,440 +1,162 @@
-// frontend/src/pages/PricingPage.jsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Check, Zap, Crown, Sparkles, ArrowRight } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { paymentAPI } from '../services/api';
+import { isAbortError } from '../hooks/useApi';
+import { useAuth } from '../context/AuthContext';
+import { Alert, Button, PageHeader } from '../components';
+import { describeOrganizationFeatures, describeStudentFeatures, formatPrice } from '../utils/plans';
 
-const PricingPage = () => {
+/**
+ * In-app plans. Plans, prices and feature lines come from the server's own plan
+ * definitions (the same source the public page and the limits use), so nothing
+ * shown here can drift from what a plan actually includes.
+ */
+export default function PricingPage() {
   const { user } = useAuth();
-  const [billingCycle, setBillingCycle] = useState('monthly');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [state, setState] = useState({ status: 'loading', data: null });
+  const [period, setPeriod] = useState('monthly');
+  const [busy, setBusy] = useState(null);
+  const [error, setError] = useState('');
+
   const isStudent = user?.role === 'student';
+  const currentPlan = (user?.subscription?.plan || (isStudent ? 'free' : 'basic')).toLowerCase();
+  const hasPaid = user?.subscription?.status === 'active' && !['free', 'basic'].includes(currentPlan);
 
-  const studentPlans = [
-    {
-      name: 'Free',
-      price: { monthly: 0, yearly: 0 },
-      description: 'Perfect for students just starting their internship search',
-      icon: Sparkles,
-      color: 'neutral',
-      features: [
-        'Browse all internship listings',
-        'Apply to unlimited internships',
-        'Basic profile creation',
-        'Application tracking dashboard',
-        'Email notifications',
-        'Standard support',
-      ],
-      limitations: [
-        'Standard resume tools',
-        'No AI matching recommendations',
-        'Basic search filters only',
-      ],
-      cta: 'Current Plan',
-      popular: false,
-    },
-    {
-      name: 'Premium',
-      price: { monthly: 5.99, yearly: 99 },
-      description: 'Unlock AI-powered features to land your dream internship',
-      icon: Zap,
-      color: 'primary',
-      features: [
-        'Everything in Free',
-        'Advanced resume tools',
-        'AI-powered internship matching',
-        'Advanced search filters',
-        'Priority application review badge',
-        'Resume optimization tips',
-        'Interview preparation guide',
-        'Priority customer support',
-      ],
-      limitations: [],
-      cta: 'Upgrade to Premium',
-      popular: true,
-    },
-    {
-      name: 'Pro',
-      price: { monthly: 19.99, yearly: 199 },
-      description: 'For serious students seeking maximum opportunities',
-      icon: Crown,
-      color: 'amber',
-      features: [
-        'Everything in Premium',
-        'Advanced resume tools',
-        'Personalized career coaching',
-        'Direct messaging with recruiters',
-        'Exclusive job opportunities',
-        'Resume review by professionals',
-        'Mock interview sessions',
-        'Dedicated account manager',
-      ],
-      limitations: [],
-      cta: 'Go Pro',
-      popular: false,
-    },
-  ];
+  useEffect(() => {
+    document.title = 'Plans | InternshipConnect';
+    const controller = new AbortController();
+    paymentAPI
+      .getPublicPlans({ signal: controller.signal })
+      .then((res) => setState({ status: 'ready', data: res.data?.data }))
+      .catch((err) => {
+        if (!isAbortError(err)) setState({ status: 'error', data: null });
+      });
+    return () => controller.abort();
+  }, []);
 
-  const organizationPlans = [
-    {
-      name: 'Basic',
-      price: { monthly: 0, yearly: 0 },
-      description: 'Start hiring interns at no cost',
-      icon: Sparkles,
-      color: 'neutral',
-      features: [
-        'Post up to 3 internship listings',
-        'Basic candidate search',
-        'Application management dashboard',
-        'Email notifications',
-        'Standard support',
-      ],
-      limitations: [
-        'No featured listings',
-        'No AI candidate matching',
-        'Limited analytics',
-      ],
-      cta: 'Current Plan',
-      popular: false,
-    },
-    {
-      name: 'Professional',
-      price: { monthly: 49, yearly: 490 },
-      description: 'Advanced features for growing organizations',
-      icon: Zap,
-      color: 'primary',
-      features: [
-        'Everything in Basic',
-        'Unlimited internship postings',
-        '5 featured listings per month',
-        'AI-powered candidate matching',
-        'Advanced analytics dashboard',
-        'Custom branding on listings',
-        'Priority listing placement',
-        'Team collaboration tools',
-      ],
-      limitations: [],
-      cta: 'Upgrade Now',
-      popular: true,
-    },
-    {
-      name: 'Enterprise',
-      price: { monthly: 199, yearly: 1990 },
-      description: 'Complete hiring solution for large organizations',
-      icon: Crown,
-      color: 'amber',
-      features: [
-        'Everything in Professional',
-        'Unlimited featured listings',
-        'Dedicated account manager',
-        'Custom integrations & API access',
-        'White-label solutions',
-        'Advanced reporting & analytics',
-        'Bulk candidate management',
-        'Priority support 24/7',
-        'Custom contract & SLA',
-      ],
-      limitations: [],
-      cta: 'Contact Sales',
-      popular: false,
-    },
-  ];
+  const plans = state.data ? (isStudent ? state.data.student : state.data.organization) : [];
+  const describe = isStudent ? describeStudentFeatures : describeOrganizationFeatures;
 
-  const plans = isStudent ? studentPlans : organizationPlans;
-  const currentPlan = user?.subscription?.plan || 'free';
-
-  const handlePlanSelect = async (planName) => {
-    if (planName.toLowerCase() === currentPlan.toLowerCase()) return;
-
-    // For free/basic plans, don't need checkout
-    if (planName.toLowerCase() === 'free' || planName.toLowerCase() === 'basic') {
-      return;
-    }
-
-    // Contact sales for enterprise plans
-    if (planName === 'Enterprise' || planName === 'Pro') {
-      alert(`Please contact our sales team for ${planName} plan details`);
-      return;
-    }
-
+  const choose = async (plan) => {
+    setError('');
+    setBusy(plan.id);
     try {
-      setLoading(true);
-      setError(null);
-
-      // Create Stripe checkout session
-      const response = await paymentAPI.createCheckout(planName.toLowerCase(), billingCycle);
-
-      // Redirect to Stripe checkout
-      if (response.data?.data?.url) {
-        window.location.href = response.data.data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
+      const res = await paymentAPI.createCheckout(plan.id, period);
+      const url = res.data?.data?.url;
+      if (!url) throw new Error('missing url');
+      window.location.assign(url);
     } catch (err) {
-      console.error('Checkout error:', err);
-      setError(err.response?.data?.error || 'Failed to create checkout session. Please try again.');
-      setLoading(false);
+      setError(err.response?.data?.error || 'We could not start checkout. Please try again.');
+      setBusy(null);
     }
   };
 
-  const savings = billingCycle === 'yearly' ? 17 : 0;
+  const manage = async () => {
+    setError('');
+    setBusy('portal');
+    try {
+      const res = await paymentAPI.createPortal();
+      const url = res.data?.data?.url;
+      if (!url) throw new Error('missing url');
+      window.location.assign(url);
+    } catch (err) {
+      setError(err.response?.data?.error || 'We could not open billing. Please try again.');
+      setBusy(null);
+    }
+  };
 
   return (
-    <div className="py-12 bg-neutral-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-neutral-900 mb-4">
-            Choose Your Perfect Plan
-          </h1>
-          <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-            {isStudent
-              ? 'Get AI-powered tools to accelerate your internship search and land your dream role'
-              : 'Find the perfect candidates faster with our intelligent hiring platform'}
-          </p>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="Plans"
+        description={isStudent ? 'Start free. Upgrade only if you want more tools.' : 'Post for free. Upgrade as your hiring grows.'}
+      />
 
-          {/* Error Message */}
-          {error && (
-            <div className="mt-6 max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">{error}</p>
-            </div>
-          )}
-        </div>
+      {error && <Alert variant="error" onDismiss={() => setError('')} className="mb-5">{error}</Alert>}
 
-        {/* Billing Toggle */}
-        <div className="flex items-center justify-center gap-4 mb-12">
-          <span
-            className={`text-sm font-medium ${
-              billingCycle === 'monthly' ? 'text-neutral-900' : 'text-neutral-500'
-            }`}
-          >
-            Monthly
-          </span>
-          <button
-            onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-            className="relative w-14 h-7 bg-primary-600 rounded-full transition-colors"
-          >
-            <span
-              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                billingCycle === 'yearly' ? 'translate-x-7' : 'translate-x-0'
-              }`}
-            />
+      {hasPaid && (
+        <Alert variant="info" className="mb-5">
+          You're on the {currentPlan} plan.{' '}
+          <button type="button" onClick={manage} disabled={busy === 'portal'} className="font-semibold underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+            Manage or cancel billing
           </button>
-          <span
-            className={`text-sm font-medium ${
-              billingCycle === 'yearly' ? 'text-neutral-900' : 'text-neutral-500'
-            }`}
+        </Alert>
+      )}
+
+      <div role="group" aria-label="Billing period" className="mb-6 inline-flex rounded-md border border-neutral-300 bg-white p-0.5">
+        {['monthly', 'yearly'].map((p) => (
+          <button
+            key={p}
+            type="button"
+            aria-pressed={period === p}
+            onClick={() => setPeriod(p)}
+            className={`rounded px-4 py-1.5 text-sm font-medium capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${period === p ? 'bg-primary-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}
           >
-            Yearly
-          </span>
-          {billingCycle === 'yearly' && (
-            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-              Save {savings}%
-            </span>
-          )}
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan) => {
-            const Icon = plan.icon;
-            const isCurrentPlan = plan.name.toLowerCase() === currentPlan;
-
-            return (
-              <div
-                key={plan.name}
-                className={`relative bg-white rounded-2xl shadow-sm border-2 transition-all hover:shadow-lg ${
-                  plan.popular
-                    ? 'border-primary-500 shadow-xl scale-105'
-                    : 'border-neutral-200'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary-600 text-white text-sm font-semibold rounded-full">
-                    Most Popular
-                  </div>
-                )}
-
-                <div className="p-8">
-                  {/* Icon & Name */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        plan.color === 'primary'
-                          ? 'bg-primary-100'
-                          : plan.color === 'amber'
-                          ? 'bg-amber-100'
-                          : 'bg-neutral-100'
-                      }`}
-                    >
-                      <Icon
-                        size={24}
-                        className={
-                          plan.color === 'primary'
-                            ? 'text-primary-600'
-                            : plan.color === 'amber'
-                            ? 'text-amber-600'
-                            : 'text-neutral-600'
-                        }
-                      />
-                    </div>
-                    <h3 className="text-2xl font-bold text-neutral-900">{plan.name}</h3>
-                  </div>
-
-                  {/* Price */}
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold text-neutral-900">
-                        ${plan.price[billingCycle]}
-                      </span>
-                      {plan.price[billingCycle] > 0 && (
-                        <span className="text-neutral-600">
-                          /{billingCycle === 'monthly' ? 'mo' : 'yr'}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-neutral-600 mt-2">{plan.description}</p>
-                  </div>
-
-                  {/* CTA Button */}
-                  <button
-                    onClick={() => handlePlanSelect(plan.name)}
-                    disabled={isCurrentPlan || loading}
-                    className={`w-full py-3 rounded-lg font-semibold transition-colors mb-6 flex items-center justify-center gap-2 ${
-                      isCurrentPlan || loading
-                        ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed'
-                        : plan.popular
-                        ? 'bg-primary-600 hover:bg-primary-700 text-white'
-                        : 'bg-neutral-900 hover:bg-neutral-800 text-white'
-                    }`}
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin" />
-                        Processing...
-                      </>
-                    ) : isCurrentPlan ? (
-                      'Current Plan'
-                    ) : (
-                      <>
-                        {plan.cta}
-                        <ArrowRight size={18} />
-                      </>
-                    )}
-                  </button>
-
-                  {/* Features */}
-                  <div className="space-y-3">
-                    {plan.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-neutral-700">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Limitations */}
-                  {plan.limitations.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-neutral-200">
-                      <p className="text-xs font-medium text-neutral-500 mb-3">NOT INCLUDED:</p>
-                      <div className="space-y-2">
-                        {plan.limitations.map((limitation, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
-                            <span className="text-neutral-400">×</span>
-                            <span className="text-sm text-neutral-500">{limitation}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* FAQ Section */}
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-neutral-900 text-center mb-8">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            <FAQItem
-              question="Can I switch plans at any time?"
-              answer="Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any charges."
-            />
-            <FAQItem
-              question="What happens when I upgrade?"
-              answer="When you upgrade, you'll get instant access to all premium features. Your billing will be adjusted on a pro-rata basis."
-            />
-            <FAQItem
-              question="Do you offer refunds?"
-              answer="We offer a 14-day money-back guarantee for all premium plans. If you're not satisfied, contact support for a full refund."
-            />
-            <FAQItem
-              question="What resume tools are included in Premium?"
-              answer="Premium includes advanced resume tools to help you build and optimize your resume for internship applications, including formatting guidance and tailored tips."
-            />
-            <FAQItem
-              question="Is my data secure?"
-              answer="We use industry-standard encryption and never share your data with third parties. Your privacy is our top priority."
-            />
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="mt-16 bg-primary-600 rounded-2xl p-12 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Still have questions?</h2>
-          <p className="text-primary-100 mb-8 max-w-2xl mx-auto">
-            Our team is here to help you find the perfect plan for your needs
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <Link
-              to="/contact-sales"
-              className="px-8 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-neutral-100 transition-colors inline-block"
-            >
-              Contact Sales
-            </Link>
-            <Link
-              to="/demo"
-              className="px-8 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors inline-block"
-            >
-              View Demo
-            </Link>
-          </div>
-        </div>
+            {p}
+          </button>
+        ))}
       </div>
-    </div>
-  );
-};
 
-const FAQItem = ({ question, answer }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-neutral-50 transition-colors"
-      >
-        <span className="font-semibold text-neutral-900">{question}</span>
-        <span
-          className={`text-2xl text-neutral-400 transition-transform ${
-            isOpen ? 'rotate-45' : ''
-          }`}
-        >
-          +
-        </span>
-      </button>
-      {isOpen && (
-        <div className="px-6 pb-4 text-neutral-600 border-t border-neutral-100">
-          <p className="pt-4">{answer}</p>
+      {state.status === 'loading' && (
+        <div className="grid gap-6 md:grid-cols-3" aria-busy="true">
+          {[0, 1, 2].map((n) => <div key={n} className="h-80 animate-pulse rounded-2xl border border-neutral-200 bg-white" />)}
         </div>
       )}
+
+      {state.status === 'error' && (
+        <Alert variant="warning" title="Plans are temporarily unavailable">
+          Please refresh in a moment, or <Link to="/contact" className="font-medium underline">contact us</Link>.
+        </Alert>
+      )}
+
+      {state.status === 'ready' && (
+        <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {plans.map((plan) => {
+            const free = plan.monthlyPrice === 0;
+            const price = period === 'yearly' && plan.yearlyPrice ? plan.yearlyPrice : plan.monthlyPrice;
+            const current = plan.id === currentPlan;
+            return (
+              <li key={plan.id} className={`flex flex-col rounded-2xl border bg-white p-6 shadow-sm ${current ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-neutral-200'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-lg font-semibold text-neutral-900">{plan.name}</h2>
+                  {current && <span className="rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">Your plan</span>}
+                </div>
+                <p className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-semibold tracking-tight text-neutral-900 tabular">{formatPrice(price)}</span>
+                  {!free && <span className="text-sm text-neutral-600">/ {period === 'yearly' ? 'year' : 'month'}</span>}
+                </p>
+                <ul className="mt-6 flex-1 space-y-3">
+                  {describe(plan.features).map((line) => (
+                    <li key={line} className="flex items-start gap-3 text-sm text-neutral-700">
+                      <Check size={18} className="mt-0.5 shrink-0 text-success-600" aria-hidden="true" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6">
+                  {current ? (
+                    <Button variant="secondary" fullWidth disabled>Current plan</Button>
+                  ) : free ? null : plan.id === 'enterprise' ? (
+                    <Button as={Link} to="/contact-sales" variant="secondary" fullWidth>Contact sales</Button>
+                  ) : (
+                    <Button fullWidth onClick={() => choose(plan)} loading={busy === plan.id} disabled={hasPaid || Boolean(busy)}>
+                      Choose {plan.name}
+                    </Button>
+                  )}
+                  {hasPaid && !current && !free && <p className="mt-2 text-xs text-neutral-600">To switch plans, manage billing above.</p>}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <p className="mt-8 text-sm text-neutral-600">
+        Prices are in US dollars and billed through Stripe. Refunds are considered case by case; see our{' '}
+        <Link to="/terms" className="font-medium text-primary-600 hover:text-primary-700">Terms</Link>. Questions?{' '}
+        <Link to="/contact" className="font-medium text-primary-600 hover:text-primary-700">Contact us</Link>.
+      </p>
     </div>
   );
-};
-
-export default PricingPage;
+}

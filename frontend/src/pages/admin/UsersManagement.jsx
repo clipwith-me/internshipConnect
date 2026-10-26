@@ -100,8 +100,8 @@ const UsersManagement = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-primary-600" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-neutral-900">{users.filter(u => u.role === 'student').length}</div>
@@ -111,8 +111,8 @@ const UsersManagement = () => {
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-success-600" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-neutral-900">{users.filter(u => u.role === 'organization').length}</div>
@@ -122,8 +122,8 @@ const UsersManagement = () => {
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Shield className="w-6 h-6 text-amber-600" />
+              <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
+                <Shield className="w-6 h-6 text-warning-600" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-neutral-900">{users.filter(u => u.status === 'pending').length}</div>
@@ -135,7 +135,7 @@ const UsersManagement = () => {
 
         {/* Users Table */}
         <div className="bg-white rounded-xl shadow-sm border border-neutral-200/50 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Users table, scrolls sideways on small screens">
             <table className="w-full">
               <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
@@ -180,16 +180,16 @@ const UsersManagement = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'student' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                          user.role === 'student' ? 'bg-primary-100 text-primary-700' : 'bg-success-100 text-success-700'
                         }`}>
                           {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          user.status === 'active' ? 'bg-green-100 text-green-700' :
-                          user.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
+                          user.status === 'active' ? 'bg-success-100 text-success-700' :
+                          user.status === 'pending' ? 'bg-warning-100 text-warning-700' :
+                          'bg-error-100 text-error-700'
                         }`}>
                           {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                         </span>
@@ -212,19 +212,19 @@ const UsersManagement = () => {
                           {user.status === 'pending' && (
                             <button
                               onClick={() => handleAction(user.id, 'approve')}
-                              className="p-2 hover:bg-green-50 rounded-lg transition-colors"
+                              className="p-2 hover:bg-success-50 rounded-lg transition-colors"
                               title="Approve"
                             >
-                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              <CheckCircle className="w-4 h-4 text-success-600" />
                             </button>
                           )}
                           {user.status === 'active' && (
                             <button
                               onClick={() => handleAction(user.id, 'suspend')}
-                              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 hover:bg-error-50 rounded-lg transition-colors"
                               title="Suspend"
                             >
-                              <Ban className="w-4 h-4 text-red-600" />
+                              <Ban className="w-4 h-4 text-error-600" />
                             </button>
                           )}
                         </div>

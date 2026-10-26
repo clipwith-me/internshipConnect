@@ -32,6 +32,7 @@ export default function EditInternshipPage() {
     return (
       <div className="mx-auto max-w-3xl">
         <EmptyState
+          asPage
           title="We couldn't load this listing"
           description="It may have been removed, or you may not own it."
           action={<Button as={Link} to="/dashboard/my-internships" variant="secondary">Back to my internships</Button>}

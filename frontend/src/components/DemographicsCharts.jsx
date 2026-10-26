@@ -12,10 +12,10 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
     return (
       <div className="grid gap-6 md:grid-cols-2">
         {[1, 2].map((i) => (
-          <div key={i} className="flex h-80 items-center justify-center rounded-lg border border-gray-200 bg-white p-6">
+          <div key={i} className="flex h-80 items-center justify-center rounded-lg border border-neutral-200 bg-white p-6">
             <div className="text-center">
-              <div className="mx-auto mb-3 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600"></div>
-              <p className="text-gray-600">Loading demographics...</p>
+              <div className="mx-auto mb-3 h-12 w-12 animate-spin rounded-full border-4 border-neutral-200 border-t-blue-600"></div>
+              <p className="text-neutral-600">Loading demographics...</p>
             </div>
           </div>
         ))}
@@ -25,9 +25,9 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
 
   if (!demographics) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="rounded-lg border border-neutral-200 bg-white p-6">
         <div className="text-center">
-          <p className="text-gray-600">No demographic data available</p>
+          <p className="text-neutral-600">No demographic data available</p>
         </div>
       </div>
     );
@@ -38,9 +38,9 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
-          <p className="font-semibold text-gray-900">{data.name}</p>
-          <p className="text-sm text-blue-600">
+        <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
+          <p className="font-semibold text-neutral-900">{data.name}</p>
+          <p className="text-sm text-primary-600">
             <span className="font-medium">{data.value}</span> applicant{data.value !== 1 ? 's' : ''}
           </p>
         </div>
@@ -74,8 +74,8 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Education Levels - Pie Chart */}
       {demographics.education && demographics.education.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Education Levels</h3>
+        <div className="rounded-lg border border-neutral-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-neutral-900">Education Levels</h3>
 
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -107,9 +107,9 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
                     className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="text-gray-700">{item.name}</span>
+                  <span className="text-neutral-700">{item.name}</span>
                 </div>
-                <span className="font-semibold text-gray-900">{item.count}</span>
+                <span className="font-semibold text-neutral-900">{item.count}</span>
               </div>
             ))}
           </div>
@@ -118,8 +118,8 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
 
       {/* Top Skills - Bar Chart */}
       {demographics.topSkills && demographics.topSkills.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Top Skills</h3>
+        <div className="rounded-lg border border-neutral-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-neutral-900">Top Skills</h3>
 
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={demographics.topSkills.slice(0, 8)} layout="vertical" margin={{ left: 60 }}>
@@ -141,8 +141,8 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
 
       {/* Experience Levels - Bar Chart */}
       {demographics.experience && demographics.experience.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Experience Levels</h3>
+        <div className="rounded-lg border border-neutral-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-neutral-900">Experience Levels</h3>
 
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={demographics.experience}>
@@ -165,8 +165,8 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
 
       {/* Application Status Funnel */}
       {demographics.statusBreakdown && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Application Status</h3>
+        <div className="rounded-lg border border-neutral-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-neutral-900">Application Status</h3>
 
           <div className="space-y-3">
             {Object.entries(demographics.statusBreakdown).map(([status, count]) => {
@@ -174,13 +174,13 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
               const percentage = total > 0 ? (count / total) * 100 : 0;
 
               const statusColors = {
-                submitted: 'bg-blue-500',
+                submitted: 'bg-primary-500',
                 'under-review': 'bg-yellow-500',
                 shortlisted: 'bg-purple-500',
                 interview: 'bg-indigo-500',
-                offered: 'bg-green-500',
+                offered: 'bg-success-500',
                 accepted: 'bg-emerald-500',
-                rejected: 'bg-red-500'
+                rejected: 'bg-error-500'
               };
 
               const statusLabels = {
@@ -196,14 +196,14 @@ const DemographicsCharts = ({ demographics, loading = false }) => {
               return (
                 <div key={status}>
                   <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-700">{statusLabels[status] || status}</span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-medium text-neutral-700">{statusLabels[status] || status}</span>
+                    <span className="font-semibold text-neutral-900">
                       {count} ({percentage.toFixed(1)}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
                     <div
-                      className={`h-full transition-all ${statusColors[status] || 'bg-gray-500'}`}
+                      className={`h-full transition-all ${statusColors[status] || 'bg-neutral-500'}`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>

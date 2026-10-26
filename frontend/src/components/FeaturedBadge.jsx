@@ -8,13 +8,13 @@ import { Star, Crown, Sparkles } from 'lucide-react';
 const FeaturedBadge = ({ variant = 'default', size = 'md', showText = true }) => {
   const variants = {
     default: {
-      bg: 'bg-gradient-to-r from-amber-500 to-yellow-500',
+      bg: 'bg-gradient-to-r from-warning-500 to-yellow-500',
       text: 'text-white',
       icon: Star,
       label: 'Featured'
     },
     pro: {
-      bg: 'bg-gradient-to-r from-purple-600 to-blue-600',
+      bg: 'bg-gradient-to-r from-purple-600 to-primary-600',
       text: 'text-white',
       icon: Crown,
       label: 'Pro'

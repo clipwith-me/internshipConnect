@@ -75,7 +75,7 @@ const SaveBtn = ({ loading, label = 'Save Changes', icon: Icon = Save, onClick, 
     disabled={loading}
     className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 ${
       variant === 'danger'
-        ? 'bg-red-600 hover:bg-red-700 text-white'
+        ? 'bg-error-600 hover:bg-error-700 text-white'
         : 'bg-primary-600 hover:bg-primary-700 text-white'
     }`}
   >
@@ -145,9 +145,9 @@ const SettingsPage = () => {
           <div className="flex-1 min-w-0">
             {message.text && (
               <div className={`mb-4 p-4 rounded-xl flex items-start gap-3 ${
-                message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-                message.type === 'info'    ? 'bg-blue-50 text-blue-800 border border-blue-200' :
-                'bg-red-50 text-red-800 border border-red-200'
+                message.type === 'success' ? 'bg-success-50 text-green-800 border border-green-200' :
+                message.type === 'info'    ? 'bg-primary-50 text-primary-800 border border-primary-200' :
+                'bg-error-50 text-red-800 border border-red-200'
               }`}>
                 {message.type === 'success' ? <CheckCircle size={18} className="mt-0.5 flex-shrink-0" /> : <AlertTriangle size={18} className="mt-0.5 flex-shrink-0" />}
                 <span className="text-sm">{message.text}</span>
@@ -279,28 +279,28 @@ const AccountSettings = ({ user, showMessage }) => {
         {isStudent ? (
           <>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">First Name</label>
-              <input type="text" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+              <label htmlFor="st-first-name-1" className="block text-sm font-medium text-neutral-700 mb-1">First Name</label>
+              <input id="st-first-name-1" type="text" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">Last Name</label>
-              <input type="text" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+              <label htmlFor="st-last-name-2" className="block text-sm font-medium text-neutral-700 mb-1">Last Name</label>
+              <input id="st-last-name-2" type="text" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
             </div>
           </>
         ) : (
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Company Name</label>
-            <input type="text" value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+            <label htmlFor="st-company-name-3" className="block text-sm font-medium text-neutral-700 mb-1">Company Name</label>
+            <input id="st-company-name-3" type="text" value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Email</label>
-          <input type="email" value={formData.email} disabled className="w-full px-3 py-2 border border-neutral-200 rounded-lg bg-neutral-50 text-neutral-400 cursor-not-allowed" />
-          <p className="text-xs text-neutral-400 mt-1">Email cannot be changed</p>
+          <label htmlFor="st-email-4" className="block text-sm font-medium text-neutral-700 mb-1">Email</label>
+          <input id="st-email-4" type="email" value={formData.email} disabled className="w-full px-3 py-2 border border-neutral-200 rounded-lg bg-neutral-50 text-neutral-400 cursor-not-allowed" />
+          <p className="text-xs text-neutral-500 mt-1">Email cannot be changed</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Phone</label>
-          <input type="tel" value={formData.phone} placeholder="+234 800 000 0000" onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          <label htmlFor="st-phone-5" className="block text-sm font-medium text-neutral-700 mb-1">Phone</label>
+          <input id="st-phone-5" type="tel" value={formData.phone} placeholder="+234 800 000 0000" onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
       </div>
 
@@ -473,7 +473,7 @@ const SecuritySettings = ({ user, showMessage }) => {
             <p className="text-sm font-medium text-neutral-900">Current device</p>
             <p className="text-xs text-neutral-500">{navigator.userAgent.split(' ').slice(-1)[0].split('/')[0]} · Active now</p>
           </div>
-          <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-success-500 flex-shrink-0" />
         </div>
         <button
           type="button"
@@ -496,9 +496,9 @@ const SecuritySettings = ({ user, showMessage }) => {
 
       {/* Danger Zone */}
       <div>
-        <h3 className="text-base font-semibold text-red-600 mb-2 flex items-center gap-2"><AlertTriangle size={17} /> Danger Zone</h3>
+        <h3 className="text-base font-semibold text-error-600 mb-2 flex items-center gap-2"><AlertTriangle size={17} /> Danger Zone</h3>
         <p className="text-sm text-neutral-600 mb-4">Deleting your account is permanent and cannot be undone. All your data, applications, and profile information will be removed.</p>
-        <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+        <div className="border border-red-200 rounded-lg p-4 bg-error-50">
           <label className="block text-sm font-medium text-neutral-700 mb-2">
             Type your email <span className="font-semibold text-neutral-900">{user?.email}</span> to confirm:
           </label>
@@ -721,7 +721,7 @@ const BillingSettings = ({ user, showMessage }) => {
           <div className="flex-1">
             <p className="font-bold text-neutral-900 capitalize text-lg">{currentPlanId === 'free' ? 'Free' : currentPlanId === 'premium' ? 'Student Premium' : 'Employer'} Plan</p>
             <p className="text-sm text-neutral-600">
-              Status: <span className={`font-semibold ${isActive ? 'text-green-700' : 'text-amber-700'}`}>{subscription?.status || 'Active'}</span>
+              Status: <span className={`font-semibold ${isActive ? 'text-success-700' : 'text-warning-700'}`}>{subscription?.status || 'Active'}</span>
               {subscription?.currentPeriodEnd && ` · Renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
             </p>
           </div>
@@ -755,7 +755,7 @@ const BillingSettings = ({ user, showMessage }) => {
                   ))}
                 </ul>
                 {isCurrent ? (
-                  <div className="w-full py-2 text-center text-sm font-semibold text-green-700 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="w-full py-2 text-center text-sm font-semibold text-success-700 bg-success-50 border border-green-200 rounded-lg">
                     ✓ Current Plan
                   </div>
                 ) : (
@@ -790,7 +790,7 @@ const BillingSettings = ({ user, showMessage }) => {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-neutral-900">${(inv.amount / 100 || inv.amount || 0).toFixed(2)}</span>
-                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${inv.status === 'paid' || inv.status === 'succeeded' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${inv.status === 'paid' || inv.status === 'succeeded' ? 'bg-success-100 text-success-700' : 'bg-warning-100 text-warning-700'}`}>
                     {inv.status === 'paid' || inv.status === 'succeeded' ? 'Paid' : inv.status}
                   </span>
                 </div>
@@ -801,7 +801,7 @@ const BillingSettings = ({ user, showMessage }) => {
           <div className="py-8 text-center border border-neutral-200 rounded-xl">
             <CreditCard size={32} className="text-neutral-300 mx-auto mb-2" />
             <p className="text-sm text-neutral-500">No billing history yet.</p>
-            <p className="text-xs text-neutral-400 mt-1">Your invoices will appear here after your first payment.</p>
+            <p className="text-xs text-neutral-500 mt-1">Your invoices will appear here after your first payment.</p>
           </div>
         )}
       </div>
@@ -812,7 +812,7 @@ const BillingSettings = ({ user, showMessage }) => {
           <button
             onClick={handleCancel}
             disabled={cancelLoading}
-            className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+            className="text-sm text-error-600 hover:text-error-700 font-medium disabled:opacity-50"
           >
             {cancelLoading ? 'Cancelling…' : 'Cancel subscription'}
           </button>

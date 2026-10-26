@@ -2,6 +2,7 @@ import express from 'express';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import SavedInternship from '../models/SavedInternship.js';
 import Internship from '../models/Internship.js';
+import { withPublicVerification } from '../utils/orgVerification.js';
 
 const router = express.Router();
 
@@ -11,11 +12,18 @@ router.get('/', authenticate, authorize('student'), async (req, res) => {
     const saved = await SavedInternship.find({ student: req.user._id })
       .populate({
         path: 'internship',
-        populate: { path: 'organization', select: 'companyInfo.name companyInfo.logo verification.status' }
+        populate: { path: 'organization', select: 'companyInfo.name companyInfo.logo verification.status verification.verifiedBy' }
       })
       .sort({ savedAt: -1 });
 
-    res.json({ success: true, data: saved });
+    res.json({
+      success: true,
+      data: saved.map((s) => {
+        const json = s.toJSON();
+        if (s.internship) json.internship = withPublicVerification(s.internship);
+        return json;
+      })
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch saved internships' });
   }

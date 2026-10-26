@@ -160,6 +160,7 @@ export default function InternshipDetailPage() {
     return (
       <div className="mx-auto max-w-4xl">
         <EmptyState
+          asPage
           title={state.status === 'missing' ? 'This opportunity is no longer available' : "We couldn't load this opportunity"}
           description={state.status === 'missing' ? 'It may have been closed or removed by the employer.' : 'Please check your connection and try again.'}
           action={<Button as={Link} to="/dashboard/internships" variant="secondary">Back to internships</Button>}
